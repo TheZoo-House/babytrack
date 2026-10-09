@@ -1,0 +1,14 @@
+.DS_Store
+.build/
+build/
+.codex-tmp/
+.env
+.env.*
+!.env.example
+app/Config/Local.xcconfig
+*.xcuserstate
+xcuserdata/
+*.ipa
+*.xcarchive
+*.xcresult
+*.sqlite*
