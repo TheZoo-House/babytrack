@@ -7,6 +7,7 @@ import WidgetKit
 
 struct APIError: LocalizedError {
     var message: String
+    var status: Int?
     var errorDescription: String? {
         message
     }
@@ -44,6 +45,7 @@ enum SessionKeychain {
     var notice: String?
     var syncing = false
     var showWelcome = true
+    var reauthenticationRequired = false
     var nonce: String?
     var selectedSection: AppSection = .today
     var form: FormRequest?
@@ -163,7 +165,14 @@ enum SessionKeychain {
         let (data, response) = try await URLSession.shared.data(for: req)
         guard let http = response as? HTTPURLResponse, (200 ..< 300).contains(http.statusCode) else {
             let value = try? JSONDecoder().decode([String: String].self, from: data)
-            throw APIError(message: value?["error"] ?? "Server unavailable. Your offline records are saved.")
+            let status = (response as? HTTPURLResponse)?.statusCode
+            if authenticated, status == 401 {
+                reauthenticationRequired = true
+            }
+            throw APIError(
+                message: value?["error"] ?? "Server unavailable. Your offline records are saved.",
+                status: status
+            )
         }
         return try JSONDecoder().decode(T.self, from: data)
     }
@@ -199,6 +208,8 @@ enum SessionKeychain {
     }
 
     func preview() async {
+        guard pendingCount == 0,
+              !reauthenticationRequired else { error = "Sign in again to sync your saved records first."; return }
         do {
             let login: LoginResponse = try await request(
                 "/v1/auth/preview",
@@ -216,13 +227,15 @@ enum SessionKeychain {
     }
 
     private func accept(_ login: LoginResponse) throws {
-        if !testing {
-            try SessionKeychain.write(login.token)
-        }; token = login.token
         try storage.update { current in
-            current = DiskState(); current.snapshot = login.snapshot
-            current.selectedChildID = login.snapshot.entities.first { $0.type == "child" }?.id ?? ""
-        }; reload(); showWelcome = false
+            try current.accept(login.snapshot)
+            if !testing {
+                try SessionKeychain.write(login.token)
+            }
+        }
+        token = login.token
+        reauthenticationRequired = false
+        reload(); showWelcome = false
     }
 
     func save(_ entity: Entity, action: String = "upsert") {
@@ -240,7 +253,7 @@ enum SessionKeychain {
     }
 
     func sync() async {
-        guard !syncing, signedIn else { return }
+        guard !syncing, signedIn, !reauthenticationRequired else { return }
         syncing = true; defer { syncing = false }
         do {
             let disk = try storage.read()

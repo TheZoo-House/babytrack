@@ -66,4 +66,27 @@ final class CoreTests: XCTestCase {
         XCTAssertThrowsError(try storage.enqueue(Command(entity: Entity(type: "note", title: "Note"))))
         XCTAssertEqual(try Data(contentsOf: file), bytes)
     }
+
+    func testReauthenticationPreservesQueueAndRejectsFamilySwitch() throws {
+        var state = DiskState()
+        state.snapshot = try Snapshot.sample()
+        state.selectedChildID = "sample-child"
+        let command = Command(entity: Entity(
+            type: "diaper",
+            childID: "sample-child",
+            title: "Diaper",
+            fields: ["contents": "Wet"]
+        ))
+        state.outbox = [command]
+        var refreshed = state.snapshot
+        refreshed.serverTime += 100
+        try state.accept(refreshed)
+        XCTAssertEqual(state.outbox.map(\.id), [command.id])
+        XCTAssertEqual(state.selectedChildID, "sample-child")
+        var other = Snapshot.empty
+        other.familyID = "other-synthetic-family"
+        XCTAssertThrowsError(try state.accept(other))
+        XCTAssertEqual(state.snapshot.familyID, refreshed.familyID)
+        XCTAssertEqual(state.outbox.count, 1)
+    }
 }

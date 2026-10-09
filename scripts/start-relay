@@ -2,6 +2,6 @@
 set -eu
 repo_dir="${0:A:h:h}"
 export DATABASE_PATH="$HOME/.local/share/babytrack/babytrack.sqlite"
-if [[ -f "$HOME/.config/babytrack/apns.env" ]]; then source "$HOME/.config/babytrack/apns.env"; fi
+if [[ -f "$HOME/.config/babytrack/apns.env" ]]; then set -a; source "$HOME/.config/babytrack/apns.env"; set +a; fi
 export APNS_TEAM_ID="${APNS_TEAM_ID:-Q28NF3NH3D}"
 exec "$HOME/.local/share/mise/installs/node/24/bin/node" "$repo_dir/relay/worker.mjs"

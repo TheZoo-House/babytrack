@@ -160,6 +160,21 @@ public struct DiskState: Codable, Sendable {
     public var selectedChildID: String = ""
     public var localPreview: Bool = false
     public init() {}
+    public mutating func accept(_ newSnapshot: Snapshot) throws {
+        let switching = snapshot.familyID != newSnapshot.familyID || snapshot.user.id != newSnapshot.user.id
+        if switching, !outbox.isEmpty {
+            throw SessionChangeError.pendingChanges
+        }
+        if switching {
+            self = DiskState()
+        }
+        snapshot = newSnapshot
+        localPreview = false
+        if !visibleEntities.contains(where: { $0.type == "child" && $0.id == selectedChildID }) {
+            selectedChildID = visibleEntities.first { $0.type == "child" }?.id ?? ""
+        }
+    }
+
     /// This projects only user-entered drafts. Business summaries remain server fields.
     public var visibleEntities: [Entity] {
         var records = snapshot.entities
@@ -184,5 +199,12 @@ public struct DiskState: Codable, Sendable {
         }
         snapshot = response.snapshot
         return response.results.compactMap { $0.status == "accepted" ? nil : $0.message }
+    }
+}
+
+public enum SessionChangeError: Error, LocalizedError {
+    case pendingChanges
+    public var errorDescription: String? {
+        "Sign in with the same Apple account to sync pending records before switching families."
     }
 }

@@ -9,7 +9,7 @@ struct RootView: View {
     var body: some View {
         @Bindable var store = store
         Group {
-            if store.showWelcome {
+            if store.showWelcome || store.reauthenticationRequired {
                 WelcomeView()
             } else if sizeClass == .regular {
                 NavigationSplitView {
@@ -125,18 +125,21 @@ struct WelcomeView: View {
                     }
                 }.signInWithAppleButtonStyle(scheme == .dark ? .white : .black).frame(height: 52)
                     .clipShape(RoundedRectangle(cornerRadius: 13)).disabled(store.nonce == nil)
-                Button { loading = true; Task { await store.preview(); loading = false } } label: {
-                    HStack {
-                        Spacer(); if loading {
-                            ProgressView()
-                        } else {
-                            Text("Try sample family").fontWeight(.semibold)
-                        }; Spacer()
-                    }.frame(height: 44)
-                }.disabled(loading).accessibilityIdentifier("trySample")
+                if !store.reauthenticationRequired {
+                    Button { loading = true; Task { await store.preview(); loading = false } } label: {
+                        HStack {
+                            Spacer(); if loading {
+                                ProgressView()
+                            } else {
+                                Text("Try sample family").fontWeight(.semibold)
+                            }; Spacer()
+                        }.frame(height: 44)
+                    }.disabled(loading).accessibilityIdentifier("trySample")
+                }
                 NavigationLink("Connection", destination: ConnectionView()).font(.subheadline)
                     .frame(maxWidth: .infinity)
             }.padding(32).frame(maxWidth: 500).frame(maxWidth: .infinity).background(Palette.paper)
+                .task { await store.prepareSignIn() }
         }
     }
 }
