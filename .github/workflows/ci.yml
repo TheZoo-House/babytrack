@@ -1,0 +1,38 @@
+name: CI
+on:
+  push:
+    branches: ['main', 'feat/**', 'fix/**', 'chore/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  server:
+    name: Backend and contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test server/*.test.mjs relay/*.test.mjs
+      - run: python3 scripts/check-contracts.py
+  app:
+    name: Apple build and core tests
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: swift test --package-path app/BabyCore
+      - run: xcodegen generate --spec app/project.yml
+      - run: xcodebuild -project app/Babytrack.xcodeproj -scheme Babytrack -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build-for-testing
+  gate:
+    name: CI Gate
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [server, app]
+    steps:
+      - run: test '${{ needs.server.result }}' = success && test '${{ needs.app.result }}' = success

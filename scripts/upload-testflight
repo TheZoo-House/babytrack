@@ -1,0 +1,10 @@
+#!/bin/zsh
+set -eu
+cd "${0:A:h:h}"
+: "${APP_STORE_CONNECT_KEY_ID:?Set the App Store Connect key ID}"
+: "${APP_STORE_CONNECT_ISSUER_ID:?Set the App Store Connect issuer ID}"
+: "${APP_STORE_CONNECT_KEY_PATH:?Set the App Store Connect key path}"
+ipa_path="${1:-.codex-tmp/export-app-store-connect/Babytrack.ipa}"
+[[ -f "$ipa_path" ]] || { print -u2 'Archive with scripts/archive app-store-connect first'; exit 1; }
+export API_PRIVATE_KEYS_DIR="${APP_STORE_CONNECT_KEY_PATH:h}"
+xcrun altool --upload-app --type ios --file "$ipa_path" --apiKey "$APP_STORE_CONNECT_KEY_ID" --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"

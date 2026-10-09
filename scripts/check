@@ -1,0 +1,7 @@
+#!/bin/zsh
+set -eu
+cd "${0:A:h:h}"
+node --test server/*.test.mjs relay/*.test.mjs
+python3 scripts/check-contracts.py
+swift test --package-path app/BabyCore
+git diff --check

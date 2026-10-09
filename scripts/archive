@@ -1,0 +1,15 @@
+#!/bin/zsh
+set -eu
+cd "${0:A:h:h}"
+method="${1:-release-testing}"
+[[ "$method" == release-testing || "$method" == app-store-connect ]] || { print -u2 'Use release-testing or app-store-connect'; exit 1; }
+mkdir -p .codex-tmp
+xcodegen generate --spec app/project.yml
+xcodebuild -project app/Babytrack.xcodeproj -scheme Babytrack -configuration Release -destination 'generic/platform=iOS' -archivePath .codex-tmp/Babytrack.xcarchive -allowProvisioningUpdates archive
+export METHOD="$method"
+python3 - <<'PY'
+import plistlib,os
+from pathlib import Path
+Path('.codex-tmp/ExportOptions.plist').write_bytes(plistlib.dumps({'method':os.environ['METHOD'],'teamID':'Q28NF3NH3D','signingStyle':'automatic'}))
+PY
+xcodebuild -exportArchive -archivePath .codex-tmp/Babytrack.xcarchive -exportPath ".codex-tmp/export-$method" -exportOptionsPlist .codex-tmp/ExportOptions.plist -allowProvisioningUpdates

@@ -1,0 +1,10 @@
+#!/bin/zsh
+set -eu
+repo_dir="${0:A:h:h}"
+state_dir="$HOME/.local/share/babytrack"
+mkdir -p "$state_dir"
+export DATABASE_PATH="$state_dir/babytrack.sqlite"
+export PREVIEW_ENABLED=1
+export HOST=127.0.0.1
+export PORT=8792
+exec "$HOME/.local/share/mise/installs/node/24/bin/node" "$repo_dir/server/main.mjs"

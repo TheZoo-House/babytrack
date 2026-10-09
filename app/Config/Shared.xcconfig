@@ -1,0 +1,6 @@
+#include "Brand.xcconfig"
+DEVELOPMENT_TEAM = Q28NF3NH3D
+APP_BUNDLE_IDENTIFIER = house.thezoo.babytrack
+APP_GROUP_IDENTIFIER = group.house.thezoo.babytrack
+BACKEND_URL = https:/$()/devapps.thezoo.house/babytrack-api
+#include? "Local.xcconfig"
