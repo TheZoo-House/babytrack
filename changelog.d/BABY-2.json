@@ -1,1 +1,1 @@
-{"type":"ux","ticket":"BABY-2","summary":"Use direct wet/dirty/dry buttons, visual texture and color choices and explicit diaper flags; unify bottom-sheet headers and surfaces, and replace short option menus with direct selections."}
+{"type":"ux","ticket":"BABY-2","summary":"Center choice controls, simplify bottle quantity entry with explicit last-amount reuse and clear-on-edit input, and anchor delete confirmation to styled destructive buttons; refresh Today counters for local saves, offline edits, live sleep and new days."}

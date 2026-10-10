@@ -82,9 +82,7 @@ enum SessionKeychain {
         return entities.first { $0.type == "sleep" && $0.childID == selectedChildID && $0.end == nil }
     }
 
-    var summary: DaySummary? {
-        state.snapshot.summaries.first { $0.childID == childID }
-    }
+    func summary(at date: Date) -> DaySummary? { state.careSummary(for: childID, now: date) }
 
     var signedIn: Bool {
         token != nil

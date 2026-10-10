@@ -106,7 +106,6 @@ struct RecordDetail: View {
     var entity: Entity
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
-    @State private var confirmDelete = false
     private var current: Entity {
         store.entities.first { $0.id == entity.id } ?? entity
     }
@@ -207,16 +206,15 @@ struct RecordDetail: View {
                     }.disabled(store.childID.isEmpty) }
                 }
                 Section {
-                    Button("Delete record", role: .destructive) { confirmDelete = true }
-                        .disabled(store.state.outbox.contains { $0.entity.id == current.id })
+                    HStack {
+                        Spacer()
+                        DestructiveActionButton(title: "Delete record", question: "Delete this record?", identifier: "deleteRecord", enabled: !store.state.outbox.contains { $0.entity.id == current.id }) {
+                            if store.save(current, action: "delete") { dismiss() }
+                        }
+                        Spacer()
+                    }.listRowSeparator(.hidden)
                 }
             }.appList()
-                .confirmationDialog("Delete this record?", isPresented: $confirmDelete, titleVisibility: .visible) {
-                    Button(
-                        "Delete",
-                        role: .destructive
-                    ) { store.save(current, action: "delete"); dismiss() }
-                }
         }.presentationDetents([.medium, .large]).careSheetStyle()
     }
 }

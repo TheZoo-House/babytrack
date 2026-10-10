@@ -17,6 +17,8 @@ struct RecordForm: View {
     @State private var lookupNote: String?
     @State private var validation: String?
     @State private var choosingFormula = false
+    @FocusState private var focusedField: String?
+    @State private var amountWasEdited = false
     private var spec: TypeSpec {
         Catalog.shared.spec(request.type)
     }
@@ -42,6 +44,7 @@ struct RecordForm: View {
     }
 
     private var requiredMissing: Bool {
+        (request.type == "feeding" && amountWasEdited && (fields["amount"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) ||
         (needsTitle && title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) ||
             (request.entity?.imported == nil && spec.fields.contains { $0.required && (fields[$0.key] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty })
     }
@@ -116,6 +119,9 @@ struct RecordForm: View {
                     end = value
                 }
             }
+            .onChange(of: focusedField) { _, field in
+                if request.type == "feeding", field == "amount" { amountWasEdited = true; fields["amount"] = "" }
+            }
             .onChange(of: photo) { _, item in Task { await loadPhoto(item) } }
             .sheet(isPresented: $scanning) { BarcodeScanner { code in fields["isbn"] = code; scanning = false; Task { await lookup() } } }
             .sheet(isPresented: $choosingFormula) { FormulaChooser(current: fields["brand"] ?? "") { fields["brand"] = $0 } }
@@ -168,18 +174,33 @@ struct RecordForm: View {
     }
 
     private func quantity(_ field: FieldSpec) -> some View {
-        EntryRow(title: field.label) {
-            HStack(spacing: 8) {
-                TextField("0", text: binding(field)).keyboardType(.decimalPad)
-                    .font(.title3.weight(.medium)).monospacedDigit().multilineTextAlignment(.trailing)
-                    .frame(width: 80).accessibilityLabel(field.label).accessibilityIdentifier(field.key)
-                if let unit = spec.fields.first(where: { $0.key == "unit" }) {
-                    unitChoices(unit)
-                } else if field.key == "minutes" {
-                    Text("min").foregroundStyle(.secondary)
-                }
-            }.fixedSize(horizontal: true, vertical: false)
+        VStack(spacing: 0) {
+            EntryRow(title: field.label) {
+                HStack(spacing: 8) {
+                    TextField("0", text: binding(field)).keyboardType(.decimalPad)
+                        .focused($focusedField, equals: field.key)
+                        .font(.title3.weight(.medium)).monospacedDigit().multilineTextAlignment(.trailing)
+                        .frame(width: 80).accessibilityLabel(field.label).accessibilityIdentifier(field.key)
+                    if let unit = spec.fields.first(where: { $0.key == "unit" }) {
+                        if request.type == "feeding" {
+                            Text(fields["unit"] ?? "").font(.subheadline).foregroundStyle(Palette.secondary).accessibilityIdentifier("bottleUnit")
+                        } else { unitChoices(unit) }
+                    } else if field.key == "minutes" { Text("min").foregroundStyle(Palette.secondary) }
+                }.fixedSize(horizontal: true, vertical: false)
+            }
+            if request.type == "feeding", let last = lastBottleAmount {
+                HStack {
+                    Spacer()
+                    Button("Use last amount: \(last.value) \(last.unit)") {
+                        focusedField = nil; fields["amount"] = last.value; fields["unit"] = last.unit; amountWasEdited = true
+                    }.font(.caption).buttonStyle(.plain).foregroundStyle(tint).frame(minHeight: 44).accessibilityIdentifier("reuseBottleAmount")
+                }.padding(.horizontal, 20)
+            }
         }
+    }
+
+    private var lastBottleAmount: BottleAmount? {
+        BottleAmount.latest(in: store.entities, childID: request.entity?.childID ?? store.childID, excluding: request.entity?.id)
     }
 
     private func unitChoices(_ field: FieldSpec) -> some View {

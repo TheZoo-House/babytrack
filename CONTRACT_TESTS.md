@@ -90,3 +90,13 @@ Optional `blowout` and `rash` fields use the strings `true` and `false`. Legacy
 An explicit editor change replaces that legacy flag while retaining original
 export columns in `ImportSource`. Synthetic tests cover combined selections,
 flag persistence, invalid values and reopening a server-saved diaper.
+
+## Today totals and bottle reuse
+
+Server summaries remain authoritative when current and no draft affects the
+child. BabyCore projects the full visible records for local previews, pending
+changes, active sleep and day rollover. Shared synthetic cases compare Swift
+with the server across midnight, spring/fall DST, units and child isolation.
+Today refreshes time-dependent values every minute. Bottle reuse copies the
+latest known amount/unit pair only; unknown or other-child amounts are not
+invented. A touched empty amount blocks saving until replaced.

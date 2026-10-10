@@ -104,7 +104,7 @@ public struct Member: Codable, Sendable, Identifiable {
     public var photo: String?
 }
 
-public struct DaySummary: Codable, Sendable {
+public struct DaySummary: Codable, Sendable, Equatable {
     public var childID: String
     public var feedingCount: Int
     public var feedingML: Int
@@ -142,6 +142,10 @@ public struct Snapshot: Codable, Sendable {
             members: [],
             user: User(id: "", name: "Caregiver")
         )
+    }
+
+    public static func summaryContractCases() throws -> Data {
+        try Data(contentsOf: Bundle.module.url(forResource: "summary-cases", withExtension: "json")!)
     }
 
     public static func sampleNaraImport() throws -> Snapshot {

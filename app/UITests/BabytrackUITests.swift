@@ -135,6 +135,70 @@ import XCTest
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Both · Blowout")).firstMatch.waitForExistence(timeout: 5))
     }
 
+    func testBottleAmountShortcutAndReplacement() {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15)); openLog(app, "quickBottle")
+        XCTAssertFalse(app.buttons["unit-oz"].exists); XCTAssertFalse(app.buttons["unit-mL"].exists)
+        XCTAssertTrue(app.staticTexts["bottleUnit"].exists)
+        let amount = app.textFields["amount"]
+        amount.tap(); XCTAssertFalse(app.buttons["saveRecord"].isEnabled)
+        amount.typeText("6.5"); app.buttons["saveRecord"].tap()
+        openLog(app, "quickBottle")
+        XCTAssertTrue(app.buttons["reuseBottleAmount"].label.contains("6.5 oz"))
+        app.buttons["reuseBottleAmount"].tap(); XCTAssertEqual(amount.value as? String, "6.5")
+        capture(app, "Bottle last amount shortcut")
+        amount.tap(); XCTAssertFalse(app.buttons["saveRecord"].isEnabled)
+        amount.typeText("3.5"); app.buttons["saveRecord"].tap()
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "3.5 oz")).firstMatch.waitForExistence(timeout: 5))
+    }
+
+    func testCenteredDiaperBubblesAndAnchoredDelete() {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["quickDiaper"].waitForExistence(timeout: 15)); openLog(app, "quickDiaper")
+        let wet = app.buttons["diaper-Wet"].frame, dry = app.buttons["diaper-Dry"].frame
+        XCTAssertEqual((wet.minX + dry.maxX) / 2, app.frame.midX, accuracy: 3)
+        capture(app, "Centered diaper bubbles"); app.buttons["Cancel"].tap()
+        let old = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Diaper, Wet")).firstMatch
+        old.tap()
+        let button = app.buttons["deleteRecord"]
+        for _ in 0 ..< 6 where !button.isHittable { app.collectionViews.firstMatch.swipeUp() }
+        button.tap(); XCTAssertTrue(app.staticTexts["deleteConfirmation"].waitForExistence(timeout: 5))
+        capture(app, "Delete button confirmation")
+        XCTAssertLessThan(app.buttons["confirmDestructiveAction"].frame.width, app.frame.width * 0.8)
+        app.buttons["cancelDestructiveAction"].tap(); XCTAssertTrue(button.exists)
+        button.tap(); app.buttons["confirmDestructiveAction"].tap()
+        XCTAssertTrue(app.buttons["quickDiaper"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Diaper, Wet")).firstMatch.exists)
+    }
+
+    func testTodayCountersAfterSavingCare() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
+        let oldFeed = try XCTUnwrap(Double(app.staticTexts["total-feeding"].label.split(separator: " ").first.map(String.init) ?? ""))
+        openLog(app, "quickBottle"); app.buttons["saveRecord"].tap()
+        XCTAssertTrue(app.staticTexts["total-feeding"].label.hasPrefix(String(format: "%.1f", oldFeed + 4)))
+        let oldDiapers = try XCTUnwrap(Int(app.staticTexts["total-diaper"].label.split(separator: " ").first.map(String.init) ?? ""))
+        openLog(app, "quickDiaper"); app.buttons["saveRecord"].tap()
+        XCTAssertTrue(app.staticTexts["total-diaper"].label.hasPrefix("\(oldDiapers + 1) "))
+        openLog(app, "sleepTimeline"); app.buttons["startTime"].tap()
+        let hour = app.pickerWheels.element(boundBy: 1)
+        let rawHour = hour.value as? String ?? ""
+        let digits = try XCTUnwrap(rawHour.split(whereSeparator: { !$0.isNumber }).first.map(String.init))
+        let value = try XCTUnwrap(Int(digits))
+        if value == 12, (app.pickerWheels.element(boundBy: 3).value as? String) == "AM" {
+            throw XCTSkip("This native journey needs a previous hour within today; midnight is covered by the shared summary fixtures.")
+        }
+        hour.adjust(toPickerWheelValue: "\(value == 1 ? 12 : value - 1)")
+        if value == 12 {
+            let meridiem = app.pickerWheels.element(boundBy: 3)
+            meridiem.adjust(toPickerWheelValue: (meridiem.value as? String) == "AM" ? "PM" : "AM")
+        }
+        app.buttons["startTime"].tap(); app.buttons["saveRecord"].tap()
+        XCTAssertFalse(app.staticTexts["total-sleep"].label.hasPrefix("0h 0m"))
+        XCTAssertTrue(app.buttons["timeline-sleep"].firstMatch.label.contains("60 min"))
+        capture(app, "Today counters after care saves")
+    }
+
     func testAllPagesScreenshots() {
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
@@ -200,8 +264,7 @@ import XCTest
     func testDiaperLargeTextScreenshots() {
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]; app.launch()
         XCTAssertTrue(app.buttons["quickDiaper"].waitForExistence(timeout: 15))
-        for _ in 0 ..< 5 where !app.buttons["quickDiaper"].isHittable { app.scrollViews.firstMatch.swipeUp() }
-        app.buttons["quickDiaper"].tap()
+        openLog(app, "quickDiaper")
         let dirty = app.buttons["diaper-Dirty"]
         for _ in 0 ..< 5 where !dirty.isHittable { app.scrollViews.firstMatch.swipeUp() }
         dirty.tap(); XCTAssertTrue(dirty.isSelected)
@@ -324,7 +387,18 @@ import XCTest
         if app.buttons["logRecord"].exists {
             app.navigationBars.buttons["BackButton"].tap()
         }
-        XCTAssertTrue(app.buttons[option].waitForExistence(timeout: 5)); app.buttons[option].tap()
+        let button = app.buttons[option]
+        XCTAssertTrue(button.waitForExistence(timeout: 5))
+        // AX can report a partly visible control as hittable at the tab bar edge.
+        for _ in 0 ..< 8 {
+            let y = button.frame.midY
+            if y > 140 && y < app.frame.height * 0.65 { break }
+            let scroll = app.scrollViews.firstMatch
+            let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.55))
+            let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: y > app.frame.height * 0.65 ? 0.35 : 0.75))
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
+        button.tap()
         if option == "sleepTimeline" {
             app.buttons["addRecord"].tap(); app.buttons["add-sleep"].tap()
         }

@@ -115,6 +115,10 @@ struct AppValueStyle: LabeledContentStyle {
 extension Entity {
     /// Drafts have no server description yet; format only their entered fields.
     var displayDetail: String {
+        if type == "sleep" {
+            let duration = end.map { "\(Int((max(0, $0 - at) / 60).rounded()).formatted()) min" } ?? "Sleeping"
+            return [duration, fields["category"]].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+        }
         if !detail.isEmpty {
             return detail
         }
@@ -228,25 +232,20 @@ struct ChoiceButtons: View {
     var minimumWidth: CGFloat = 110
     var horizontal = false
     @Environment(\.dynamicTypeSize) private var dynamicType
-    private var columns: [GridItem] {
-        if dynamicType.isAccessibilitySize { return [GridItem(.flexible())] }
-        if horizontal { return Array(repeating: GridItem(.flexible(), spacing: 4), count: options.count) }
-        return [GridItem(.adaptive(minimum: minimumWidth), spacing: 8)]
-    }
     private func label(_ option: String) -> String {
         if identifier == "measure", option == "Head circumference" { return "Head size" }
         if identifier == "kind" { return option == "other" ? "Other" : Catalog.shared.spec(option).title }
         return option
     }
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 8) {
+        CenteredSelectionLayout(horizontalSpacing: horizontal ? 4 : 8, fullWidth: dynamicType.isAccessibilitySize) {
             ForEach(options, id: \.self) { option in
                 let chosen = selection == option
                 Button { selection = chosen && optional ? "" : option } label: {
                     HStack(spacing: 4) {
                         Text(label(option)).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                         if chosen && identifier != "unit" { Image(systemName: "checkmark").font(.caption.weight(.bold)) }
-                    }.font(.subheadline.weight(chosen ? .semibold : .regular)).frame(maxWidth: .infinity, minHeight: 44).padding(.horizontal, 8)
+                    }.font(.subheadline.weight(chosen ? .semibold : .regular)).frame(minWidth: horizontal ? 44 : minimumWidth, maxWidth: .infinity, minHeight: 44).padding(.horizontal, 8)
                         .foregroundStyle(chosen ? Palette.buttonInk : Palette.ink)
                         .background(chosen ? Palette.fill(color) : Palette.tint(color).opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
                         .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.tint(color).opacity(chosen ? 0 : 0.25), lineWidth: 1))
@@ -268,4 +267,50 @@ private struct CareSheetStyle: ViewModifier {
 
 extension View {
     func careSheetStyle() -> some View { modifier(CareSheetStyle()) }
+}
+
+/// Wraps compact choices and centers every row, including incomplete rows.
+struct CenteredSelectionLayout: Layout {
+    var horizontalSpacing: CGFloat = 8
+    var verticalSpacing: CGFloat = 8
+    var fullWidth = false
+
+    private func rows(width: CGFloat, subviews: Subviews) -> [[CGSize]] {
+        var result: [[CGSize]] = [], row: [CGSize] = []
+        var used: CGFloat = 0
+        for view in subviews {
+            let proposal = ProposedViewSize(width: fullWidth ? width : nil, height: nil)
+            var size = view.sizeThatFits(proposal)
+            size.width = min(size.width, width)
+            if !row.isEmpty, fullWidth || used + horizontalSpacing + size.width > width {
+                result.append(row); row = []; used = 0
+            }
+            used += (row.isEmpty ? 0 : horizontalSpacing) + size.width
+            row.append(size)
+        }
+        if !row.isEmpty { result.append(row) }
+        return result
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache _: inout ()) -> CGSize {
+        let width = proposal.width ?? subviews.reduce(0) { $0 + $1.sizeThatFits(.unspecified).width + horizontalSpacing }
+        let lines = rows(width: width, subviews: subviews)
+        let height = lines.reduce(0) { $0 + ($1.map(\.height).max() ?? 0) } + CGFloat(max(0, lines.count - 1)) * verticalSpacing
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal _: ProposedViewSize, subviews: Subviews, cache _: inout ()) {
+        var index = 0, y = bounds.minY
+        for row in rows(width: bounds.width, subviews: subviews) {
+            let height = row.map(\.height).max() ?? 0
+            let width = row.reduce(0) { $0 + $1.width } + CGFloat(max(0, row.count - 1)) * horizontalSpacing
+            var x = bounds.midX - width / 2
+            for size in row {
+                subviews[index].place(at: CGPoint(x: x, y: y + (height - size.height) / 2), anchor: .topLeading,
+                                     proposal: ProposedViewSize(size))
+                x += size.width + horizontalSpacing; index += 1
+            }
+            y += height + verticalSpacing
+        }
+    }
 }

@@ -24,3 +24,9 @@ test('diaper choices accept combinations and project legacy and explicit flags',
  assert.equal(decorate({...legacy,fields:{...legacy.fields,blowout:'false'}},[]).detail,'Dirty');
  assert.equal(validateEntity({...input,fields:{contents:'Dirty',color:'Gray',consistency:'Pebbles'}}).fields.consistency,'Pebbles');
 });
+
+test('shared summary contract cases remain equal to server calculations',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const cases=JSON.parse(readFileSync(new URL('../contracts/summary-cases.json',import.meta.url),'utf8'));
+ for(const c of cases)assert.deepEqual(summary(c.entities,c.childID,c.now,c.timeZone),c.expected,c.name);
+});

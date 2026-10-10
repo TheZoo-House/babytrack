@@ -65,15 +65,19 @@ struct TodayView: View {
     }
 
     private var header: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { context in header(at: context.date) }
+    }
+
+    private func header(at date: Date) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             if dynamicType.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(Date.now, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day()).font(.subheadline).foregroundStyle(Palette.secondary)
+                    Text(date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day()).font(.subheadline).foregroundStyle(Palette.secondary)
                     status
                 }
             } else {
                 HStack {
-                    Text(Date.now, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day()).font(.subheadline).foregroundStyle(Palette.secondary)
+                    Text(date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day()).font(.subheadline).foregroundStyle(Palette.secondary)
                     Spacer()
                     status
                 }
@@ -110,16 +114,19 @@ struct TodayView: View {
     }
 
     private var careSections: some View {
-        VStack(spacing: 0) {
-            activity(type: "feeding", identifier: "quickBottle", latestID: store.summary?.lastFeedingID,
-                     total: store.summary.map { store.unitSystem == "imperial" ? String(format: "%.1f oz today", Double($0.feedingML) / 29.5735295625) : "\($0.feedingML) mL today" })
-            Divider()
-            activity(type: "diaper", identifier: "quickDiaper", latestID: store.summary?.lastDiaperID,
-                     total: store.summary.map { "\($0.diaperCount) diaper\($0.diaperCount == 1 ? "" : "s") today" })
-            Divider()
-            activity(type: "sleep", identifier: "toggleSleep", latestID: store.summary?.lastSleepID,
-                     total: store.summary.map { "\($0.sleepMinutes / 60)h \($0.sleepMinutes % 60)m today" })
-            Divider()
+        TimelineView(.periodic(from: .now, by: 60)) { context in
+            let summary = store.summary(at: context.date)
+            VStack(spacing: 0) {
+                activity(type: "feeding", identifier: "quickBottle", latestID: summary?.lastFeedingID,
+                         total: summary.map { store.unitSystem == "imperial" ? String(format: "%.1f oz today", Double($0.feedingML) / 29.5735295625) : "\($0.feedingML) mL today" })
+                Divider()
+                activity(type: "diaper", identifier: "quickDiaper", latestID: summary?.lastDiaperID,
+                         total: summary.map { "\($0.diaperCount) diaper\($0.diaperCount == 1 ? "" : "s") today" })
+                Divider()
+                activity(type: "sleep", identifier: "toggleSleep", latestID: summary?.lastSleepID,
+                         total: summary.map { "\($0.sleepMinutes / 60)h \($0.sleepMinutes % 60)m today" })
+                Divider()
+            }
         }
     }
 

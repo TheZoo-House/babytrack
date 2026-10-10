@@ -183,7 +183,6 @@ struct AccountView: View {
     @State private var showProfile = false
     @Environment(AppStore.self) private var store
     @State private var exportURL: URL?
-    @State private var deleteAccount = false
     var body: some View {
         AppList {
             Section {
@@ -213,22 +212,15 @@ struct AccountView: View {
             }
             if store.signedIn {
                 Section {
-                    Button("Delete account", role: .destructive) { deleteAccount = true }
-                        .disabled(store.pendingCount > 0)
+                    HStack {
+                        Spacer()
+                        DestructiveActionButton(title: "Delete account", question: "Delete your account?", message: "Shared records remain for other caregivers. If you are the last caregiver, the family's records are deleted.", identifier: "deleteAccount", enabled: store.pendingCount == 0) {
+                            Task { do { let _: [String: Bool] = try await store.request("/v1/account/delete", body: Data("{}".utf8)); try await store.signOut(revoke: false) } catch { store.error = error.localizedDescription } }
+                        }
+                        Spacer()
+                    }.listRowSeparator(.hidden)
                 }
             }
         }.appList().navigationTitle("Account & data").sheet(isPresented: $showProfile) { CaregiverProfileView() }
-            .confirmationDialog(
-                "Delete your account? Shared records remain for other caregivers. If you are the last member, the family's records are deleted.",
-                isPresented: $deleteAccount,
-                titleVisibility: .visible
-            ) {
-                Button("Delete account", role: .destructive) {
-                    Task { do { let _: [String: Bool] = try await store.request(
-                        "/v1/account/delete",
-                        body: Data("{}".utf8)
-                    ); try await store.signOut(revoke: false) } catch { store.error = error.localizedDescription } }
-                }
-            }
     }
 }

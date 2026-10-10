@@ -15,7 +15,7 @@ struct DiaperControls: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            LazyVGrid(columns: dynamicType.isAccessibilitySize ? [GridItem(.flexible())] : [GridItem(.adaptive(minimum: circleSize), spacing: 16)], spacing: 12) {
+            CenteredSelectionLayout(horizontalSpacing: 20, verticalSpacing: 12, fullWidth: dynamicType.isAccessibilitySize) {
                 ForEach(["Wet", "Dirty", "Dry"], id: \.self) { option in
                     let selected = DiaperFields.selected(option, in: fields)
                     Button { DiaperFields.toggleContents(option, in: &fields) } label: {
@@ -86,7 +86,7 @@ struct DiaperControls: View {
     }
 
     private func palette(_ values: [String], key: String) -> some View {
-        LazyVGrid(columns: dynamicType.isAccessibilitySize ? [GridItem(.flexible())] : [GridItem(.adaptive(minimum: key == "color" ? 44 : 55), spacing: 8)], spacing: 10) {
+        CenteredSelectionLayout(verticalSpacing: 10, fullWidth: dynamicType.isAccessibilitySize) {
             ForEach(values, id: \.self) { value in
                 let selected = DiaperFields.tokens(key, in: fields).contains(value)
                 Button { DiaperFields.toggle(value, key: key, in: &fields) } label: {
@@ -98,7 +98,7 @@ struct DiaperControls: View {
                             if selected {
                                 Image(systemName: "checkmark").font(.caption.weight(.bold)).foregroundStyle(Palette.tint("mint"))
                             }
-                        }.frame(maxWidth: .infinity, minHeight: 64).contentShape(Rectangle())
+                        }.frame(minWidth: key == "color" ? 44 : 55, maxWidth: .infinity, minHeight: 64).contentShape(Rectangle())
                     } else {
                         VStack(spacing: 5) {
                             ZStack(alignment: .topTrailing) {
@@ -108,7 +108,7 @@ struct DiaperControls: View {
                                 }
                             }
                             Text(value == "Mucous" ? "Mucousy" : value).font(.caption).foregroundStyle(Palette.ink).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
-                        }.frame(maxWidth: .infinity, minHeight: 64).contentShape(Rectangle())
+                        }.frame(minWidth: key == "color" ? 44 : 55, maxWidth: .infinity, minHeight: 64).contentShape(Rectangle())
                     }
                 }.buttonStyle(.plain).accessibilityIdentifier("diaper-\(key)-\(value)")
                     .accessibilityLabel(value + (key == "color" ? " color" : " texture"))

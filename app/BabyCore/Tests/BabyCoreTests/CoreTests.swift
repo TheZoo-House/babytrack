@@ -214,4 +214,55 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(fields["color"], "Brown Gray")
     }
 
+    func testSavedCareRefreshesTodayCountersInLocalPreview() throws {
+        var state = DiskState(); state.snapshot = try Snapshot.sample(); state.localPreview = true
+        let child = "sample-child"
+        state.snapshot.entities = state.snapshot.entities.filter { $0.type == "child" }
+        state.snapshot.summaries[0].feedingCount = 0; state.snapshot.summaries[0].feedingML = 0
+        state.snapshot.summaries[0].diaperCount = 0; state.snapshot.summaries[0].sleepMinutes = 0
+        let now = Date(timeIntervalSince1970: 1791640800)
+        state.enqueue(Command(entity: Entity(id: "new-bottle", type: "feeding", childID: child, title: "Bottle", date: now, fields: ["amount": "5", "unit": "oz"])))
+        state.enqueue(Command(entity: Entity(id: "new-diaper", type: "diaper", childID: child, title: "Diaper", date: now, fields: ["contents": "Wet"])))
+        state.enqueue(Command(entity: Entity(id: "new-sleep", type: "sleep", childID: child, title: "Sleep", date: now.addingTimeInterval(-1200), end: now)))
+        let summary = try XCTUnwrap(state.careSummary(for: child, now: now, timeZone: TimeZone(identifier: "America/New_York")!))
+        XCTAssertEqual(summary.feedingCount, 1)
+        XCTAssertEqual(summary.feedingML, 148)
+        XCTAssertEqual(summary.diaperCount, 1)
+        XCTAssertEqual(summary.sleepMinutes, 20)
+    }
+
+    func testSummaryProjectionMatchesServerAcrossDaysAndTimeZones() throws {
+        struct Case: Decodable { var name: String; var childID: String; var entities: [Entity]; var now: Double; var timeZone: String; var expected: DaySummary }
+        let cases = try JSONDecoder().decode([Case].self, from: Snapshot.summaryContractCases())
+        for fixture in cases {
+            var state = DiskState(); state.localPreview = true; state.snapshot.entities = fixture.entities
+            XCTAssertEqual(state.careSummary(for: fixture.childID, now: Date(timeIntervalSince1970: fixture.now), timeZone: TimeZone(identifier: fixture.timeZone)!), fixture.expected, fixture.name)
+        }
+    }
+
+    func testPendingCareAndDeletionChangeCachedTotals() throws {
+        var state = DiskState(); state.snapshot = try Snapshot.sample(); state.snapshot.entities = state.snapshot.entities.filter { $0.type == "child" }
+        let now = Date(timeIntervalSince1970: 1791640800), zone = TimeZone(identifier: "America/New_York")!
+        state.snapshot.summaries[0].day = "2026-10-10"
+        state.snapshot.summaries[0].feedingML = 0
+        XCTAssertEqual(state.careSummary(for: "sample-child", now: now, timeZone: zone), state.snapshot.summaries[0])
+        let bottle = Entity(id: "pending-bottle", type: "feeding", childID: "sample-child", title: "Bottle", date: now, fields: ["amount": "50", "unit": "mL"])
+        state.enqueue(Command(entity: bottle))
+        XCTAssertEqual(state.careSummary(for: "sample-child", now: now, timeZone: zone)?.feedingML, 50)
+        state.enqueue(Command(action: "delete", entity: bottle))
+        XCTAssertEqual(state.careSummary(for: "sample-child", now: now, timeZone: zone)?.feedingML, 0)
+        XCTAssertEqual(state.careSummary(for: "sample-child", now: now.addingTimeInterval(86400), timeZone: zone)?.feedingCount, 0)
+    }
+
+    func testBottleAmountKeepsUnitsAndDoesNotInventUnknownAmounts() {
+        let earlier = Entity(id: "earlier", type: "feeding", childID: "a", title: "Bottle", date: Date(timeIntervalSince1970: 1), fields: ["amount": "5.5", "unit": "oz"])
+        let latest = Entity(id: "latest", type: "feeding", childID: "a", title: "Bottle", date: Date(timeIntervalSince1970: 2), fields: ["amount": "50", "unit": "mL"])
+        XCTAssertEqual(BottleAmount.latest(in: [latest, earlier], childID: "a")?.value, "50")
+        XCTAssertEqual(BottleAmount.latest(in: [latest, earlier], childID: "a")?.unit, "mL")
+        XCTAssertEqual(BottleAmount.latest(in: [latest, earlier], childID: "a", excluding: "latest")?.value, "5.5")
+        var unknown = latest; unknown.fields = [:]
+        XCTAssertNil(BottleAmount.latest(in: [unknown, earlier], childID: "a"))
+        XCTAssertNil(BottleAmount.latest(in: [latest], childID: "b"))
+    }
+
 }
