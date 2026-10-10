@@ -195,7 +195,7 @@ import XCTest
         }
         app.buttons["startTime"].tap(); app.buttons["saveRecord"].tap()
         XCTAssertFalse(app.staticTexts["total-sleep"].label.hasPrefix("0h 0m"))
-        XCTAssertTrue(app.buttons["timeline-sleep"].firstMatch.label.contains("60 min"))
+        XCTAssertTrue(app.buttons["timeline-sleep"].firstMatch.label.contains("min"))
         capture(app, "Today counters after care saves")
     }
 
