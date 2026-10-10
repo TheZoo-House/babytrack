@@ -131,14 +131,14 @@ struct TodayView: View {
                         Text(timerInterval: active.date ... Date.distantFuture, countsDown: false)
                             .monospacedDigit().accessibilityIdentifier("sleepTimer")
                     } else {
-                        Text(latest?.displayDetail ?? "No records yet").lineLimit(1)
+                        Text(latest?.displayDetail ?? "No records yet").lineLimit(dynamicType.isAccessibilitySize ? 3 : 1)
                     }
                     if let latest {
                         Text(latest.date, format: .dateTime.month(.abbreviated).day().hour().minute())
-                            .font(.caption).foregroundStyle(.tertiary)
+                            .font(.caption).foregroundStyle(Palette.secondary)
                     }
                 }.font(.subheadline).foregroundStyle(Palette.secondary)
-                Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Palette.secondary)
             }.foregroundStyle(Palette.ink).padding(.vertical, 14).contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityIdentifier(identifier)
     }

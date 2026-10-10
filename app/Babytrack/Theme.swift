@@ -64,7 +64,7 @@ struct RecordRow: View {
             if !dynamicType.isAccessibilitySize {
                 metadata
             }
-            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Palette.secondary)
         }.padding(.vertical, 8).contentShape(Rectangle())
     }
 
@@ -74,7 +74,7 @@ struct RecordRow: View {
                 Text(entity.date, format: .dateTime.hour().minute()).font(.subheadline.monospacedDigit())
                     .foregroundStyle(Palette.secondary)
                 if !entity.actor.isEmpty {
-                    Text(entity.actor).font(.caption).foregroundStyle(.tertiary)
+                    Text(entity.actor).font(.caption).foregroundStyle(Palette.secondary)
                 }
             }
         }
