@@ -4,11 +4,28 @@ import {randomUUID} from 'node:crypto';
 import {Store} from './store.mjs';
 import {createServer} from './main.mjs';
 import {summary} from './domain.mjs';
+import {request} from 'node:http';
 
 const operation=(entity,action='upsert',baseVersion=entity.version??0)=>({id:randomUUID(),entity,action,baseVersion});
 const child={id:'review-child',type:'child',title:'Synthetic child',at:1700000000,fields:{},childID:''};
 const sleep=(id,end=null)=>({id,type:'sleep',title:'Sleep',at:1700000100,end,fields:{category:'Nap'},childID:child.id});
 function fixture(t){const store=new Store();t.after(()=>store.close());const user=store.authenticate(store.login('review-user','Synthetic caregiver').token);store.command(user,operation(child));return {store,user};}
+
+test('a slow upload rechecks membership after the request body arrives',async t=>{
+ const {store,user}=fixture(t),login=store.login(user.id),other=store.account('new-household');
+ store.join(store.account('old-remaining'),store.invite(user).code);
+ const server=createServer(store);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>server.close());
+ let seen;const authenticated=new Promise(resolve=>{seen=resolve;});const authenticate=store.authenticate.bind(store);
+ store.authenticate=token=>{const result=authenticate(token);if(token===login.token)seen();return result;};
+ const body=JSON.stringify({familyID:user.family,commands:[operation({id:'stale-family-write',type:'note',title:'Stale upload',childID:child.id,at:1700000300,fields:{notes:'Synthetic'}})]});
+ let upload;const result=new Promise((resolve,reject)=>{
+  upload=request({host:'127.0.0.1',port:server.address().port,path:'/v1/sync',method:'POST',headers:{authorization:'Bearer '+login.token,'content-type':'application/json','content-length':Buffer.byteLength(body)}},response=>{response.resume();response.on('end',()=>resolve(response.statusCode));});upload.on('error',reject);
+ });
+ t.after(()=>upload.destroy());upload.write(body.slice(0,1));await authenticated;
+ store.join(user,store.invite(other).code);upload.end(body.slice(1));
+ assert.equal(await result,409);
+ assert.equal(store.list(user.family).some(e=>e.id==='stale-family-write'),false);
+});
 
 test('preview expiry removes old anonymous state and preserves fresh and real households',t=>{
  const {store,user}=fixture(t),old=store.preview(),fresh=store.preview(),now=Date.now()/1000;

@@ -23,6 +23,8 @@ export function createServer(store,{preview=false,audience='house.thezoo.babytra
    if(method==='GET'&&url.pathname==='/health')return json(200,{ok:true,contractVersion:1,appleConfigured:!!audience,previewEnabled:preview});
    if(method==='GET'&&url.pathname==='/v1/catalog')return json(200,catalog);
    let body={};if(method==='POST'){const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>catalog.limits.requestBytes)fail('Request is too large',413);chunks.push(chunk);}try{body=JSON.parse(Buffer.concat(chunks).toString()||'{}');}catch{fail('Invalid JSON');}if(!body||typeof body!=='object'||Array.isArray(body))fail('Send a JSON object');}
+   // Membership or the session can change while a request is uploading.
+   if(user&&method==='POST')user=store.authenticate(token);
    if(method==='POST'&&url.pathname==='/v1/auth/challenge')return json(200,{nonce:store.issueChallenge()});
    if(method==='POST'&&url.pathname==='/v1/auth/apple'){
     if(!store.validChallenge(body.nonce))fail('Sign-in session expired. Try again.',401);
