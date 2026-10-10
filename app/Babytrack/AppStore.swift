@@ -6,8 +6,17 @@ import SwiftUI
 import WidgetKit
 
 @MainActor @Observable final class AppStore {
-    var state = DiskState() { didSet { entityCache = nil } }
-    @ObservationIgnored private var entityCache: (minute: Int, records: [Entity])?
+    private struct ViewState {
+        var minute: Int
+        var records: [Entity]
+        var children: [Entity]
+        var child: Entity?
+        var activeSleep: Entity?
+        var care: [Entity]
+    }
+    var state = DiskState() { didSet { viewCache = nil; summaryCache = nil } }
+    @ObservationIgnored private var viewCache: ViewState?
+    @ObservationIgnored private var summaryCache: (minute: Int, zone: String, childID: String, value: DaySummary?)?
     var error: String?
     var notice: String?
     var syncing = false
@@ -30,34 +39,41 @@ import WidgetKit
     let storage: SharedStorage
     let testing: Bool
     private var token: String?
-    var entities: [Entity] {
+    private var projected: ViewState {
         // Read observable state even on a cache hit so screens react to incoming changes.
         let disk = state
         let minute = Int(Date.now.timeIntervalSince1970 / 60)
-        if let cached = entityCache, cached.minute == minute { return cached.records }
+        if let cached = viewCache, cached.minute == minute { return cached }
         let records = disk.visibleEntities
-        entityCache = (minute, records)
-        return records
+        let profiles = records.filter { $0.type == "child" }
+        let chosenID = disk.resolvedChild?.id ?? ""
+        let activeID = disk.activeSleep(for: chosenID)?.id
+        let care = records.filter { $0.childID == chosenID && Catalog.shared.spec($0.type).scope == "care" && $0.scheduled != true }.sorted { $0.at > $1.at }
+        let result = ViewState(minute: minute, records: records, children: profiles,
+                               child: profiles.first { $0.id == chosenID },
+                               activeSleep: records.first { $0.id == activeID }, care: care)
+        viewCache = result
+        return result
     }
 
-    var children: [Entity] {
-        entities.filter { $0.type == "child" }
-    }
-
-    var child: Entity? {
-        guard let id = state.resolvedChild?.id else { return nil }
-        return entities.first { $0.id == id }
-    }
+    var entities: [Entity] { projected.records }
+    var children: [Entity] { projected.children }
+    var child: Entity? { projected.child }
 
     var childID: String {
         child?.id ?? ""
     }
 
-    var activeSleep: Entity? {
-        state.activeSleep(for: childID)
-    }
+    var activeSleep: Entity? { projected.activeSleep }
 
-    func summary(at date: Date) -> DaySummary? { state.careSummary(for: childID, now: date) }
+    func summary(at date: Date) -> DaySummary? {
+        let disk = state, id = childID, zone = TimeZone.current
+        let minute = Int(date.timeIntervalSince1970 / 60)
+        if let cached = summaryCache, cached.minute == minute, cached.zone == zone.identifier, cached.childID == id { return cached.value }
+        let result = disk.careSummary(for: id, now: date, timeZone: zone)
+        summaryCache = (minute, zone.identifier, id, result)
+        return result
+    }
 
     var signedIn: Bool {
         token != nil
@@ -71,12 +87,7 @@ import WidgetKit
         state.outbox.count + (state.caregiverPhotoDraft == nil ? 0 : 1)
     }
 
-    var care: [Entity] {
-        // Resolve the child once; doing it inside the filter scans all records for every row.
-        let selectedChildID = childID
-        return entities.filter { $0.childID == selectedChildID && Catalog.shared.spec($0.type).scope == "care" && $0.scheduled != true }
-            .sorted { $0.at > $1.at }
-    }
+    var care: [Entity] { projected.care }
 
     init() {
         #if DEBUG
