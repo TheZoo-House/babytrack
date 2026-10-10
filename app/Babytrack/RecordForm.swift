@@ -174,12 +174,21 @@ struct RecordForm: View {
                     .font(.title3.weight(.medium)).monospacedDigit().multilineTextAlignment(.trailing)
                     .frame(width: 80).accessibilityLabel(field.label).accessibilityIdentifier(field.key)
                 if let unit = spec.fields.first(where: { $0.key == "unit" }) {
-                    ChoiceButtons(options: options(unit), selection: binding(unit), color: spec.color, identifier: "unit", minimumWidth: 44, horizontal: true).frame(width: dynamicType.isAccessibilitySize ? 132 : CGFloat(options(unit).count * 44 + max(0, options(unit).count - 1) * 4))
+                    unitChoices(unit)
                 } else if field.key == "minutes" {
                     Text("min").foregroundStyle(.secondary)
                 }
             }.fixedSize(horizontal: true, vertical: false)
         }
+    }
+
+    private func unitChoices(_ field: FieldSpec) -> some View {
+        let values = options(field)
+        let buttonWidth = values.count * 44
+        let spacing = max(0, values.count - 1) * 4
+        let width: CGFloat = dynamicType.isAccessibilitySize ? 132 : CGFloat(buttonWidth + spacing)
+        return ChoiceButtons(options: values, selection: binding(field), color: spec.color,
+                             identifier: "unit", minimumWidth: 44, horizontal: true).frame(width: width)
     }
 
     @ViewBuilder private func control(_ field: FieldSpec) -> some View {

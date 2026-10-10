@@ -228,13 +228,23 @@ struct ChoiceButtons: View {
     var minimumWidth: CGFloat = 110
     var horizontal = false
     @Environment(\.dynamicTypeSize) private var dynamicType
+    private var columns: [GridItem] {
+        if dynamicType.isAccessibilitySize { return [GridItem(.flexible())] }
+        if horizontal { return Array(repeating: GridItem(.flexible(), spacing: 4), count: options.count) }
+        return [GridItem(.adaptive(minimum: minimumWidth), spacing: 8)]
+    }
+    private func label(_ option: String) -> String {
+        if identifier == "measure", option == "Head circumference" { return "Head size" }
+        if identifier == "kind" { return option == "other" ? "Other" : Catalog.shared.spec(option).title }
+        return option
+    }
     var body: some View {
-        LazyVGrid(columns: dynamicType.isAccessibilitySize ? [GridItem(.flexible())] : horizontal ? Array(repeating: GridItem(.flexible(), spacing: 4), count: options.count) : [GridItem(.adaptive(minimum: minimumWidth), spacing: 8)], spacing: 8) {
+        LazyVGrid(columns: columns, spacing: 8) {
             ForEach(options, id: \.self) { option in
                 let chosen = selection == option
                 Button { selection = chosen && optional ? "" : option } label: {
                     HStack(spacing: 4) {
-                        Text(identifier == "measure" && option == "Head circumference" ? "Head size" : identifier == "kind" ? (option == "other" ? "Other" : Catalog.shared.spec(option).title) : option).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                        Text(label(option)).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                         if chosen && identifier != "unit" { Image(systemName: "checkmark").font(.caption.weight(.bold)) }
                     }.font(.subheadline.weight(chosen ? .semibold : .regular)).frame(maxWidth: .infinity, minHeight: 44).padding(.horizontal, 8)
                         .foregroundStyle(chosen ? Palette.buttonInk : Palette.ink)
