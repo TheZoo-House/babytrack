@@ -83,6 +83,11 @@ bottle history over 1,700 synthetic records and records application CPU usage.
 Check its result with `scripts/check-ios-dropdown-performance <result.xcresult>`;
 two toggles must use less than 500 ms of application CPU. This excludes XCTest
 driver waits and catches repeated whole-history scans in selected-child lookup.
+On hosted CI, `--relative` compares the 1,700-record case with a 24-record control
+that has identical visible rows and actions on the same runner. Large-history
+mean CPU must stay below 1.5 times the fastest control sample, so a noisy control
+cannot inflate the budget. This separates history-dependent work
+from the speed of a virtualized simulator; the local 500 ms budget still applies.
 The app caches formatted records until data changes or the minute changes;
 selection and summaries read draft records without formatting the whole history.
 The filtered-history test also verifies that logging actions sit above the

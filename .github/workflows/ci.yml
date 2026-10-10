@@ -45,7 +45,7 @@ jobs:
         env:
           IOS_SIMULATOR_POOL_SIZE: '1'
       - run: scripts/test-ios -resultBundlePath .codex-tmp/ci-ios.xcresult
-      - run: scripts/check-ios-dropdown-performance .codex-tmp/ci-ios.xcresult
+      - run: scripts/check-ios-dropdown-performance .codex-tmp/ci-ios.xcresult --relative
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

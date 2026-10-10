@@ -411,7 +411,15 @@ import XCTest
     }
 
     func testLargeHistoryDropdownPerformance() {
-        let app = XCUIApplication(); app.launchArguments = ["--ui-testing", "--history-stress-testing"]; app.launch()
+        measureHistoryDropdown(small: false)
+    }
+
+    func testSmallHistoryDropdownPerformance() {
+        measureHistoryDropdown(small: true)
+    }
+
+    private func measureHistoryDropdown(small: Bool) {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing", "--history-stress-testing"] + (small ? ["--small-history"] : []); app.launch()
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
         let options = XCTMeasureOptions(); options.iterationCount = 3
         measure(metrics: [XCTClockMetric(), XCTCPUMetric(application: app)], options: options) {
@@ -420,7 +428,7 @@ import XCTest
             app.buttons["feedingTimeline"].tap()
             XCTAssertEqual(app.buttons["feedingTimeline"].value as? String, "Collapsed")
         }
-        capture(app, "Large history Today")
+        capture(app, small ? "Small history Today" : "Large history Today")
     }
 
     func testProfilePhotoEditors() {

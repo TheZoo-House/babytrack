@@ -31,6 +31,10 @@ export class Store {
  authenticate(token){const row=this.db.prepare('SELECT users.* FROM sessions JOIN users ON users.id=sessions.user WHERE token=? AND expires>?').get(hash(token??''),Date.now()/1000);if(!row||!this.db.prepare('SELECT 1 FROM members WHERE family=? AND user=?').get(row.family,row.id))fail('Sign in again',401);return row;}
  list(family){return this.db.prepare('SELECT body FROM entities WHERE family=?').all(family).map(r=>JSON.parse(r.body));}
  put(family,e){this.db.prepare('INSERT INTO entities VALUES (?,?,?) ON CONFLICT(family,id) DO UPDATE SET body=excluded.body').run(family,e.id,JSON.stringify(e));}
+ stamp(user,entity,previous=null,now=Date.now()/1000){
+  const actor=previous?(previous.actor??''):entity.imported?(entity.actor??''):(entity.actor||user.name);
+  return {...entity,version:(previous?.version??0)+1,updatedAt:now,createdAt:previous?.createdAt??now,actor,updatedBy:user.name,updatedByID:user.id};
+ }
  snapshot(user,timeZone,{includeSource=false}={}){const all=this.list(user.family);const entities=all.filter(e=>!e.deleted).map(e=>{const result=decorate(e,all);if(result.imported&&!includeSource)result.imported={...result.imported,raw:{}};return result;}).sort((a,b)=>b.at-a.at||a.id.localeCompare(b.id));const children=entities.filter(e=>e.type==='child');const now=Date.now()/1000;return {version:1,familyID:user.family,serverTime:now,entities,summaries:children.map(e=>summary(all,e.id,now,timeZone)),daySummaries:children.flatMap(e=>historicalSummaries(all,e.id,now,timeZone)),...feedingPreferences(all),members:this.db.prepare('SELECT users.id,users.name,caregiver_profiles.photo FROM members JOIN users ON users.id=members.user LEFT JOIN caregiver_profiles ON caregiver_profiles.user=users.id WHERE members.family=? AND users.family=members.family').all(user.family),user:{id:user.id,name:user.name,preview:!!user.preview,photo:this.db.prepare('SELECT photo FROM caregiver_profiles WHERE user=?').get(user.id)?.photo??null}};}
  source(user,id){const record=this.list(user.family).find(e=>e.id===id&&!e.deleted);if(!record?.imported)fail('Original import data is not available',404);return record.imported;}
  updateCaregiver(user,body){
@@ -75,6 +79,7 @@ export class Store {
     entity={...previous,deleted:true};
    }else if(['reminderDone','reminderSnooze'].includes(command.action)){
     if(!previous||previous.deleted||previous.type!=='reminder')fail('Reminder is no longer available',404);
+    if(command.action==='reminderSnooze'&&previous.fields.done==='true'){const result={id:command.id,status:'accepted',entityID:previous.id};this.saveOperation(user,command,result);return result;}
     if(command.action==='reminderDone')entity={...previous,fields:{...previous.fields,done:'true'}};
     else{const until=command.entity?.at;if(!Number.isFinite(until)||until<=Date.now()/1000||until>Date.now()/1000+86400*7)fail('Choose a snooze within the next seven days');entity={...previous,at:until,snoozedUntil:until,fields:{...previous.fields,done:'false'}};}
    }else if(command.action==='sleepStop'){
@@ -114,7 +119,7 @@ export class Store {
    }
    if(entity.deleted&&all.some(e=>!e.deleted&&e.id!==entity.id&&(e.childID===entity.id||e.fields.locationID===entity.id||e.fields.parentID===entity.id||e.fields.itemID===entity.id)))fail('Move or remove linked records first');
    const now=Date.now()/1000;
-   entity={...entity,version:(previous?.version??0)+1,updatedAt:now,createdAt:previous?.createdAt??now,actor:previous?.actor||user.name,updatedBy:user.name,updatedByID:user.id};
+   entity=this.stamp(user,entity,previous,now);
    if(entity.type==='reminder'){
     if(command.action==='upsert'&&previous?.at===entity.at)entity.snoozedUntil=previous.snoozedUntil;
     entity.recipientUserID=entity.fields.recipients==='Only me'?(previous?.fields.recipients==='Only me'?previous.recipientUserID??user.id:user.id):null;
@@ -134,7 +139,7 @@ export class Store {
   const all=this.list(family);
   for(const previous of all.filter(e=>e.type==='reminder'&&!e.deleted&&e.fields.done!=='true'&&e.fields.trigger==='After last log'&&e.childID===changed.childID&&e.fields.kind===changed.type)){
    const due=reminderDue(previous,all,now);if(due===previous.at)continue;
-   const entity={...previous,at:due,version:previous.version+1,updatedAt:now,updatedBy:user.name,updatedByID:user.id};
+   const entity=this.stamp(user,{...previous,at:due},previous,now);
    this.put(family,entity);this.clearEntityJobs(family,entity.id);this.enqueue({type:'reminder',family,entity},due);
   }
  }
@@ -156,7 +161,7 @@ export class Store {
  importNara(user,{csv,familyID,targetChildID='',commit=false,timeZone}){
   if(familyID!==user.family)fail('The family changed. Preview the import again.',409);
   const run=()=>{const report=planNara(csv,{familyID:user.family,existing:this.list(user.family),targetChildID});
-   if(commit){for(const e of report.records)this.put(user.family,{...e,updatedAt:Date.now()/1000});}
+   if(commit){for(const e of report.records)this.put(user.family,this.stamp(user,e));}
    return {...report,records:undefined,...(commit?{snapshot:this.snapshot(user,timeZone)}:{})};};
   return commit?this.transaction(run):run();
  }

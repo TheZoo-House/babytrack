@@ -5,11 +5,20 @@ import {Store} from './store.mjs';
 import {createServer} from './main.mjs';
 import {summary} from './domain.mjs';
 import {request} from 'node:http';
+import {readFileSync} from 'node:fs';
 
 const operation=(entity,action='upsert',baseVersion=entity.version??0)=>({id:randomUUID(),entity,action,baseVersion});
 const child={id:'review-child',type:'child',title:'Synthetic child',at:1700000000,fields:{},childID:''};
 const sleep=(id,end=null)=>({id,type:'sleep',title:'Sleep',at:1700000100,end,fields:{category:'Nap'},childID:child.id});
 function fixture(t){const store=new Store();t.after(()=>store.close());const user=store.authenticate(store.login('review-user','Synthetic caregiver').token);store.command(user,operation(child));return {store,user};}
+
+test('imports preserve the recording caregiver and identify who imported the records',t=>{
+ const store=new Store();t.after(()=>store.close());const user=store.account('importing-user','Importing caregiver');
+ const csv=readFileSync(new URL('../contracts/nara-sample.csv',import.meta.url),'utf8');store.importNara(user,{csv,familyID:user.family,commit:true});
+ const record=store.list(user.family).find(e=>e.type==='feeding');
+ assert.equal(record.actor,record.imported.raw['Created By Caregiver']);
+ assert.equal(record.updatedByID,user.id);assert.equal(record.updatedBy,user.name);
+});
 
 test('a slow upload rechecks membership after the request body arrives',async t=>{
  const {store,user}=fixture(t),login=store.login(user.id),other=store.account('new-household');

@@ -14,7 +14,8 @@ extension AppStore {
         var fresh = DiskState(); fresh.snapshot = try Snapshot.sample()
         if args.contains("--history-stress-testing") {
             let templates = fresh.snapshot.entities.filter { ["feeding", "diaper", "sleep"].contains($0.type) }
-            for index in 0 ..< 1700 {
+            let count = args.contains("--small-history") ? 24 : 1700
+            for index in 0 ..< count {
                 var record = templates[index % templates.count]; record.id = "stress-\(index)"
                 let offset = Double(index * 3600); record.at -= offset
                 if let end = record.end { record.end = end - offset }

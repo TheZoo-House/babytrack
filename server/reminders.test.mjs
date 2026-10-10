@@ -25,6 +25,13 @@ test('snooze is durable and Done removes all pending deliveries',t=>{
  s.command(user,cmd(e,'reminderDone'));assert.equal(s.list(user.family).find(x=>x.id==='reminder').fields.done,'true');assert.equal(s.db.prepare('SELECT count(*) AS n FROM jobs').get().n,0);
 });
 
+test('an offline Snooze cannot reopen a reminder another caregiver completed',t=>{
+ const {s,user}=fixture(t);const now=Date.now()/1000;s.command(user,cmd({...reminder(now),fields:{kind:'feeding',trigger:'At time'}}));
+ const stale=s.list(user.family).find(x=>x.id==='reminder');s.command(user,cmd(stale,'reminderDone'));
+ s.command(user,cmd({...stale,at:now+900},'reminderSnooze'));
+ assert.equal(s.list(user.family).find(x=>x.id==='reminder').fields.done,'true');assert.equal(s.db.prepare('SELECT count(*) AS n FROM jobs').get().n,0);
+});
+
 test('relative medication rules match names without crossing children or using future entries',()=>{
  const e={...reminder(1000),createdAt:500,fields:{kind:'medication',trigger:'After last log',anchorTitle:' Example ',afterHours:'1'}};
  const records=[{type:'medication',childID:'child',title:'example',at:800},{type:'medication',childID:'other',title:'Example',at:950},{type:'medication',childID:'child',title:'Example',at:1100},{type:'medication',childID:'child',title:'Other',at:980}];

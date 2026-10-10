@@ -41,6 +41,7 @@ public extension DiskState {
     func caregiverChanges(childID: String, since: Double) -> [Entity] {
         visibleEntities.filter { entity in
             guard entity.childID == childID, Catalog.shared.spec(entity.type).scope == "care", entity.updatedAt > since else { return false }
+            if entity.imported != nil && entity.updatedByID == nil { return false }
             return entity.updatedByID.map { $0 != snapshot.user.id } ?? (!entity.actor.isEmpty && entity.actor != snapshot.user.name)
         }.sorted { $0.updatedAt > $1.updatedAt }
     }

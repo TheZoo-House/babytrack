@@ -2,6 +2,13 @@ import XCTest
 @testable import BabyCore
 
 final class FeatureTests: XCTestCase {
+    func testLegacyImportDoesNotPretendItsOriginalCaregiverEditedItAtImportTime() throws {
+        var state = DiskState(); state.snapshot = try Snapshot.sampleNaraImport()
+        var record = try XCTUnwrap(state.snapshot.entities.first { $0.type == "feeding" })
+        record.updatedAt = 100; record.actor = "Original caregiver"; record.updatedByID = nil
+        state.snapshot.entities = [record]
+        XCTAssertTrue(state.caregiverChanges(childID: record.childID, since: 50).isEmpty)
+    }
     func testReportScopeEscapingAndPhotosExcluded() {
         let start = Date(timeIntervalSince1970: 1791580000)
         let note = Entity(type: "note", childID: "child", title: "Note", date: start, fields: ["notes": "=quoted \"note\",\nUnicode 😀", "photo": "private-image"])
