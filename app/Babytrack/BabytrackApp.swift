@@ -36,26 +36,7 @@ import SwiftUI
                     }
                 }
                 .onOpenURL { url in
-                    if url.host == "sleep",
-                       let sessionID = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?
-                       .first(where: { $0.name == "session" })?.value
-                    {
-                        Task { await store.endSleep(sessionID) }
-                    } else if url.host == "feeding" {
-                        store.form = FormRequest(type: "feeding")
-                    } else if url.host == "diaper" {
-                        store.form = FormRequest(type: "diaper")
-                    } else if url.host == "record",
-                              let type = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "type" })?.value,
-                              Catalog.shared.types.contains(where: { $0.id == type && !["formula", "child"].contains(type) })
-                    {
-                        store.form = FormRequest(type: type)
-                    } else if url.host == "join",
-                              let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?
-                              .first(where: { $0.name == "code" })?.value
-                    {
-                        Task { do { try await store.join(code) } catch { store.error = error.localizedDescription } }
-                    }
+                    if let link = DeepLink(url: url) { store.handle(link) }
                 }
         }
     }

@@ -1,5 +1,9 @@
 {
-  "version": 1,
+  "version": 2,
+  "limits": {
+    "csvBytes": 7000000,
+    "requestBytes": 8000000
+  },
   "formulaBrands": [
     "Enfamil",
     "Similac",
@@ -18,11 +22,24 @@
       "color": "amber",
       "fields": [
         {
+          "key": "milkType",
+          "label": "Milk",
+          "kind": "choice",
+          "options": [
+            "Formula",
+            "Breast milk",
+            "Mixed"
+          ],
+          "required": false,
+          "labels": {}
+        },
+        {
           "key": "amount",
           "label": "Amount",
           "kind": "number",
           "options": [],
-          "required": true
+          "required": true,
+          "labels": {}
         },
         {
           "key": "unit",
@@ -32,23 +49,29 @@
             "oz",
             "mL"
           ],
-          "required": true
+          "required": true,
+          "labels": {}
         },
         {
           "key": "brand",
-          "label": "Formula",
+          "label": "Formula brand",
           "kind": "formula",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "care",
+      "titleRequired": false,
+      "canSchedule": false
     },
     {
       "id": "diaper",
@@ -66,14 +89,18 @@
             "Both",
             "Dry"
           ],
-          "required": true
+          "required": true,
+          "labels": {
+            "Both": "Wet, Dirty"
+          }
         },
         {
           "key": "detail",
           "label": "Detail",
           "kind": "text",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "color",
@@ -88,7 +115,9 @@
             "White",
             "Gray"
           ],
-          "required": false
+          "required": false,
+          "multiple": true,
+          "labels": {}
         },
         {
           "key": "consistency",
@@ -107,30 +136,40 @@
             "Solid",
             "Pebbles"
           ],
-          "required": false
+          "required": false,
+          "multiple": true,
+          "labels": {
+            "Mucous": "Mucousy"
+          }
         },
         {
           "key": "blowout",
           "label": "Blowout",
           "kind": "toggle",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "rash",
           "label": "Diaper rash",
           "kind": "toggle",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "care",
+      "titleRequired": false,
+      "canSchedule": false
     },
     {
       "id": "sleep",
@@ -146,16 +185,21 @@
             "Nap",
             "Night"
           ],
-          "required": true
+          "required": true,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "care",
+      "titleRequired": false,
+      "canSchedule": false
     },
     {
       "id": "reading",
@@ -168,29 +212,35 @@
           "label": "Book",
           "kind": "book",
           "options": [],
-          "required": true
+          "required": true,
+          "labels": {}
         },
         {
           "key": "minutes",
           "label": "Minutes",
           "kind": "number",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "care",
+      "titleRequired": false,
+      "canSchedule": false
     },
     {
       "id": "growth",
       "title": "Measurement",
       "symbol": "ruler.fill",
-      "color": "mint",
+      "color": "neutral",
       "fields": [
         {
           "key": "measure",
@@ -201,14 +251,18 @@
             "Height",
             "Head circumference"
           ],
-          "required": true
+          "required": true,
+          "labels": {
+            "Head circumference": "Head size"
+          }
         },
         {
           "key": "value",
           "label": "Value",
           "kind": "number",
           "options": [],
-          "required": true
+          "required": true,
+          "labels": {}
         },
         {
           "key": "unit",
@@ -221,65 +275,93 @@
             "in",
             "cm"
           ],
-          "required": true
+          "required": true,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "care",
+      "titleRequired": false,
+      "canSchedule": false,
+      "unitsByMeasure": {
+        "Weight": [
+          "lb",
+          "oz",
+          "kg"
+        ],
+        "Height": [
+          "in",
+          "cm"
+        ],
+        "Head circumference": [
+          "in",
+          "cm"
+        ]
+      }
     },
     {
       "id": "medication",
       "title": "Medication",
       "symbol": "pills.fill",
-      "color": "rose",
+      "color": "neutral",
       "fields": [
         {
           "key": "dose",
           "label": "Dose",
           "kind": "text",
           "options": [],
-          "required": true
+          "required": true,
+          "labels": {}
         },
         {
           "key": "unit",
           "label": "Dose unit",
           "kind": "text",
           "options": [],
-          "required": true
+          "required": true,
+          "labels": {}
         },
         {
           "key": "route",
           "label": "Route",
           "kind": "text",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "care",
+      "titleRequired": true,
+      "canSchedule": false
     },
     {
       "id": "temperature",
       "title": "Temperature",
       "symbol": "thermometer.medium",
-      "color": "amber",
+      "color": "neutral",
       "fields": [
         {
           "key": "value",
           "label": "Temperature",
           "kind": "number",
           "options": [],
-          "required": true
+          "required": true,
+          "labels": {}
         },
         {
           "key": "unit",
@@ -289,7 +371,8 @@
             "\u00b0F",
             "\u00b0C"
           ],
-          "required": true
+          "required": true,
+          "labels": {}
         },
         {
           "key": "method",
@@ -302,167 +385,202 @@
             "Ear",
             "Oral"
           ],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "care",
+      "titleRequired": false,
+      "canSchedule": false
     },
     {
       "id": "illness",
       "title": "Illness",
       "symbol": "cross.case.fill",
-      "color": "rose",
+      "color": "neutral",
       "fields": [
         {
           "key": "symptoms",
           "label": "Symptoms",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "care",
+      "titleRequired": true,
+      "canSchedule": false
     },
     {
       "id": "vaccine",
       "title": "Vaccine",
       "symbol": "syringe.fill",
-      "color": "mint",
+      "color": "neutral",
       "fields": [
         {
           "key": "dose",
           "label": "Dose number",
           "kind": "text",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "provider",
           "label": "Provider",
           "kind": "text",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "lot",
           "label": "Lot number",
           "kind": "text",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "care",
+      "titleRequired": true,
+      "canSchedule": false
     },
     {
       "id": "milestone",
       "title": "Milestone",
       "symbol": "sparkles",
-      "color": "amber",
+      "color": "neutral",
       "fields": [
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "care",
+      "titleRequired": true,
+      "canSchedule": false
     },
     {
       "id": "appointment",
       "title": "Appointment",
       "symbol": "calendar",
-      "color": "indigo",
+      "color": "neutral",
       "fields": [
         {
           "key": "provider",
           "label": "Provider",
           "kind": "text",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "place",
           "label": "Place",
           "kind": "text",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "care",
+      "titleRequired": true,
+      "canSchedule": true
     },
     {
       "id": "note",
       "title": "Note",
       "symbol": "note.text",
-      "color": "rose",
+      "color": "neutral",
       "fields": [
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "care",
+      "titleRequired": true,
+      "canSchedule": false
     },
     {
       "id": "book",
       "title": "Book",
       "symbol": "books.vertical.fill",
-      "color": "rose",
+      "color": "neutral",
       "fields": [
         {
           "key": "isbn",
           "label": "ISBN",
           "kind": "barcode",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "author",
           "label": "Author",
           "kind": "text",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "giftGiver",
           "label": "Gift giver",
           "kind": "text",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "locationID",
           "label": "Location",
           "kind": "location",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "status",
@@ -474,57 +592,67 @@
             "Outgrown",
             "Donated"
           ],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "quantity",
           "label": "Quantity",
           "kind": "number",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "inventory",
+      "titleRequired": true,
+      "canSchedule": false
     },
     {
       "id": "toy",
       "title": "Toy",
       "symbol": "teddybear.fill",
-      "color": "amber",
+      "color": "neutral",
       "fields": [
         {
           "key": "brand",
           "label": "Brand",
           "kind": "text",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "minAge",
           "label": "Minimum age (months)",
           "kind": "number",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "maxAge",
           "label": "Maximum age (months)",
           "kind": "number",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "locationID",
           "label": "Location",
           "kind": "location",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "status",
@@ -536,50 +664,59 @@
             "Outgrown",
             "Donated"
           ],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "quantity",
           "label": "Quantity",
           "kind": "number",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "inventory",
+      "titleRequired": true,
+      "canSchedule": false
     },
     {
       "id": "clothing",
       "title": "Clothing",
       "symbol": "tshirt.fill",
-      "color": "mint",
+      "color": "neutral",
       "fields": [
         {
           "key": "size",
           "label": "Size",
           "kind": "text",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "brand",
           "label": "Brand",
           "kind": "text",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "locationID",
           "label": "Location",
           "kind": "location",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "status",
@@ -591,59 +728,119 @@
             "Outgrown",
             "Donated"
           ],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "quantity",
           "label": "Quantity",
           "kind": "number",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "inventory",
+      "titleRequired": true,
+      "canSchedule": false
     },
     {
       "id": "location",
       "title": "Location",
       "symbol": "mappin.and.ellipse",
-      "color": "indigo",
+      "color": "neutral",
       "fields": [
         {
           "key": "parentID",
           "label": "Inside",
           "kind": "location",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "inventory",
+      "titleRequired": true,
+      "canSchedule": false
     },
     {
       "id": "child",
       "title": "Child",
       "symbol": "face.smiling.fill",
-      "color": "amber",
-      "fields": []
+      "color": "neutral",
+      "fields": [],
+      "scope": "profile",
+      "titleRequired": true,
+      "canSchedule": false
     },
     {
       "id": "reminder",
       "title": "Reminder",
       "symbol": "bell.fill",
-      "color": "indigo",
+      "color": "neutral",
       "fields": [
+        {
+          "key": "trigger",
+          "label": "When",
+          "kind": "choice",
+          "options": [
+            "At time",
+            "After last log"
+          ],
+          "required": false,
+          "labels": {}
+        },
+        {
+          "key": "recipients",
+          "label": "Notify",
+          "kind": "choice",
+          "options": [
+            "All caregivers",
+            "Only me"
+          ],
+          "required": false,
+          "labels": {}
+        },
+        {
+          "key": "afterHours",
+          "label": "After (hours)",
+          "kind": "number",
+          "options": [],
+          "required": false,
+          "labels": {}
+        },
+        {
+          "key": "anchorTitle",
+          "label": "Medication",
+          "kind": "text",
+          "options": [],
+          "required": false,
+          "labels": {}
+        },
+        {
+          "key": "done",
+          "label": "Done",
+          "kind": "toggle",
+          "options": [],
+          "required": false,
+          "labels": {}
+        },
         {
           "key": "kind",
           "label": "For",
@@ -655,30 +852,60 @@
             "appointment",
             "other"
           ],
-          "required": true
+          "required": true,
+          "labels": {
+            "feeding": "Bottle",
+            "diaper": "Diaper",
+            "sleep": "Sleep",
+            "reading": "Reading",
+            "growth": "Measurement",
+            "medication": "Medication",
+            "temperature": "Temperature",
+            "illness": "Illness",
+            "vaccine": "Vaccine",
+            "milestone": "Milestone",
+            "appointment": "Appointment",
+            "note": "Note",
+            "book": "Book",
+            "toy": "Toy",
+            "clothing": "Clothing",
+            "location": "Location",
+            "child": "Child",
+            "reminder": "Reminder",
+            "formula": "Formula",
+            "other": "Other"
+          }
         },
         {
           "key": "repeatHours",
           "label": "Repeat interval (hours)",
           "kind": "number",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         },
         {
           "key": "notes",
           "label": "Notes",
           "kind": "multiline",
           "options": [],
-          "required": false
+          "required": false,
+          "labels": {}
         }
-      ]
+      ],
+      "scope": "scheduled",
+      "titleRequired": true,
+      "canSchedule": true
     },
     {
       "id": "formula",
       "title": "Formula",
       "symbol": "waterbottle.fill",
-      "color": "amber",
-      "fields": []
+      "color": "neutral",
+      "fields": [],
+      "scope": "inventory",
+      "titleRequired": true,
+      "canSchedule": false
     }
   ]
 }

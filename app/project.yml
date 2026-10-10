@@ -28,6 +28,15 @@ targets:
     type: application
     platform: iOS
     sources: [Babytrack]
+    postBuildScripts:
+      - name: Synthetic CSV for Debug UI tests
+        basedOnDependencyAnalysis: false
+        inputFiles: [$(SRCROOT)/../contracts/nara-sample.csv]
+        outputFiles: [$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/nara-ui-sample.csv]
+        script: |
+          if [ "$CONFIGURATION" = Debug ]; then
+            cp "$SRCROOT/../contracts/nara-sample.csv" "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/nara-ui-sample.csv"
+          fi
     info:
       path: Babytrack/Info.plist
       properties:

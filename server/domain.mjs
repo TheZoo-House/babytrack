@@ -1,8 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 export const catalog=JSON.parse(readFileSync(new URL('../contracts/catalog.json',import.meta.url)));
-const inventory=new Set(['book','toy','clothing','location','formula']);
-export const careTypes=new Set(catalog.types.map(t=>t.id).filter(t=>!inventory.has(t)&&!['child','reminder'].includes(t)));
+export const careTypes=new Set(catalog.types.filter(t=>t.scope==='care').map(t=>t.id));
+export const inventoryTypes=new Set(catalog.types.filter(t=>t.scope==='inventory').map(t=>t.id));
+export const requiresChild=type=>['care','scheduled'].includes(catalog.types.find(t=>t.id===type)?.scope);
+export function fieldLabel(type,key,value){const field=catalog.types.find(t=>t.id===type)?.fields.find(f=>f.key===key);return (field?.multiple?value.split(' ').filter(Boolean):[value]).map(v=>field?.labels?.[v]??v).join(', ');}
 export function fail(message,status=400){throw Object.assign(new Error(message),{status});}
 export function validatePhoto(value){
  if(typeof value!=='string'||value.length>1500000||value.length%4!==0||!value||!/^[-A-Za-z0-9+/]*={0,2}$/.test(value))fail('Choose a valid photo');
@@ -30,7 +32,9 @@ export function validateEntity(input,{imported=false}={}){
  if(!Number.isFinite(input.at)||input.at<0||input.at>4102444800)fail('Invalid record date');
  if(input.end!=null&&(!Number.isFinite(input.end)||input.end<input.at))fail('End must follow start');
  if(input.type==='sleep'&&input.end!=null&&input.end-input.at>86400*7)fail('Check the sleep end date');
- const fields=input.fields??{};if(typeof fields!=='object'||Array.isArray(fields))fail('Invalid fields');
+ if(input.type==='sleep'&&!imported&&(input.at>Date.now()/1000+120||(input.end!=null&&input.end>Date.now()/1000+120)))fail('Sleep cannot start or end in the future');
+ if(input.fields!=null&&(typeof input.fields!=='object'||Array.isArray(input.fields)))fail('Invalid fields');
+ const fields={...(input.fields??{})};
  // Older apps may still send offered; preserve existing records during upgrades.
  const allowed=new Set(spec.fields.map(f=>f.key).concat(['photo','imageURL'],input.type==='feeding'?['offered']:[]));
  for(const [key,value] of Object.entries(fields)){
@@ -41,7 +45,7 @@ export function validateEntity(input,{imported=false}={}){
  for(const field of spec.fields){const value=fields[field.key];
    if(!imported&&field.required&&!value?.trim())fail(`Enter ${field.label.toLowerCase()}`);
    if(!imported&&value&&field.kind==='choice'){
-    const choices=input.type==='diaper'&&['color','consistency'].includes(field.key)?value.split(' ').filter(Boolean):[value];
+    const choices=field.multiple?value.split(' ').filter(Boolean):[value];
     if(choices.some(choice=>!field.options.includes(choice)))fail(`Invalid ${field.label.toLowerCase()}`);
    }
    if(value&&field.kind==='toggle'&&!['true','false'].includes(value))fail(`Invalid ${field.label.toLowerCase()}`);
@@ -50,10 +54,12 @@ export function validateEntity(input,{imported=false}={}){
  if(input.type==='feeding'&&fields.amount!=null&&Number(fields.amount)<=0)fail('Amount must be greater than zero');
  if(input.type==='formula'&&input.title.trim().length>80)fail('Formula name must be 80 characters or fewer');
  if(input.type==='growth'&&!imported){
-   const units=fields.measure==='Weight'?['lb','oz','kg']:['in','cm'];
+   const units=spec.unitsByMeasure[fields.measure]??[];
    if(!units.includes(fields.unit))fail('Choose a unit for this measurement');
  }
  if(input.type==='reminder'&&fields.repeatHours&&Number(fields.repeatHours)<=0)fail('Repeat interval must be greater than zero');
+ if(input.type==='reminder'&&fields.trigger==='After last log'&&(!['feeding','medication'].includes(fields.kind)||!Number.isFinite(Number(fields.afterHours))||Number(fields.afterHours)<=0))fail('Choose a bottle or medication and an interval greater than zero');
+ if(input.type==='diaper'&&['Wet','Dry'].includes(fields.contents))for(const key of ['color','consistency','detail','blowout'])delete fields[key];
  return {id:input.id,type:input.type,childID:input.childID??'',title:input.title.trim(),at:input.at,end:input.end??null,fields,version:input.version??0,updatedAt:0,deleted:!!input.deleted,actor:'',detail:''};
 }
 export function feedingPreferences(entities){
@@ -69,30 +75,30 @@ export function feedingPreferences(entities){
  });
  return {formulaBrands,feedingDefaults};
 }
-export function decorate(entity,entities){
+export function decorate(entity,entities,now=Date.now()/1000){
  const f=entity.fields;let detail='';
  const reference=id=>entities.find(e=>e.id===id&&!e.deleted)?.title??'';
  const location=id=>{const names=[];const seen=new Set();while(id&&!seen.has(id)){seen.add(id);const e=entities.find(e=>e.id===id&&!e.deleted&&e.type==='location');if(!e)break;names.unshift(e.title);id=e.fields.parentID;}return names.join(' → ');};
  switch(entity.type){
- case 'feeding':detail=[f.amount?`${f.amount} ${f.unit}`:'Amount not recorded',f.brand].filter(Boolean).join(' · ');break;
+ case 'feeding':detail=[f.amount?`${f.amount} ${f.unit}`:'Amount not recorded',f.milkType,f.milkType==='Breast milk'||f.brand===f.milkType?'':f.brand].filter(Boolean).join(' · ');break;
  case 'diaper':{
   const legacyBlowout=f.detail?.trim().toLowerCase()==='blowout';
   const blowout=f.blowout==null?legacyBlowout:f.blowout==='true';
-  detail=[f.contents,...(['Dirty','Both'].includes(f.contents)?[legacyBlowout?'':f.detail,f.color,f.consistency]:[]),blowout?'Blowout':'',f.rash==='true'?'Diaper rash':''].filter(Boolean).join(' · ');break;
+  detail=[f.contents?fieldLabel('diaper','contents',f.contents):'',...(['Dirty','Both'].includes(f.contents)?[legacyBlowout?'':f.detail,f.color?fieldLabel('diaper','color',f.color):'',f.consistency?fieldLabel('diaper','consistency',f.consistency):'']:[]),blowout?'Blowout':'',f.rash==='true'?'Diaper rash':''].filter(Boolean).join(' · ');break;
  }
  case 'sleep':detail=entity.end!=null?[`${Math.round((entity.end-entity.at)/60)} min`,f.category].filter(Boolean).join(' · '):(f.category||'Sleeping');break;
  case 'reading':detail=[reference(f.itemID),f.minutes?f.minutes+' min':''].filter(Boolean).join(' · ');break;
- case 'growth':detail=`${f.measure} · ${f.value} ${f.unit||"· unit unknown"}`;break;
+ case 'growth':detail=`${fieldLabel('growth','measure',f.measure??'')} · ${f.value} ${f.unit||"· unit unknown"}`;break;
  case 'temperature':detail=[`${f.value} ${f.unit||"· unit unknown"}`,f.method].filter(Boolean).join(' · ');break;
  case 'medication':detail=[f.dose?`${f.dose} ${f.unit||'· unit unknown'}`:'Dose not recorded',f.route].filter(Boolean).join(' · ');break;
  case 'book':detail=[f.author,location(f.locationID),f.status].filter(Boolean).join(' · ');break;
  case 'toy':detail=[f.brand,f.minAge!=null&&f.minAge!==''?`${f.minAge}${f.maxAge?'–'+f.maxAge:'+'} months`:'',location(f.locationID),f.status].filter(Boolean).join(' · ');break;
  case 'clothing':detail=[f.size,f.brand,location(f.locationID),f.status].filter(Boolean).join(' · ');break;
  case 'location':detail=location(f.parentID);break;
- case 'child':{if(entity.at===0&&entity.imported){detail='Birthday not recorded';break;}const months=Math.max(0,Math.floor((Date.now()/1000-entity.at)/(86400*30.4375)));detail=months?`${months} month${months===1?'':'s'} old`:'Newborn';break;}
+ case 'child':{if(entity.at===0&&entity.imported){detail='Birthday not recorded';break;}const months=Math.max(0,Math.floor((now-entity.at)/(86400*30.4375)));detail=months?`${months} month${months===1?'':'s'} old`:'Newborn';break;}
  default:detail=f.provider||f.symptoms||f.notes||'';
  }
- return {...entity,detail,scheduled:['appointment','reminder'].includes(entity.type)&&entity.at>Date.now()/1000};
+ return {...entity,detail,scheduled:catalog.types.find(t=>t.id===entity.type)?.canSchedule&&entity.fields.done!=='true'&&entity.at>now};
 }
 export function summary(entities,childID,now=Date.now()/1000,timeZone='America/New_York'){
  let format;try{format=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'});}catch{format=new Intl.DateTimeFormat('en-CA',{timeZone:'UTC',year:'numeric',month:'2-digit',day:'2-digit'});}
@@ -102,9 +108,22 @@ export function summary(entities,childID,now=Date.now()/1000,timeZone='America/N
  let low=now-172800,high=now;
  for(let i=0;i<40;i++){const middle=(low+high)/2;if(format.format(new Date(middle*1000))===date)high=middle;else low=middle;}
  const dayStart=Math.round(high);
- const sleep=entities.filter(e=>e.childID===childID&&e.type==='sleep'&&!e.deleted).reduce((n,e)=>n+Math.max(0,Math.min(e.end??now,now)-Math.max(e.at,dayStart))/60,0);
+ const intervals=entities.filter(e=>e.childID===childID&&e.type==='sleep'&&!e.deleted).map(e=>[Math.max(e.at,dayStart),Math.min(e.end??now,now)]).filter(([start,end])=>end>start).sort((a,b)=>a[0]-b[0]);
+ let sleep=0,unionEnd=dayStart;
+ for(const [start,end] of intervals){sleep+=Math.max(0,end-Math.max(start,unionEnd))/60;unionEnd=Math.max(unionEnd,end);}
  const lastID=type=>entities.filter(e=>e.childID===childID&&e.type===type&&!e.deleted).sort((a,b)=>b.at-a.at||a.id.localeCompare(b.id))[0]?.id??null;
  return {childID,feedingCount:feeds.length,feedingML:Math.round(ml),diaperCount:day.filter(e=>e.type==='diaper').length,sleepMinutes:Math.round(sleep),readingCount:day.filter(e=>e.type==='reading').length,day:date,lastFeedingID:lastID('feeding'),lastDiaperID:lastID('diaper'),lastSleepID:lastID('sleep')};
+}
+export function historicalSummaries(entities,childID,now=Date.now()/1000,timeZone='America/New_York',days=7){
+ let format;try{format=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'});}catch{timeZone='UTC';format=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'});}
+ const today=format.format(new Date(now*1000)),anchor=new Date(today+'T12:00:00Z');const result=[];
+ for(let offset=1;offset<=days;offset++){
+  const next=new Date(anchor);next.setUTCDate(next.getUTCDate()-(offset-1));const day=next.toISOString().slice(0,10);
+  let low=Date.parse(day+'T00:00:00Z')/1000-86400,high=low+86400*3;
+  for(let i=0;i<40;i++){const middle=(low+high)/2;if(format.format(new Date(middle*1000))<day)low=middle;else high=middle;}
+  result.push(summary(entities,childID,Math.round(high)-0.001,timeZone));
+ }
+ return result;
 }
 export function seedEntities(now=Date.now()/1000){
  const child='sample-child',book='sample-book';

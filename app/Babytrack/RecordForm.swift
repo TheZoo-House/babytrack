@@ -19,6 +19,10 @@ struct RecordForm: View {
     @State private var choosingFormula = false
     @FocusState private var focusedField: String?
     @State private var amountWasEdited = false
+    @State private var clearSuggestedAmount = true
+    @State private var amountSelection: TextSelection?
+    @State private var isRunningSleep = false
+    @State private var targetChildID = ""
     private var spec: TypeSpec {
         Catalog.shared.spec(request.type)
     }
@@ -28,11 +32,11 @@ struct RecordForm: View {
     }
 
     private var inventory: Bool {
-        ["book", "toy", "clothing", "location", "formula"].contains(request.type)
+        spec.isInventory
     }
 
     private var needsTitle: Bool {
-        !["feeding", "diaper", "sleep", "reading", "growth", "temperature"].contains(request.type)
+        spec.titleRequired
     }
 
     private var primaryField: String? {
@@ -50,28 +54,27 @@ struct RecordForm: View {
     }
 
     @Environment(\.dynamicTypeSize) private var dynamicType
-    private static let compactDetent = PresentationDetent.height(460)
-    private static let timeDetent = PresentationDetent.height(660)
-    @State private var detent = RecordForm.compactDetent
     @State private var dateTarget: String?
     @State private var diaperExpanded = false
-    private var baseDetent: PresentationDetent { request.type == "diaper" ? .height(560) : Self.compactDetent }
 
     var body: some View {
         VStack(spacing: 0) {
             LogSheetHeader(title: spec.title, color: spec.color,
                            actionTitle: "Save", actionEnabled: !requiredMissing, close: { dismiss() }, action: save)
-            ScrollView {
+            CareSheetBody {
                 VStack(spacing: 0) {
                     if !inventory {
-                        timeRow(request.type == "child" ? "Birthday" : request.type == "diaper" ? "Time" : "Start time", target: "start", value: date)
-                        if request.type == "sleep" {
+                        if request.type != "reminder" || fields["trigger"] != "After last log" { timeRow(request.type == "child" ? "Birthday" : request.type == "sleep" ? "Start time" : "Time", target: "start", value: date) }
+                        if request.type == "sleep", !isRunningSleep {
                             timeRow("End time", target: "end", value: end)
                         }
                     }
                     if needsTitle {
                         EntryRow(title: titleLabel) { TextField("Required", text: $title).multilineTextAlignment(.trailing).accessibilityLabel(titleLabel).accessibilityIdentifier("recordTitle") }
                         Divider()
+                    }
+                    if request.type == "medication", let last = store.state.lastMedication(named: title, childID: targetChildID) {
+                        Text("Last recorded " + last.date.formatted(date: .abbreviated, time: .shortened) + " · " + last.actor).font(.caption).foregroundStyle(Palette.secondary).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 20).padding(.vertical, 8).accessibilityIdentifier("lastMedication")
                     }
                     if request.type == "diaper" {
                         DiaperControls(fields: $fields, expanded: $diaperExpanded)
@@ -84,11 +87,11 @@ struct RecordForm: View {
                     }
                     if !["location", "formula"].contains(request.type) {
                         let photoLabel = fields["photo"] == nil ? (request.type == "child" ? "Add profile photo" : "Add photo") : "Replace photo"
-                        HStack {
-                            Spacer()
-                            PhotosPicker(selection: $photo, matching: .images) { Label(photoLabel, systemImage: "photo") }
-                                .buttonStyle(CareActionStyle(color: spec.color))
-                        }.padding(.horizontal, 20).padding(.vertical, 12)
+                        let hasPhoto = fields["photo"] != nil
+                        EntryRow(title: request.type == "child" ? "Profile photo" : "Photo") {
+                            PhotosPicker(selection: $photo, matching: .images) { Text(hasPhoto ? "Replace" : "Add") }
+                                .buttonStyle(.plain).accessibilityLabel(photoLabel)
+                        }
                         if let raw = fields["photo"], let data = Data(base64Encoded: raw), let image = UIImage(data: data) {
                             Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 180)
                             HStack { Spacer(); Button("Remove photo", role: .destructive) { fields.removeValue(forKey: "photo") } }.padding(20)
@@ -103,14 +106,11 @@ struct RecordForm: View {
                 }.padding(.bottom, 12)
             }.scrollDismissesKeyboard(.interactively).defaultScrollAnchor(.top)
         }.background(Palette.paper).tint(tint).foregroundStyle(Palette.ink)
-            .presentationDetents([baseDetent, Self.timeDetent, .large], selection: $detent)
             .careSheetStyle()
             .onAppear {
                 load()
                 diaperExpanded = request.type == "diaper" && DiaperFields.selected("Dirty", in: fields)
-                updateDetent()
             }
-            .onChange(of: diaperExpanded) { _, _ in updateDetent() }
             .onChange(of: fields["contents"]) { _, _ in
                 if request.type == "diaper" { diaperExpanded = DiaperFields.selected("Dirty", in: fields) }
             }
@@ -120,7 +120,11 @@ struct RecordForm: View {
                 }
             }
             .onChange(of: focusedField) { _, field in
-                if request.type == "feeding", field == "amount" { amountWasEdited = true; fields["amount"] = "" }
+                if request.type == "feeding", field == "amount" {
+                    if request.entity?.fields["amount"]?.isEmpty == false { amountWasEdited = true }
+                    if request.entity == nil, clearSuggestedAmount { amountWasEdited = true; fields["amount"] = ""; clearSuggestedAmount = false }
+                    else if request.entity != nil { let value = fields["amount"] ?? ""; amountSelection = TextSelection(range: value.startIndex ..< value.endIndex) }
+                }
             }
             .onChange(of: photo) { _, item in Task { await loadPhoto(item) } }
             .sheet(isPresented: $scanning) { BarcodeScanner { code in fields["isbn"] = code; scanning = false; Task { await lookup() } } }
@@ -133,7 +137,6 @@ struct RecordForm: View {
                 Button {
                     withAnimation {
                         dateTarget = dateTarget == target ? nil : target
-                        updateDetent()
                     }
                 } label: {
                     if dateTarget == target {
@@ -149,7 +152,7 @@ struct RecordForm: View {
                     .accessibilityValue(value.formatted(request.type == "child" ? .dateTime.month().day().year() : .dateTime.month().day().hour().minute()))
             }
             if dateTarget == target {
-                CombinedDatePicker(date: target == "start" ? $date : $end, dateOnly: request.type == "child", minimumDate: target == "end" ? date : nil)
+                CombinedDatePicker(date: target == "start" ? $date : $end, dateOnly: request.type == "child", minimumDate: target == "end" ? date : nil, maximumDate: spec.canSchedule ? nil : .now)
                     .frame(height: 216).padding(.horizontal, 12)
             }
             Divider()
@@ -157,16 +160,24 @@ struct RecordForm: View {
     }
 
     private var entryFields: [FieldSpec] {
-        let fields = spec.fields.filter { $0.key != "notes" && ($0.key != "unit" || primaryField == nil) }
-        if request.type == "feeding" {
-            return fields.sorted { ($0.key == "brand" ? 0 : 1) < ($1.key == "brand" ? 0 : 1) }
+        spec.fields.filter { field in
+            guard field.key != "notes", field.key != "done", field.key != "unit" || primaryField == nil else { return false }
+            if request.type == "feeding", field.key == "brand", fields["milkType"] == "Breast milk" { return false }
+            if request.type == "reminder" {
+                if field.key == "afterHours" { return fields["trigger"] == "After last log" }
+                if field.key == "anchorTitle" { return fields["trigger"] == "After last log" && fields["kind"] == "medication" }
+            }
+            return true
         }
-        return fields
     }
 
     private func binding(_ field: FieldSpec) -> Binding<String> {
         Binding(get: { fields[field.key] ?? "" }, set: { value in
             fields[field.key] = value
+            if request.type == "reminder", field.key == "trigger", value == "After last log" {
+                if !["feeding", "medication"].contains(fields["kind"] ?? "") { fields["kind"] = "feeding" }
+                if fields["afterHours"]?.isEmpty != false { fields["afterHours"] = "2" }
+            }
             if request.type == "growth", field.key == "measure" {
                 fields["unit"] = value == "Weight" ? (store.unitSystem == "imperial" ? "lb" : "kg") : (store.unitSystem == "imperial" ? "in" : "cm")
             }
@@ -177,7 +188,7 @@ struct RecordForm: View {
         VStack(spacing: 0) {
             EntryRow(title: field.label) {
                 HStack(spacing: 8) {
-                    TextField("0", text: binding(field)).keyboardType(.decimalPad)
+                    TextField("0", text: binding(field), selection: field.key == "amount" ? $amountSelection : .constant(nil)).keyboardType(.decimalPad)
                         .focused($focusedField, equals: field.key)
                         .font(.title3.weight(.medium)).monospacedDigit().multilineTextAlignment(.trailing)
                         .frame(width: 80).accessibilityLabel(field.label).accessibilityIdentifier(field.key)
@@ -191,8 +202,8 @@ struct RecordForm: View {
             if request.type == "feeding", let last = lastBottleAmount {
                 HStack {
                     Spacer()
-                    Button("Use last amount: \(last.value) \(last.unit)") {
-                        focusedField = nil; fields["amount"] = last.value; fields["unit"] = last.unit; amountWasEdited = true
+                    Button("Last: \(last.value) \(last.unit)") {
+                        focusedField = nil; fields["amount"] = last.value; fields["unit"] = last.unit; amountWasEdited = true; clearSuggestedAmount = true
                     }.font(.caption).buttonStyle(.plain).foregroundStyle(tint).frame(minHeight: 44).accessibilityIdentifier("reuseBottleAmount")
                 }.padding(.horizontal, 20)
             }
@@ -200,7 +211,7 @@ struct RecordForm: View {
     }
 
     private var lastBottleAmount: BottleAmount? {
-        BottleAmount.latest(in: store.entities, childID: request.entity?.childID ?? store.childID, excluding: request.entity?.id)
+        BottleAmount.latest(in: store.entities, childID: targetChildID, excluding: request.entity?.id)
     }
 
     private func unitChoices(_ field: FieldSpec) -> some View {
@@ -258,13 +269,11 @@ struct RecordForm: View {
         }.foregroundStyle(Palette.ink)
     }
 
-    private func updateDetent() {
-        detent = dynamicType.isAccessibilitySize ? .large : dateTarget != nil || diaperExpanded ? Self.timeDetent : baseDetent
-    }
-
     private func options(_ field: FieldSpec) -> [String] {
+        if request.type == "reminder", field.key == "kind", fields["trigger"] == "After last log" { return field.options.filter { ["feeding", "medication"].contains($0) } }
         if request.type == "growth", field.key == "unit" {
-            return fields["measure"] == "Weight" ? ["lb", "oz", "kg"] : ["in", "cm"]
+            let values = spec.options("unit", measure: fields["measure"]), current = fields[field.key] ?? ""
+            return request.entity?.imported != nil && !current.isEmpty && !values.contains(current) ? values + [current] : values
         }
         let current = fields[field.key] ?? ""
         return request.entity?.imported != nil && !current.isEmpty && !field.options.contains(current) ? field.options + [current] : field.options
@@ -272,13 +281,17 @@ struct RecordForm: View {
 
     private func load() {
         guard !loaded else { return }; loaded = true
+        targetChildID = request.entity?.childID ?? request.childID ?? store.childID
         if let entity = request.entity {
             title = entity.title; date = entity.date; end = Date(timeIntervalSince1970: entity.end ?? entity.at + 3600); fields = entity.fields
+            isRunningSleep = request.type == "sleep" && entity.end == nil
+            clearSuggestedAmount = false
         } else {
             for field in spec.fields where field.kind == "choice" {
                 fields[field.key] = field.required ? field.options.first : ""
             }
             if request.type == "feeding" {
+                fields["milkType"] = store.state.latestRecord("feeding", for: targetChildID)?.fields["milkType"] ?? "Formula"
                 fields["unit"] = store.unitSystem == "imperial" ? "oz" : "mL"; fields["amount"] = store.unitSystem == "imperial" ? "4" : "120"; fields["brand"] = store.state.preferredFormula(for: store.childID) ?? ""
             }
             if request.type == "growth" {
@@ -293,7 +306,10 @@ struct RecordForm: View {
             if ["reminder", "appointment"].contains(request.type) {
                 date = .now.addingTimeInterval(3600)
             }
-            end = date.addingTimeInterval(3600)
+            if request.type == "reminder" { fields["trigger"] = "At time"; fields["recipients"] = "All caregivers"; fields["kind"] = "feeding" }
+            if let template = request.template { title = template.title; fields = template.fields }
+            if request.type == "sleep" { end = .now; date = end.addingTimeInterval(-3600) }
+            else { end = date }
         }
     }
 
@@ -307,12 +323,12 @@ struct RecordForm: View {
         if request.type == "feeding", let amount = fields["amount"], !amount.isEmpty, (Double(amount) ?? 0) <= 0 {
             validation = "Amount must be greater than zero."; return
         }
-        var entity = request.entity ?? Entity(type: request.type, childID: inventory || request.type == "child" ? "" : store.childID, title: spec.title)
+        var entity = request.entity ?? Entity(type: request.type, childID: spec.requiresChild ? targetChildID : "", title: spec.title)
         entity.title = needsTitle ? title.trimmingCharacters(in: .whitespacesAndNewlines) : spec.title
         entity.at = date.timeIntervalSince1970; entity.fields = fields
-        if request.type == "diaper" { entity.detail = "" }
+
         if request.type == "sleep" {
-            entity.end = end.timeIntervalSince1970
+            entity.end = isRunningSleep ? nil : end.timeIntervalSince1970
         }
         if store.save(entity) {
             dismiss()
@@ -333,60 +349,5 @@ struct RecordForm: View {
             let result: Book = try await store.request("/v1/books/lookup?isbn=\(isbn)")
             title = result.title; fields["author"] = result.author; fields["isbn"] = result.isbn; fields["imageURL"] = result.imageURL; lookupNote = nil
         } catch { lookupNote = error is APIError ? error.localizedDescription : "Book lookup unavailable. Enter the title and author manually." }
-    }
-}
-
-struct CustomFormulaView: View {
-    var selected: (String) -> Void
-    @Environment(AppStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
-    @State private var name = ""
-    var body: some View {
-        VStack(spacing: 0) {
-            LogSheetHeader(title: "Custom formula", color: "amber", actionTitle: "Add",
-                           actionEnabled: !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && name.count <= 80,
-                           actionID: "addCustomFormula", close: { dismiss() }, action: add)
-            EntryRow(title: "Name") { TextField("Required", text: $name).textInputAutocapitalization(.words).multilineTextAlignment(.trailing).accessibilityLabel("Formula name").accessibilityIdentifier("customFormulaName") }
-            Spacer(minLength: 0)
-        }.background(Palette.paper).presentationDetents([.height(230), .large]).careSheetStyle()
-    }
-
-    private func add() {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let existing = store.state.formulaOptions.first(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) {
-            selected(existing); dismiss()
-        } else if store.save(Entity(type: "formula", title: trimmed)) {
-            selected(trimmed); dismiss()
-        }
-    }
-}
-
-struct FormulaChooser: View {
-    var current: String
-    var selected: (String) -> Void
-    @Environment(AppStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
-    @State private var search = ""
-    @State private var custom = false
-    var body: some View {
-        VStack(spacing: 0) {
-            LogSheetHeader(title: "Formula", color: "amber", closeLabel: "Close", close: { dismiss() })
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass").foregroundStyle(Palette.secondary)
-                TextField("Search formulas", text: $search).textInputAutocapitalization(.words).accessibilityIdentifier("formulaSearch")
-            }.padding(.horizontal, 20).padding(.vertical, 12)
-            Divider()
-            AppList {
-                Button("Custom formula", systemImage: "plus") { custom = true }.accessibilityIdentifier("customFormula")
-                Button("Not recorded") { selected(""); dismiss() }
-                ForEach(store.state.formulaOptions.filter { search.isEmpty || $0.localizedCaseInsensitiveContains(search) }, id: \.self) { name in
-                    Button { selected(name); dismiss() } label: {
-                        HStack { Text(name).foregroundStyle(Palette.ink); Spacer(); if name == current { Image(systemName: "checkmark").foregroundStyle(Palette.tint("amber")) } }
-                            .frame(minHeight: 44).contentShape(Rectangle())
-                    }.accessibilityAddTraits(name == current ? .isSelected : [])
-                }
-            }
-        }.background(Palette.paper).presentationDetents([.medium, .large]).careSheetStyle()
-            .sheet(isPresented: $custom) { CustomFormulaView { value in selected(value); dismiss() } }
     }
 }

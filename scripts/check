@@ -1,7 +1,9 @@
-#!/bin/zsh
+#!/usr/bin/env bash
 set -eu
-cd "${0:A:h:h}"
-node --test server/*.test.mjs relay/*.test.mjs
-python3 scripts/check-contracts.py
-swift test --package-path app/BabyCore
+cd "$(dirname "$0")/.."
+if [[ "${1:-}" != --core ]]; then
+  node --test server/*.test.mjs relay/*.test.mjs
+  python3 scripts/check-contracts.py
+fi
+if [[ "${1:-}" != --server ]]; then swift test --package-path app/BabyCore; fi
 git diff --check

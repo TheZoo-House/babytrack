@@ -1,7 +1,10 @@
 # Version 1 contracts
 
-The JSON catalog and snapshot fixture are consumed by Node and bundled in the
-Swift package. `scripts/check-contracts.py` rejects resource drift.
+Snapshot version 1 remains backward compatible. Catalog version 2 declares
+type scope, title requirements, scheduling, measurement units, choice labels
+and upload limits. Node and Swift consume the same catalog. Test fixtures live
+under the test target. `scripts/check-contracts.py` checks mirrors and regenerated
+fixture content, including details, day summaries and ActivityKit payloads.
 
 All timestamps are Unix seconds. Entity IDs and operation IDs are stable client
 UUIDs. A record has `type`, `childID`, `title`, `at`, optional `end`, fixed
@@ -33,6 +36,9 @@ by Swift; required version-1 fields remain mandatory.
   preserve per-recipient acknowledgments and ignore superseded jobs.
 - `GET /v1/books/lookup?isbn=…` queries Open Library, with manual entry on failure.
 - `GET /v1/export` returns the current family snapshot.
+- `GET /v1/import-source/<recordID>` returns original Nara columns for an active
+  imported record in the current family. Normal snapshots omit these raw columns;
+  full exports retain them. Private owner samples retain them for offline access.
 - `POST /v1/auth/logout` revokes the session. Sign-out disables the device's
   remote notifications before removing its local credentials.
 - `POST /v1/account/delete` removes the account and device registrations.
@@ -77,6 +83,8 @@ bottle history over 1,700 synthetic records and records application CPU usage.
 Check its result with `scripts/check-ios-dropdown-performance <result.xcresult>`;
 two toggles must use less than 500 ms of application CPU. This excludes XCTest
 driver waits and catches repeated whole-history scans in selected-child lookup.
+The app caches formatted records until data changes or the minute changes;
+selection and summaries read draft records without formatting the whole history.
 The filtered-history test also verifies that logging actions sit above the
 disclosure rows. Personal exports are excluded from both tests.
 
@@ -100,3 +108,23 @@ with the server across midnight, spring/fall DST, units and child isolation.
 Today refreshes time-dependent values every minute. Bottle reuse copies the
 latest known amount/unit pair only; unknown or other-child amounts are not
 invented. A touched empty amount blocks saving until replaced.
+
+## Caregiver actions and reminders
+
+`updatedBy`, `updatedByID` and `createdAt` are optional server metadata; clients
+cannot select the editing caregiver. Handoff cursors are device-local per child.
+Snapshots include the previous seven local-day totals in `daySummaries`; older
+or offline days use the same unit and interval-union projection.
+
+`reminderDone` and `reminderSnooze` act on the named stored reminder. Snooze accepts
+an epoch-second `entity.at` in the next seven days. `trigger: After last log`
+uses `afterHours`, `kind` and optional `anchorTitle` to match feeding or medication
+records. `recipients: Only me` assigns `recipientUserID` on the server. Edits by
+another caregiver preserve that recipient. The relay drops stale jobs, bounds
+transient retries, acknowledges permanent failures and keeps repeats anchored
+to the original schedule. Notifications carry `BABYTRACK_REMINDER` and `recordID`.
+
+Sync batches can include `familyID` to reject an obsolete household. Clients
+discard acknowledgments from older sessions, and retry transport/database failures
+without removing queued writes. Anonymous preview creation has its own rate limit
+and expires old preview accounts. Real accounts remain separate.

@@ -63,6 +63,7 @@
       "fields": {
         "amount": "5",
         "unit": "oz",
+        "milkType": "Formula",
         "brand": "Sample formula",
         "notes": "a comma, a \"quote\"\nand emoji 😂"
       },
@@ -70,7 +71,7 @@
       "updatedAt": 0,
       "deleted": false,
       "actor": "",
-      "detail": "5 oz · Sample formula",
+      "detail": "5 oz · Formula · Sample formula",
       "imported": {
         "source": "Nara Baby",
         "profileKey": "synthetic-profile",
@@ -277,7 +278,7 @@
       "updatedAt": 0,
       "deleted": false,
       "actor": "",
-      "detail": "Both · Brown Yellow · Mucous Mushy",
+      "detail": "Wet, Dirty · Brown, Yellow · Mucousy, Mushy",
       "imported": {
         "source": "Nara Baby",
         "profileKey": "synthetic-profile",

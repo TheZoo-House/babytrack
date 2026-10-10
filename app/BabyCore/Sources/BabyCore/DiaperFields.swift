@@ -10,6 +10,7 @@ public enum DiaperFields {
         guard ["Wet", "Dirty", "Dry"].contains(option) else { return }
         if option == "Dry" {
             fields["contents"] = selected("Dry", in: fields) ? "" : "Dry"
+            clearDirtyDetails(in: &fields)
             return
         }
         var wet = selected("Wet", in: fields), dirty = selected("Dirty", in: fields)
@@ -20,6 +21,12 @@ public enum DiaperFields {
             dirty.toggle()
         }
         fields["contents"] = wet && dirty ? "Both" : wet ? "Wet" : dirty ? "Dirty" : ""
+        clearDirtyDetails(in: &fields)
+    }
+
+    private static func clearDirtyDetails(in fields: inout [String: String]) {
+        guard !selected("Dirty", in: fields) else { return }
+        for key in ["color", "consistency", "detail", "blowout"] { fields.removeValue(forKey: key) }
     }
 
     public static func tokens(_ key: String, in fields: [String: String]) -> [String] {

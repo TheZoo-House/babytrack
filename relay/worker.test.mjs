@@ -10,3 +10,22 @@ test('a retry only resends to devices that have not acknowledged delivery',async
  const sent=[];const sender=async(message)=>{sent.push(message.token);return {status:message.token==='two'&&sent.filter(x=>x==='two').length===1?503:200};};
  const credentials={keyID:'synthetic',keyPath:'synthetic',teamID:'synthetic'};await tick(s,credentials,sender,100);await tick(s,credentials,sender,200);assert.deepEqual(sent,['one','two','two']);assert.equal(s.db.prepare('SELECT count(*) as n FROM jobs').get().n,0);
 });
+
+
+test('permanent device failures do not block family reminders and repeats stay anchored',async t=>{
+ const store=new Store();t.after(()=>store.close());const user=store.account('review-reminder-owner');
+ const entity={id:'repeat',type:'reminder',childID:'child',title:'Synthetic reminder',at:100,version:1,deleted:false,fields:{kind:'feeding',repeatHours:'1'}};
+ store.put(user.family,entity);store.enqueue({type:'reminder',family:user.family,entity},100);
+ for(const id of ['bad','good'])store.db.prepare('INSERT INTO devices VALUES (?,?,?)').run(user.id,id,JSON.stringify({enabled:true,pushToken:id}));
+ const sent=[];await tick(store,{keyID:'test',keyPath:'test',teamID:'test'},async m=>{sent.push(m.token);return {status:m.token==='bad'?403:200};},4000);
+ assert.deepEqual(sent,['bad','good']);assert.equal(store.db.prepare('SELECT due FROM jobs').get().due,7300);
+});
+
+test('legacy stale membership never receives pushes for another household',async t=>{
+ const store=new Store();t.after(()=>store.close());const owner=store.account('review-family-owner'),departed=store.account('review-departed');
+ store.db.prepare('INSERT INTO members VALUES (?,?)').run(owner.family,departed.id);
+ store.db.prepare('INSERT INTO devices VALUES (?,?,?)').run(departed.id,'phone',JSON.stringify({enabled:true,pushToken:'departed'}));
+ const entity={id:'private-reminder',type:'reminder',title:'Private',childID:'child',at:1,version:1,fields:{},deleted:false};store.put(owner.family,entity);store.enqueue({type:'reminder',family:owner.family,entity},1);
+ const sent=[];await tick(store,{keyID:'test',keyPath:'test',teamID:'test'},async m=>{sent.push(m.token);return {status:200};},100);
+ assert.deepEqual(sent,[]);
+});

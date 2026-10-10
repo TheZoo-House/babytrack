@@ -185,33 +185,25 @@ final class CoreTests: XCTestCase {
         try storage.update { try $0.acknowledgeCaregiverPhoto(removal.id, snapshot: $0.snapshot) }
         XCTAssertEqual(try storage.read().caregiverPhotoDraft?.photo, "newer-photo")
     }
-    func testDirectDiaperSelectionPreservesCombinedAndLegacyValues() {
-        var fields = ["contents": "Wet", "color": "Brown Yellow", "consistency": "Mucous Mushy", "detail": "Blowout"]
+    func testDirectDiaperSelectionPreservesDirtyValuesAndClearsNonDirtyDetails() {
+        var fields = ["contents": "Wet", "color": "Brown Yellow", "consistency": "Mucous Mushy", "detail": "Blowout", "rash": "true"]
         DiaperFields.toggleContents("Dirty", in: &fields)
         XCTAssertEqual(fields["contents"], "Both")
-        XCTAssertTrue(DiaperFields.selected("Wet", in: fields))
-        XCTAssertTrue(DiaperFields.selected("Dirty", in: fields))
-        DiaperFields.toggleContents("Dry", in: &fields)
-        XCTAssertEqual(fields["contents"], "Dry")
-        DiaperFields.toggleContents("Wet", in: &fields)
-        XCTAssertEqual(fields["contents"], "Wet")
+        XCTAssertTrue(DiaperFields.selected("Wet", in: fields)); XCTAssertTrue(DiaperFields.selected("Dirty", in: fields))
         DiaperFields.toggle("Mushy", key: "consistency", in: &fields)
-        XCTAssertEqual(fields["consistency"], "Mucous")
-        XCTAssertEqual(fields["color"], "Brown Yellow")
-        XCTAssertTrue(DiaperFields.hasBlowout(fields))
-        fields["blowout"] = "false"
-        XCTAssertFalse(DiaperFields.hasBlowout(fields))
-        XCTAssertEqual(fields["detail"], "Blowout")
-        DiaperFields.setBlowout(false, in: &fields)
-        XCTAssertNil(fields["detail"])
-        fields["detail"] = "Other imported detail"
-        DiaperFields.setBlowout(true, in: &fields)
+        XCTAssertEqual(fields["consistency"], "Mucous"); XCTAssertEqual(fields["color"], "Brown Yellow")
+        XCTAssertTrue(DiaperFields.hasBlowout(fields)); fields["blowout"] = "false"
+        XCTAssertFalse(DiaperFields.hasBlowout(fields)); XCTAssertEqual(fields["detail"], "Blowout")
+        DiaperFields.setBlowout(false, in: &fields); XCTAssertNil(fields["detail"])
+        fields["detail"] = "Other imported detail"; DiaperFields.setBlowout(true, in: &fields)
         XCTAssertEqual(fields["detail"], "Other imported detail")
-        DiaperFields.toggleContents("Unknown", in: &fields)
-        XCTAssertEqual(fields["contents"], "Wet")
-        DiaperFields.toggle("Yellow", key: "color", in: &fields)
-        DiaperFields.toggle("Gray", key: "color", in: &fields)
+        DiaperFields.toggle("Yellow", key: "color", in: &fields); DiaperFields.toggle("Gray", key: "color", in: &fields)
         XCTAssertEqual(fields["color"], "Brown Gray")
+        DiaperFields.toggleContents("Dry", in: &fields); XCTAssertEqual(fields["contents"], "Dry")
+        for key in ["color", "consistency", "detail", "blowout"] { XCTAssertNil(fields[key]) }
+        XCTAssertEqual(fields["rash"], "true")
+        DiaperFields.toggleContents("Wet", in: &fields); DiaperFields.toggleContents("Unknown", in: &fields)
+        XCTAssertEqual(fields["contents"], "Wet")
     }
 
     func testSavedCareRefreshesTodayCountersInLocalPreview() throws {

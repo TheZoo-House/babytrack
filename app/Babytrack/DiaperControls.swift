@@ -121,7 +121,7 @@ struct DiaperControls: View {
         if key == "color" {
             Circle().fill(swatch(value)).overlay(Circle().strokeBorder(Palette.secondary.opacity(0.35), lineWidth: 1))
         } else {
-            TextureMark(value: value).foregroundStyle(selected ? Palette.tint("mint") : Palette.secondary)
+            TextureMark(value: value).padding(selected ? 7 : 0).foregroundStyle(selected ? Palette.buttonInk : Palette.secondary).background(selected ? Palette.fill("mint") : Color.clear, in: Circle())
         }
     }
 

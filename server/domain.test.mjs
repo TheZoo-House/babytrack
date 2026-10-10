@@ -16,7 +16,7 @@ test('diaper choices accept combinations and project legacy and explicit flags',
  const {validateEntity}=await import('./domain.mjs');
  const input={id:'synthetic-diaper',type:'diaper',title:'Diaper',childID:'synthetic-child',at:1,fields:{contents:'Both',color:'Brown Gray',consistency:'Mucous Mushy',blowout:'true',rash:'true'}};
  assert.equal(validateEntity(input).fields.color,'Brown Gray');
- assert.equal(decorate(input,[]).detail,'Both · Brown Gray · Mucous Mushy · Blowout · Diaper rash');
+ assert.equal(decorate(input,[]).detail,'Wet, Dirty · Brown, Gray · Mucousy, Mushy · Blowout · Diaper rash');
  assert.throws(()=>validateEntity({...input,fields:{...input.fields,color:'Brown Purple'}}),/Invalid color/);
  assert.throws(()=>validateEntity({...input,fields:{...input.fields,blowout:'yes'}}),/Invalid blowout/);
  const legacy={...input,fields:{contents:'Dirty',detail:'Blowout'}};

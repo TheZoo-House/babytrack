@@ -80,6 +80,12 @@ public struct SharedStorage: Sendable {
 extension DiskState {
     mutating func enqueue(_ original: Command) {
         var command = original
+        command.entity.detail = ""
+        command.entity.updatedBy = snapshot.user.name
+        command.entity.updatedByID = snapshot.user.id
+        if command.entity.createdAt == nil { command.entity.createdAt = Date.now.timeIntervalSince1970 }
+        if command.entity.type == "reminder", command.entity.fields["recipients"] == "Only me", command.entity.recipientUserID == nil { command.entity.recipientUserID = snapshot.user.id }
+        if command.entity.actor.isEmpty { command.entity.actor = snapshot.user.name }
         if command.entity.type == "feeding", command.action == "upsert", !command.entity.deleted {
             let explicit = command.entity.fields["brand"]?.trimmingCharacters(in: .whitespacesAndNewlines)
             if explicit == nil {
@@ -98,7 +104,7 @@ extension DiskState {
                 .action !=
                 "delete"
             {
-                var e = command.entity; e.version += 1; e.actor = "You"; snapshot.entities.append(e)
+                var e = command.entity; e.version += 1; e.updatedAt = Date.now.timeIntervalSince1970; snapshot.entities.append(e)
             }
         } else {
             outbox.append(command)

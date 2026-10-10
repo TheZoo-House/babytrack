@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
-import { fail, validateEntity, decorate } from "./domain.mjs";
+import { fail, validateEntity, decorate, catalog } from "./domain.mjs";
 
 // CSV records can contain commas, escaped quotes and physical newlines.
 export function parseCSV(text) {
-  if (typeof text !== "string" || Buffer.byteLength(text) > 7000000)
+  if (typeof text !== "string" || Buffer.byteLength(text) > catalog.limits.csvBytes)
     fail("Choose a Nara CSV smaller than 7 MB");
   text = text.replace(/^\uFEFF/, "");
   const rows = [];
@@ -335,6 +335,7 @@ export function planNara(
         }
         emit("bottle", "feeding", "Bottle", {
           ...(amount ? { amount, unit } : {}),
+          ...((milk && formula) ? {milkType:"Mixed"} : r["[Bottle Feed] Type"] === "Formula" || formula ? {milkType:"Formula"} : ["Breast Milk", "Breast milk"].includes(r["[Bottle Feed] Type"]) || milk ? {milkType:"Breast milk"} : {}),
           brand: r["[Bottle Feed] Formula Name"] ?? "",
         });
         break;

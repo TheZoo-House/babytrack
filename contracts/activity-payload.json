@@ -1,0 +1,29 @@
+{
+  "start": {
+    "timestamp": 1791589500,
+    "event": "start",
+    "content-state": {
+      "startedAt": 1791588600,
+      "ended": false
+    },
+    "attributes-type": "SleepAttributes",
+    "attributes": {
+      "sessionID": "synthetic-session",
+      "childID": "synthetic-child",
+      "childName": "Synthetic child"
+    },
+    "alert": {
+      "title": "Synthetic child is sleeping",
+      "body": "Sleep timer started"
+    }
+  },
+  "end": {
+    "timestamp": 1791589500,
+    "event": "end",
+    "content-state": {
+      "startedAt": 1791588600,
+      "ended": true
+    },
+    "dismissal-date": 1791589500
+  }
+}

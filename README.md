@@ -4,11 +4,18 @@ Native iPhone and iPad family baby tracker. The display name is provisional.
 Change `APP_DISPLAY_NAME` in `app/Config/Brand.xcconfig` to rename the app;
 keep bundle and app-group identifiers stable to preserve accounts and data.
 
-The app includes formula bottles, diapers with color and consistency, sleep and
+The app includes formula, breast-milk and mixed bottles, diapers with color and consistency, sleep and
 nap timers, reading, growth measurements, medication, temperature, illness,
 vaccines, milestones, appointments, notes and photos. The library holds books
 with ISBN lookup and gift givers, toys with age ranges, clothing, and nested
-locations. All family members can edit. Apple is the only real-account login.
+locations. All caregivers can edit. Apple is the only real-account login.
+
+Today keeps direct logging actions above expandable care histories and shows
+the time since each latest record. Journal shows totals for past days and can
+share a date-range care report as CSV or PDF. Family has a caregiver handoff
+for changes since the last check. Medication records support Log again with
+the previous dose and unit. Reminders support Done, Snooze, Only me, and an
+interval after the last matching bottle or medication log. Nursing is excluded.
 
 `Try sample family` opens isolated synthetic data. It connects to the test
 backend when available, or saves sample records on the device when offline.
@@ -59,6 +66,9 @@ The app and widgets use `BabyCore` for models, shared storage and queued
 operations. `contracts/catalog.json` defines fixed forms and validation fields;
 edit `scripts/generate-catalog.py`, run it, and check both consumers. Synthetic
 contract fixtures are generated with `node scripts/generate-fixture.mjs`.
+`scripts/check` verifies generated snapshots, details, summaries and Live Activity
+payloads against both consumers. Test-only fixtures are not bundled in releases.
+On a fresh Mac or CI runner, run `scripts/setup-ios-test-pool` before native tests.
 
 The test wrapper leases a shared simulator and starts its own disposable HTTP
 backend. Tests do not use real Apple logins, deployed data or APNs credentials.

@@ -37,13 +37,12 @@ struct CareWidgetView: View {
     var entry: CareEntry
     @Environment(\.widgetFamily) private var family
     private var child: Entity? {
-        entry.state.visibleEntities.first { $0.id == entry.state.selectedChildID && $0.type == "child" } ?? entry.state
-            .visibleEntities.first { $0.type == "child" }
+        entry.state.resolvedChild
     }
 
     var body: some View {
         if family == .accessoryCircular {
-            Link(destination: URL(string: "babytrack://diaper")!) {
+            Link(destination: DeepLink.log("diaper").url) {
                 VStack { Image(systemName: "drop.fill"); Text("Diaper").font(.caption2) }
             }
         } else if family == .accessoryRectangular {
@@ -59,7 +58,7 @@ struct CareWidgetView: View {
                     Text("Bottle & diaper").font(.caption)
                 }
             }
-            .widgetURL(URL(string: "babytrack://feeding"))
+            .widgetURL(DeepLink.log("feeding").url)
         } else {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
@@ -84,7 +83,7 @@ struct CareWidgetView: View {
                 }
                 Spacer(minLength: 0)
                 HStack {
-                    Link(destination: URL(string: "babytrack://feeding")!) {
+                    Link(destination: DeepLink.log("feeding").url) {
                         Label("Bottle", systemImage: "plus").font(.caption.weight(.semibold)).foregroundStyle(CarePalette.tint("amber"))
                     }
                     Spacer()
@@ -126,14 +125,14 @@ struct SleepWidget: Widget {
                         countsDown: false
                     ).font(.title2.monospacedDigit()).frame(maxWidth: 150)
                 }
-                Link(destination: URL(string: "babytrack://sleep?session=\(context.attributes.sessionID)")!) {
+                Link(destination: DeepLink.endSleep(context.attributes.sessionID).url) {
                     Image(systemName: "stop.fill").padding(12).background(
                         CarePalette.tint("indigo").opacity(0.12),
                         in: Circle()
                     )
                 }.accessibilityLabel("End sleep")
             }.padding(18).activityBackgroundTint(CarePalette.paper)
-                .widgetURL(URL(string: "babytrack://sleep?session=\(context.attributes.sessionID)"))
+                .widgetURL(DeepLink.openSleep(context.attributes.sessionID).url)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -145,13 +144,13 @@ struct SleepWidget: Widget {
                 ).monospacedDigit().frame(maxWidth: 110) }
                 DynamicIslandExpandedRegion(.bottom) { Link(
                     "End sleep",
-                    destination: URL(string: "babytrack://sleep?session=\(context.attributes.sessionID)")!
+                    destination: DeepLink.endSleep(context.attributes.sessionID).url
                 ).font(.headline) }
             } compactLeading: { Image(systemName: "moon.zzz.fill") } compactTrailing: { Text(
                 Date(timeIntervalSince1970: context.state.startedAt),
                 style: .timer
             ).monospacedDigit().frame(width: 52) } minimal: { Image(systemName: "moon.zzz.fill") }
-                .widgetURL(URL(string: "babytrack://sleep?session=\(context.attributes.sessionID)"))
+                .widgetURL(DeepLink.openSleep(context.attributes.sessionID).url)
         }
     }
 }

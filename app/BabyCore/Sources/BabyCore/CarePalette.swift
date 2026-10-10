@@ -16,7 +16,7 @@
             case "mint": color(0x286380, 0x95CCE8)
             case "indigo": color(0x5752A2, 0xBBB4EB)
             case "rose": color(0x97415F, 0xF2B0C1)
-            default: accent
+            default: color(0x566174, 0xB6C0D1)
             }
         }
 
@@ -26,9 +26,10 @@
             case "mint": color(0x95CCE8)
             case "indigo": color(0xBBB4EB)
             case "rose": color(0xF2B0C1)
-            default: color(0xD7D8EE)
+            default: color(0xE8EBF2, 0x2C3443)
             }
         }
+        public static func foregroundForFill(_ key: String) -> Color { ["amber", "mint", "indigo", "rose"].contains(key) ? buttonInk : ink }
 
         private static func color(_ light: UInt32, _ dark: UInt32? = nil) -> Color {
             func uiColor(_ hex: UInt32) -> UIColor {

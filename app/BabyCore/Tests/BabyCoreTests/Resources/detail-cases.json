@@ -1,0 +1,1611 @@
+[
+  {
+    "name": "case-feeding",
+    "entity": {
+      "id": "case-feeding",
+      "type": "feeding",
+      "title": "feeding",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "amount": "5.5",
+        "unit": "oz",
+        "brand": "Similac",
+        "milkType": "Formula"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "5.5 oz · Formula · Similac"
+  },
+  {
+    "name": "case-diaper",
+    "entity": {
+      "id": "case-diaper",
+      "type": "diaper",
+      "title": "diaper",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "contents": "Both",
+        "color": "Brown Yellow",
+        "consistency": "Mucous Mushy",
+        "detail": "Blowout",
+        "rash": "true"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Wet, Dirty · Brown, Yellow · Mucousy, Mushy · Blowout · Diaper rash"
+  },
+  {
+    "name": "case-sleep",
+    "entity": {
+      "id": "case-sleep",
+      "type": "sleep",
+      "title": "sleep",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": 1791589800,
+      "fields": {
+        "category": "Nap"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "10 min · Nap"
+  },
+  {
+    "name": "case-reading",
+    "entity": {
+      "id": "case-reading",
+      "type": "reading",
+      "title": "reading",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "itemID": "book-reference",
+        "minutes": "8"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Synthetic story · 8 min"
+  },
+  {
+    "name": "case-growth",
+    "entity": {
+      "id": "case-growth",
+      "type": "growth",
+      "title": "growth",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "measure": "Head circumference",
+        "value": "40.5",
+        "unit": "cm"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Head size · 40.5 cm"
+  },
+  {
+    "name": "case-medication",
+    "entity": {
+      "id": "case-medication",
+      "type": "medication",
+      "title": "medication",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "dose": "2.5",
+        "unit": "mL",
+        "route": "Oral"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "2.5 mL · Oral"
+  },
+  {
+    "name": "case-temperature",
+    "entity": {
+      "id": "case-temperature",
+      "type": "temperature",
+      "title": "temperature",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "value": "36.5",
+        "unit": "°C",
+        "method": "Armpit"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "36.5 °C · Armpit"
+  },
+  {
+    "name": "case-illness",
+    "entity": {
+      "id": "case-illness",
+      "type": "illness",
+      "title": "illness",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "symptoms": "Synthetic symptom"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Synthetic symptom"
+  },
+  {
+    "name": "case-vaccine",
+    "entity": {
+      "id": "case-vaccine",
+      "type": "vaccine",
+      "title": "vaccine",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "provider": "Synthetic clinic"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Synthetic clinic"
+  },
+  {
+    "name": "case-milestone",
+    "entity": {
+      "id": "case-milestone",
+      "type": "milestone",
+      "title": "milestone",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "notes": "Synthetic note"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Synthetic note"
+  },
+  {
+    "name": "case-appointment",
+    "entity": {
+      "id": "case-appointment",
+      "type": "appointment",
+      "title": "appointment",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "notes": "Synthetic note"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Synthetic note"
+  },
+  {
+    "name": "case-note",
+    "entity": {
+      "id": "case-note",
+      "type": "note",
+      "title": "note",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "notes": "Quoted \"note\"\nUnicode 😀"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Quoted \"note\"\nUnicode 😀"
+  },
+  {
+    "name": "case-book",
+    "entity": {
+      "id": "case-book",
+      "type": "book",
+      "title": "book",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "author": "Synthetic author",
+        "locationID": "child-location",
+        "status": "Owned"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Synthetic author · Nursery → Shelf · Owned"
+  },
+  {
+    "name": "case-toy",
+    "entity": {
+      "id": "case-toy",
+      "type": "toy",
+      "title": "toy",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "brand": "Synthetic",
+        "minAge": "0",
+        "maxAge": "6",
+        "locationID": "child-location",
+        "status": "Owned"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Synthetic · 0–6 months · Nursery → Shelf · Owned"
+  },
+  {
+    "name": "case-clothing",
+    "entity": {
+      "id": "case-clothing",
+      "type": "clothing",
+      "title": "clothing",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "size": "3 months",
+        "brand": "Synthetic",
+        "locationID": "child-location",
+        "status": "Owned"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "3 months · Synthetic · Nursery → Shelf · Owned"
+  },
+  {
+    "name": "case-location",
+    "entity": {
+      "id": "case-location",
+      "type": "location",
+      "title": "location",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "parentID": "child-location"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Nursery → Shelf"
+  },
+  {
+    "name": "case-child",
+    "entity": {
+      "id": "case-child",
+      "type": "child",
+      "title": "child",
+      "childID": "synthetic-child",
+      "at": 1783727100,
+      "end": null,
+      "fields": {
+        "notes": "Synthetic note"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "2 months old"
+  },
+  {
+    "name": "case-reminder",
+    "entity": {
+      "id": "case-reminder",
+      "type": "reminder",
+      "title": "reminder",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "notes": "Synthetic note"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Synthetic note"
+  },
+  {
+    "name": "case-formula",
+    "entity": {
+      "id": "case-formula",
+      "type": "formula",
+      "title": "formula",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "notes": "Synthetic note"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Synthetic note"
+  },
+  {
+    "name": "active",
+    "entity": {
+      "id": "active",
+      "type": "sleep",
+      "title": "sleep",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "category": "Night"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Night"
+  },
+  {
+    "name": "unknown-medication",
+    "entity": {
+      "id": "unknown-medication",
+      "type": "medication",
+      "title": "medication",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {},
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Dose not recorded"
+  },
+  {
+    "name": "unknown-bottle",
+    "entity": {
+      "id": "unknown-bottle",
+      "type": "feeding",
+      "title": "feeding",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {},
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "Amount not recorded"
+  },
+  {
+    "name": "breast-bottle",
+    "entity": {
+      "id": "breast-bottle",
+      "type": "feeding",
+      "title": "feeding",
+      "childID": "synthetic-child",
+      "at": 1791589200,
+      "end": null,
+      "fields": {
+        "amount": "50",
+        "unit": "mL",
+        "milkType": "Breast milk",
+        "brand": "Hidden brand"
+      },
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Synthetic",
+      "detail": ""
+    },
+    "records": [
+      {
+        "id": "book-reference",
+        "type": "book",
+        "title": "Synthetic story",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "author": "Synthetic author"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "parent-location",
+        "type": "location",
+        "title": "Nursery",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "child-location",
+        "type": "location",
+        "title": "Shelf",
+        "childID": "synthetic-child",
+        "at": 1791589200,
+        "end": null,
+        "fields": {
+          "parentID": "parent-location"
+        },
+        "version": 1,
+        "updatedAt": 1791589500,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "now": 1791589500,
+    "expected": "50 mL · Breast milk"
+  }
+]

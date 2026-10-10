@@ -14,24 +14,25 @@ struct DestructiveActionButton: View {
         Button { confirming = true } label: {
             Label(title, systemImage: "trash").font(.body.weight(.semibold)).frame(minHeight: 44).padding(.horizontal, 12)
         }.buttonStyle(.bordered).tint(.red).disabled(!enabled).accessibilityIdentifier(identifier)
-            .popover(isPresented: $confirming, attachmentAnchor: .rect(.bounds), arrowEdge: .bottom) {
+            .popover(isPresented: $confirming, attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text(question).font(.headline).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("deleteConfirmation")
+                    Text(question).font(.headline).foregroundStyle(Palette.ink).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("deleteConfirmation")
                     if let message {
                         if dynamicType.isAccessibilitySize {
-                            ScrollView { Text(message).font(.subheadline) }.frame(maxHeight: 200)
+                            ScrollView { Text(message).font(.subheadline).foregroundStyle(Palette.ink) }.frame(maxHeight: 200)
                         } else {
-                            Text(message).font(.subheadline).fixedSize(horizontal: false, vertical: true)
+                            Text(message).font(.subheadline).foregroundStyle(Palette.ink).fixedSize(horizontal: false, vertical: true)
                         }
                     }
                     let layout = dynamicType.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: 12))
                     layout {
                         Button("Cancel") { confirming = false }.buttonStyle(.bordered).accessibilityIdentifier("cancelDestructiveAction")
                         Button("Delete", role: .destructive) { confirming = false; action() }
-                            .buttonStyle(.borderedProminent).tint(.red).accessibilityIdentifier("confirmDestructiveAction")
+                            .buttonStyle(.borderedProminent).tint(.red).foregroundStyle(.white).accessibilityIdentifier("confirmDestructiveAction")
                     }.frame(minHeight: 44)
-                }.padding(20).frame(width: 280).foregroundStyle(Palette.ink).background(Palette.paper)
+                }.padding(20).frame(width: 280).background(Palette.paper)
                     .presentationCompactAdaptation(.popover)
             }
+            .padding(.bottom, confirming ? (dynamicType.isAccessibilitySize ? 400 : message == nil ? 150 : 240) : 0)
     }
 }

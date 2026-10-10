@@ -1,0 +1,1 @@
+{"ticket":"BABY-6","type":"fix","summary":"Keep offline saves retryable, enforce shared sleep and family membership rules, handle Apple key rotation and bounded push retries, and reduce imported sync payloads without losing original export data."}

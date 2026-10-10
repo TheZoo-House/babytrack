@@ -48,7 +48,7 @@ struct NaraImportView: View {
                 Button("Choose Nara CSV", systemImage: "doc.badge.arrow.up") {
                     #if DEBUG
                         if store.testing {
-                            do { csv = try Snapshot.sampleNaraCSV(); fileName = "Synthetic Nara sample.csv"; Task { await preview() } } catch { store.error = error.localizedDescription }
+                            do { csv = try String(contentsOf: Bundle.main.url(forResource: "nara-ui-sample", withExtension: "csv")!, encoding: .utf8); fileName = "Synthetic Nara sample.csv"; Task { await preview() } } catch { store.error = error.localizedDescription }
                         } else {
                             choosingFile = true
                         }
@@ -123,7 +123,7 @@ struct NaraImportView: View {
                         }
                     }
                     let data = try Data(contentsOf: url, options: .mappedIfSafe)
-                    guard data.count <= 7_000_000, let text = String(data: data, encoding: .utf8)
+                    guard data.count <= Catalog.shared.limits.csvBytes, let text = String(data: data, encoding: .utf8)
                     else { throw APIError(message: "Choose a UTF-8 CSV smaller than 7 MB.") }
                     csv = text; fileName = url.lastPathComponent; message = nil
                     Task { await preview() }
@@ -132,7 +132,9 @@ struct NaraImportView: View {
     }
 
     private func payload() throws -> Data {
-        try store.body(["csv": csv ?? "", "familyID": previewFamilyID, "targetChildID": targetChildID, "timeZone": TimeZone.current.identifier])
+        let body = try store.body(["csv": csv ?? "", "familyID": previewFamilyID, "targetChildID": targetChildID, "timeZone": TimeZone.current.identifier])
+        guard body.count <= Catalog.shared.limits.requestBytes else { throw APIError(message: "This export is too large to upload. Export a smaller date range and import each part.") }
+        return body
     }
 
     private func preview() async {

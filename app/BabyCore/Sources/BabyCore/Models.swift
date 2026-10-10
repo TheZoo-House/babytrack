@@ -6,6 +6,12 @@ public struct FieldSpec: Codable, Sendable, Identifiable {
     public var kind: String
     public var options: [String]
     public var required: Bool
+    public var multiple: Bool?
+    public var labels: [String: String]?
+    public func displayValue(_ value: String) -> String {
+        let values = multiple == true ? value.split(separator: " ").map(String.init) : [value]
+        return values.map { labels?[$0] ?? $0 }.joined(separator: ", ")
+    }
     public var id: String {
         key
     }
@@ -17,12 +23,29 @@ public struct TypeSpec: Codable, Sendable, Identifiable {
     public var symbol: String
     public var color: String
     public var fields: [FieldSpec]
+    public var scope: String
+    public var titleRequired: Bool
+    public var canSchedule: Bool
+    public var unitsByMeasure: [String: [String]]?
+    public var isInventory: Bool { scope == "inventory" }
+    public var requiresChild: Bool { scope == "care" || scope == "scheduled" }
+    public func options(_ key: String, measure: String? = nil) -> [String] {
+        if key == "unit", let measure, let units = unitsByMeasure?[measure] { return units }
+        return fields.first { $0.key == key }?.options ?? []
+    }
+    public func displayValue(_ key: String, _ value: String) -> String { fields.first { $0.key == key }?.displayValue(value) ?? value }
+}
+
+public struct CatalogLimits: Codable, Sendable {
+    public var csvBytes: Int
+    public var requestBytes: Int
 }
 
 public struct Catalog: Codable, Sendable {
     public var version: Int
     public var formulaBrands: [String]
     public var types: [TypeSpec]
+    public var limits: CatalogLimits
     public static let shared: Catalog = {
         guard let url = Bundle.module.url(forResource: "catalog", withExtension: "json"),
               let data = try? Data(contentsOf: url),
@@ -61,6 +84,11 @@ public struct Entity: Codable, Sendable, Identifiable, Equatable {
     public var updatedAt: Double
     public var deleted: Bool
     public var actor: String
+    public var updatedBy: String?
+    public var updatedByID: String?
+    public var createdAt: Double?
+    public var snoozedUntil: Double?
+    public var recipientUserID: String?
     public var detail: String
     public var scheduled: Bool?
     public var imported: ImportSource?
@@ -132,6 +160,7 @@ public struct Snapshot: Codable, Sendable {
     public var user: User
     public var formulaBrands: [String]?
     public var feedingDefaults: [FeedingDefault]?
+    public var daySummaries: [DaySummary]?
     public static var empty: Snapshot {
         Snapshot(
             version: 1,
@@ -142,18 +171,6 @@ public struct Snapshot: Codable, Sendable {
             members: [],
             user: User(id: "", name: "Caregiver")
         )
-    }
-
-    public static func summaryContractCases() throws -> Data {
-        try Data(contentsOf: Bundle.module.url(forResource: "summary-cases", withExtension: "json")!)
-    }
-
-    public static func sampleNaraImport() throws -> Snapshot {
-        try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: Bundle.module.url(forResource: "nara-import-sample", withExtension: "json")!))
-    }
-
-    public static func sampleNaraCSV() throws -> String {
-        try String(contentsOf: Bundle.module.url(forResource: "nara-sample", withExtension: "csv")!, encoding: .utf8)
     }
 
     public static func sample() throws -> Snapshot {
@@ -205,6 +222,7 @@ public struct DiskState: Codable, Sendable {
     // Device-local input selections survive offline saves until the server acknowledges them.
     public var draftFormulaSelections: [String: String]?
     public var caregiverPhotoDraft: CaregiverPhotoDraft?
+    public var handoffSeenAt: [String: Double]?
     public init() {}
     public func preferredFormula(for childID: String) -> String? {
         draftFormulaSelections?[childID] ?? snapshot.feedingDefaults?.first { $0.childID == childID }?.formula
@@ -230,13 +248,11 @@ public struct DiskState: Codable, Sendable {
         }
         snapshot = newSnapshot
         localPreview = false
-        if !visibleEntities.contains(where: { $0.type == "child" && $0.id == selectedChildID }) {
-            selectedChildID = visibleEntities.first { $0.type == "child" }?.id ?? ""
-        }
+        repairChildSelection()
     }
 
-    /// This projects only user-entered drafts. Business summaries remain server fields.
-    public var visibleEntities: [Entity] {
+    /// Merge drafts once before selection and summary rules; formatting is a separate pass.
+    public var currentEntities: [Entity] {
         var records = snapshot.entities
         for command in outbox where command.error == nil {
             records.removeAll { $0.id == command.entity.id }
@@ -247,7 +263,31 @@ public struct DiskState: Codable, Sendable {
         return records.filter { !$0.deleted }
     }
 
-    public mutating func merge(_ response: SyncResponse) -> [String] {
+    public var visibleEntities: [Entity] {
+        let active = currentEntities
+        let index = Dictionary(active.map { ($0.id, $0) }, uniquingKeysWith: { _, latest in latest })
+        let now = Date.now
+        let projecting = localPreview || !outbox.isEmpty
+        return active.map { original in
+            var entity = original
+            if projecting, entity.type == "reminder", let due = ReminderTiming.due(entity, records: active, now: now) { entity.at = due }
+            entity.detail = RecordDetails.text(for: original, records: index, now: now)
+            entity.scheduled = Catalog.shared.spec(entity.type).canSchedule && entity.fields["done"] != "true" && entity.at > now.timeIntervalSince1970
+            return entity
+        }
+    }
+
+    public mutating func merge(_ response: SyncResponse, familyID: String? = nil, userID: String? = nil) -> [String] {
+        if let familyID, snapshot.familyID != familyID { return [] }
+        if let userID, snapshot.user.id != userID { return [] }
+        for result in response.results where result.status == "conflict" {
+            guard let original = outbox.first(where: { $0.id == result.id && $0.action == "sleepStart" }), let target = result.entityID else { continue }
+            for index in outbox.indices where outbox[index].action == "sleepStop" && outbox[index].entity.id == original.entity.id {
+                let end = outbox[index].entity.end
+                if var shared = response.snapshot.entities.first(where: { $0.id == target }) { shared.end = end; outbox[index].entity = shared; outbox[index].baseVersion = shared.version }
+                else { outbox[index].entity.id = target }
+            }
+        }
         let successful = Set(response.results.filter { ["accepted", "conflict"].contains($0.status) }.map(\.id))
         let acknowledgedChildren = Set(outbox.filter { successful.contains($0.id) && $0.entity.type == "feeding" }.map { $0.entity.childID })
         outbox.removeAll { successful.contains($0.id) }
@@ -262,6 +302,7 @@ public struct DiskState: Codable, Sendable {
             }
         }
         snapshot = response.snapshot
+        repairChildSelection()
         return response.results.compactMap { $0.status == "accepted" ? nil : $0.message }
     }
 }

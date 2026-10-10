@@ -4,7 +4,7 @@ import SwiftUI
 typealias Palette = CarePalette
 
 extension CarePalette {
-    static func configureNavigation() {
+    @MainActor static func configureNavigation() {
         let bar = UINavigationBar.appearance()
         for (style, large) in [(UIFont.TextStyle.headline, false), (.largeTitle, true)] {
             let font = UIFont.preferredFont(forTextStyle: style)
@@ -21,11 +21,15 @@ extension CarePalette {
 struct RecordSymbol: View {
     var type: String
     var size: CGFloat = 38
+    @ScaledMetric(relativeTo: .body) private var scale = 1.0
+    @Environment(\.dynamicTypeSize) private var dynamicType
     var body: some View {
         let spec = Catalog.shared.spec(type)
-        Image(systemName: spec.symbol).font(.system(size: size * 0.42, weight: .medium))
-            .foregroundStyle(Palette.tint(spec.color)).frame(width: size, height: size)
-            .background(Palette.tint(spec.color).opacity(0.11), in: Circle()).accessibilityHidden(true)
+        if !dynamicType.isAccessibilitySize {
+            Image(systemName: spec.symbol).font(.system(size: size * scale * 0.42, weight: .medium))
+                .foregroundStyle(Palette.tint(spec.color)).frame(width: size * scale, height: size * scale)
+                .background(Palette.tint(spec.color).opacity(0.11), in: Circle()).accessibilityHidden(true)
+        }
     }
 }
 
@@ -42,6 +46,7 @@ struct RecordRow: View {
     var pending = false
     var showTypeTitle = true
     var compact = false
+    var showDate = false
     @Environment(\.dynamicTypeSize) private var dynamicType
     var body: some View {
         let detailIsTitle = !showTypeTitle && entity.title == Catalog.shared.spec(entity.type).title && !entity.displayDetail.isEmpty
@@ -70,9 +75,9 @@ struct RecordRow: View {
     }
 
     @ViewBuilder private var metadata: some View {
-        if !["book", "toy", "clothing", "location", "child"].contains(entity.type) {
+        if Catalog.shared.spec(entity.type).requiresChild {
             VStack(alignment: dynamicType.isAccessibilitySize ? .leading : .trailing, spacing: 4) {
-                Text(entity.date, format: .dateTime.hour().minute()).font((compact ? Font.caption : .subheadline).monospacedDigit())
+                Text(entity.date, format: showDate ? .dateTime.month().day().year() : .dateTime.hour().minute()).font((compact ? Font.caption : .subheadline).monospacedDigit())
                     .foregroundStyle(Palette.secondary)
                 if !entity.actor.isEmpty {
                     Text(entity.actor).font(.caption).foregroundStyle(Palette.secondary)
@@ -91,8 +96,12 @@ extension View {
 
 struct AppList<Content: View>: View {
     @ViewBuilder var content: () -> Content
+    @Environment(\.inCareSheet) private var inSheet
     var body: some View {
-        List { content().listRowBackground(Palette.paper) }.appList().labeledContentStyle(AppValueStyle())
+        Group {
+            if inSheet { CareListBody(content: content) }
+            else { List { content().listRowBackground(Palette.paper) }.appList() }
+        }.labeledContentStyle(AppValueStyle())
     }
 }
 
@@ -112,34 +121,12 @@ struct AppValueStyle: LabeledContentStyle {
     }
 }
 
-extension Entity {
-    /// Drafts have no server description yet; format only their entered fields.
-    var displayDetail: String {
-        if type == "sleep" {
-            let duration = end.map { "\(Int((max(0, $0 - at) / 60).rounded()).formatted()) min" } ?? "Sleeping"
-            return [duration, fields["category"]].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
-        }
-        if !detail.isEmpty {
-            return detail
-        }
-        switch type {
-        case "feeding": return [fields["amount"].map { $0 + " " + (fields["unit"] ?? "") } ?? "Amount not recorded", fields["brand"]].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
-        case "diaper":
-            let dirty = ["Dirty", "Both"].contains(fields["contents"] ?? "")
-            let otherDetail = fields["detail"]?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "blowout" ? nil : fields["detail"]
-            return ([fields["contents"]] + (dirty ? [otherDetail, fields["color"], fields["consistency"]] : []) + [DiaperFields.hasBlowout(fields) ? "Blowout" : nil, fields["rash"] == "true" ? "Diaper rash" : nil]).compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
-        case "growth": return [fields["measure"], fields["value"].map { $0 + " " + (fields["unit"] ?? "") }].compactMap { $0 }.joined(separator: " · ")
-        default: return fields["notes"] ?? ""
-        }
-    }
-}
-
 struct CareActionStyle: ButtonStyle {
     var color: String
     @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.font(.subheadline.weight(.semibold))
-            .foregroundStyle(Palette.buttonInk)
+            .foregroundStyle(Palette.foregroundForFill(color))
             .padding(.horizontal, 16).padding(.vertical, 10).frame(minHeight: 44)
             .background(Palette.fill(color), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .opacity(isEnabled ? (configuration.isPressed ? 0.75 : 1) : 0.45)
@@ -149,7 +136,7 @@ struct CareActionStyle: ButtonStyle {
 struct CompactCareActionStyle: ButtonStyle {
     var color: String
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.subheadline.weight(.semibold)).foregroundStyle(Palette.buttonInk)
+        configuration.label.font(.subheadline.weight(.semibold)).foregroundStyle(Palette.foregroundForFill(color))
             .padding(.horizontal, 14).padding(.vertical, 8).frame(minWidth: 64, minHeight: 40)
             .background(Palette.fill(color), in: RoundedRectangle(cornerRadius: 11))
             .frame(minHeight: 44)
@@ -164,7 +151,7 @@ struct AddRecordButton: View {
     var body: some View {
         Button { store.form = FormRequest(type: type) } label: {
             Image(systemName: "plus").font(.body.weight(.semibold))
-        }.buttonStyle(CareActionStyle(color: Catalog.shared.spec(type).color))
+        }.buttonStyle(.plain).frame(minWidth: 44, minHeight: 44)
             .accessibilityLabel(label ?? "Add " + Catalog.shared.spec(type).title.lowercased())
     }
 }
@@ -202,8 +189,9 @@ struct LogSheetHeader: View {
             } else {
                 HStack(spacing: 12) { closeButton; heading; actionButton }
             }
-        }.foregroundStyle(Palette.buttonInk).padding(.horizontal, 12).padding(.vertical, 8)
+        }.foregroundStyle(Palette.foregroundForFill(color)).padding(.horizontal, 12).padding(.vertical, 8)
             .background(Palette.fill(color))
+            .background { GeometryReader { proxy in Color.clear.preference(key: CareHeaderHeight.self, value: proxy.size.height) } }
     }
 }
 
@@ -234,9 +222,7 @@ struct ChoiceButtons: View {
     var horizontal = false
     @Environment(\.dynamicTypeSize) private var dynamicType
     private func label(_ option: String) -> String {
-        if identifier == "measure", option == "Head circumference" { return "Head size" }
-        if identifier == "kind" { return option == "other" ? "Other" : Catalog.shared.spec(option).title }
-        return option
+        Catalog.shared.types.lazy.flatMap(\.fields).first { $0.key == identifier && $0.options.contains(option) }?.displayValue(option) ?? option
     }
     var body: some View {
         CenteredSelectionLayout(horizontalSpacing: horizontal ? 4 : 8, fullWidth: dynamicType.isAccessibilitySize) {
@@ -247,22 +233,13 @@ struct ChoiceButtons: View {
                         Text(label(option)).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                         if chosen && identifier != "unit" { Image(systemName: "checkmark").font(.caption.weight(.bold)) }
                     }.font(.subheadline.weight(chosen ? .semibold : .regular)).padding(.horizontal, 8).frame(minWidth: horizontal ? Self.compactWidth : minimumWidth, maxWidth: .infinity, minHeight: 44)
-                        .foregroundStyle(chosen ? Palette.buttonInk : Palette.ink)
+                        .foregroundStyle(chosen ? Palette.foregroundForFill(color) : Palette.ink)
                         .background(chosen ? Palette.fill(color) : Palette.tint(color).opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
                         .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.tint(color).opacity(chosen ? 0 : 0.25), lineWidth: 1))
                 }.buttonStyle(.plain).accessibilityIdentifier("\(identifier)-\(option)")
                     .accessibilityAddTraits(chosen ? .isSelected : [])
             }
         }
-    }
-}
-
-private struct CareSheetStyle: ViewModifier {
-    @Environment(\.dynamicTypeSize) private var dynamicType
-    @ViewBuilder func body(content: Content) -> some View {
-        let sheet = content.presentationSizing(.page).presentationDragIndicator(.visible).presentationCornerRadius(24)
-            .presentationBackground(Palette.paper).foregroundStyle(Palette.ink)
-        if dynamicType.isAccessibilitySize { sheet.presentationDetents([.large]) } else { sheet }
     }
 }
 

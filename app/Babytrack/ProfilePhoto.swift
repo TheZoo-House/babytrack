@@ -43,7 +43,7 @@ struct CaregiverProfileView: View {
                     dismiss()
                 }
             }
-            ScrollView { VStack(spacing: 16) {
+            CareSheetBody { VStack(spacing: 16) {
                 ProfileAvatar(photo: photo, size: 100)
                 Text(store.state.snapshot.user.name).font(.headline)
                 PhotosPicker(photo == nil ? "Add profile photo" : "Replace profile photo", selection: $selected, matching: .images)

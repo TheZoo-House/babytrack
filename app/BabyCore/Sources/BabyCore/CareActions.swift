@@ -20,32 +20,39 @@ public enum CareAction: Sendable {
     case medication(String, Double, String)
     case startSleep
     case endSleep
+    case endSleepSession(String)
+    case reminderDone(String)
+    case reminderSnooze(String, Double)
 }
 
 public extension SharedStorage {
     /// App, widgets and Siri resolve the child and enqueue under one lock.
     @discardableResult func record(_ action: CareAction, childID: String? = nil, now: Date = .now) throws -> Entity {
         try update { state in
-            let children = state.visibleEntities.filter { $0.type == "child" }
-            let id = childID ?? state.selectedChildID
-            guard let child = children.first(where: { $0.id == id }) ?? (childID == nil && children.count == 1 ? children.first : nil)
+            let records = state.currentEntities
+            let children = records.filter { $0.type == "child" }
+            let referenceID: String?
+            switch action { case let .reminderDone(id), let .reminderSnooze(id, _), let .endSleepSession(id): referenceID = id; default: referenceID = nil }
+            let referenced = referenceID.flatMap { id in records.first { $0.id == id } }
+            let id = childID ?? referenced?.childID ?? state.resolvedChild?.id ?? ""
+            guard let child = children.first(where: { $0.id == id })
             else { throw CareActionError.noChild }
-            let active = state.visibleEntities.first { $0.type == "sleep" && $0.childID == child.id && $0.end == nil }
+            let active = state.activeSleep(for: child.id)
             var entity: Entity
             var operation = "upsert"
             switch action {
             case let .diaper(contents):
-                guard ["Wet", "Dirty", "Both", "Dry"].contains(contents) else { throw CareActionError.invalidAmount }
+                guard Catalog.shared.spec("diaper").options("contents").contains(contents) else { throw CareActionError.invalidAmount }
                 entity = Entity(type: "diaper", childID: child.id, title: "Diaper", date: now, fields: ["contents": contents])
             case let .bottle(amount, unit):
-                guard amount.isFinite, amount > 0, amount <= 100_000, ["oz", "mL"].contains(unit) else { throw CareActionError.invalidAmount }
+                guard amount.isFinite, amount > 0, amount <= 100_000, Catalog.shared.spec("feeding").options("unit").contains(unit) else { throw CareActionError.invalidAmount }
                 entity = Entity(type: "feeding", childID: child.id, title: "Bottle", date: now, fields: ["amount": String(amount), "unit": unit])
             case let .measurement(value, measure, unit):
-                let units = measure == "Weight" ? ["lb", "oz", "kg"] : ["in", "cm"]
-                guard value.isFinite, value > 0, value <= 100_000, ["Weight", "Height", "Head circumference"].contains(measure), units.contains(unit) else { throw CareActionError.invalidMeasurement }
+                let spec = Catalog.shared.spec("growth"), units = spec.options("unit", measure: measure)
+                guard value.isFinite, value > 0, value <= 100_000, spec.options("measure").contains(measure), units.contains(unit) else { throw CareActionError.invalidMeasurement }
                 entity = Entity(type: "growth", childID: child.id, title: "Measurement", date: now, fields: ["value": String(value), "measure": measure, "unit": unit])
             case let .temperature(value, unit):
-                guard value.isFinite, value >= 0, value <= 100_000, ["°F", "°C"].contains(unit) else { throw CareActionError.invalidMeasurement }
+                guard value.isFinite, value >= 0, value <= 100_000, Catalog.shared.spec("temperature").options("unit").contains(unit) else { throw CareActionError.invalidMeasurement }
                 entity = Entity(type: "temperature", childID: child.id, title: "Temperature", date: now, fields: ["value": String(value), "unit": unit])
             case let .medication(name, dose, unit):
                 let title = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -57,9 +64,16 @@ public extension SharedStorage {
                 }
                 operation = "sleepStart"
                 entity = Entity(type: "sleep", childID: child.id, title: "Sleep", date: now, fields: ["category": "Nap"])
-            case .endSleep:
+            case .endSleep, .endSleepSession:
                 guard var sleep = active else { throw CareActionError.noSleep }
+                if case let .endSleepSession(id) = action, sleep.id != id { throw CareActionError.noSleep }
                 sleep.end = max(sleep.at, now.timeIntervalSince1970); entity = sleep; operation = "sleepStop"
+            case .reminderDone:
+                guard var reminder = referenced, reminder.type == "reminder" else { throw CareActionError.invalidMeasurement }
+                reminder.fields["done"] = "true"; entity = reminder; operation = "reminderDone"
+            case let .reminderSnooze(_, minutes):
+                guard var reminder = referenced, reminder.type == "reminder", minutes.isFinite, minutes > 0, minutes <= 10080 else { throw CareActionError.invalidMeasurement }
+                reminder.at = now.addingTimeInterval(minutes * 60).timeIntervalSince1970; reminder.snoozedUntil = reminder.at; reminder.fields["done"] = "false"; entity = reminder; operation = "reminderSnooze"
             }
             state.enqueue(Command(action: operation, entity: entity))
             return entity

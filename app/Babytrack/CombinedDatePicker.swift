@@ -5,6 +5,7 @@ struct CombinedDatePicker: UIViewRepresentable {
     @Binding var date: Date
     var dateOnly = false
     var minimumDate: Date?
+    var maximumDate: Date?
     func makeUIView(context: Context) -> UIDatePicker {
         let picker = UIDatePicker()
         picker.preferredDatePickerStyle = .wheels
@@ -17,6 +18,7 @@ struct CombinedDatePicker: UIViewRepresentable {
         context.coordinator.parent = self
         picker.datePickerMode = dateOnly ? .date : .dateAndTime
         picker.minimumDate = minimumDate
+        picker.maximumDate = maximumDate
         picker.overrideUserInterfaceStyle = context.environment.colorScheme == .dark ? .dark : .light
         if picker.date != date {
             picker.setDate(date, animated: false)

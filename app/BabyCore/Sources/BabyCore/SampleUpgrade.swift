@@ -9,7 +9,7 @@ public extension DiskState {
         let starterIDs = Set(starter.entities.map(\.id))
         guard let child = sample.entities.first(where: { $0.type == "child" }) else { return false }
         var retained = snapshot.entities.filter {
-            !starterIDs.contains($0.id) || ["book", "toy", "clothing", "location", "formula"].contains($0.type) || ($0.id != "sample-child" && $0.version > 1)
+            !starterIDs.contains($0.id) || Catalog.shared.spec($0.type).isInventory || ($0.id != "sample-child" && $0.version > 1)
         }
         for command in outbox {
             retained.removeAll { $0.id == command.entity.id }

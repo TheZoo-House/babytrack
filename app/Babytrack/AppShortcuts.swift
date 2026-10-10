@@ -31,6 +31,6 @@ struct OpenCareEntryIntent: AppIntent {
     static let openAppWhenRun = true
     @Parameter(title: "Record", default: .feeding) var kind: CareEntryKind
     func perform() async throws -> some IntentResult & OpensIntent {
-        .result(opensIntent: OpenURLIntent(URL(string: "babytrack://record?type=\(kind.rawValue)")!))
+        .result(opensIntent: OpenURLIntent(DeepLink.log(kind.rawValue).url))
     }
 }

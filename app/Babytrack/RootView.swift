@@ -34,9 +34,9 @@ struct RootView: View {
                         if store
                             .isPreview
                         {
-                            Text("Sample family").font(.caption).foregroundStyle(.secondary).padding(20)
+                            Text("Sample family").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading).padding(20)
                         }
-                    }.background(Palette.paper)
+                    }.background(Palette.paper).navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 320)
                 } detail: {
                     NavigationStack { content(store.selectedSection) }.id(store.selectedSection)
                 }.navigationSplitViewStyle(.balanced)
@@ -54,7 +54,7 @@ struct RootView: View {
             }
         }
         .sheet(item: $store.form) { request in RecordForm(request: request) }
-        .sheet(item: $store.detail) { entity in RecordDetail(entity: entity) }
+        .sheet(item: $store.detail, onDismiss: store.detailDismissed) { entity in RecordDetail(entity: entity) }
         .alert(
             "Could not complete",
             isPresented: Binding(get: { store.error != nil }, set: {

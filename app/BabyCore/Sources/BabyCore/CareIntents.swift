@@ -32,8 +32,7 @@
 
         public func defaultResult() async -> CareChild? {
             guard let state = try? SharedStorage.application.read() else { return nil }
-            let children = state.visibleEntities.filter { $0.type == "child" }
-            guard let child = children.first(where: { $0.id == state.selectedChildID }) ?? (children.count == 1 ? children.first : nil) else { return nil }
+            guard let child = state.resolvedChild else { return nil }
             return CareChild(id: child.id, name: child.title)
         }
 
@@ -209,6 +208,15 @@
             try SharedStorage.application.record(.medication(name, dose, unit), childID: child.id)
             WidgetCenter.shared.reloadAllTimelines()
             return .result(dialog: "Saved \(name) for \(child.name).")
+        }
+    }
+    public enum IntentCatalog {
+        public static var valid: Bool {
+            Set(BottleUnit.allCases.map(\.recordValue)) == Set(Catalog.shared.spec("feeding").options("unit")) &&
+            Set(DiaperContents.allCases.map(\.recordValue)) == Set(Catalog.shared.spec("diaper").options("contents")) &&
+            Set(GrowthMeasure.allCases.map(\.recordValue)) == Set(Catalog.shared.spec("growth").options("measure")) &&
+            Set(MeasurementUnit.allCases.map(\.recordValue)) == Set(Catalog.shared.spec("growth").options("unit")) &&
+            Set(TemperatureUnit.allCases.map(\.recordValue)) == Set(Catalog.shared.spec("temperature").options("unit"))
         }
     }
 #endif

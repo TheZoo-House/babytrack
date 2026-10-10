@@ -10,10 +10,7 @@ try {
   const user = store.account("owner-local-sample", "You", true);
   try {
     const previous = JSON.parse(readFileSync(output, "utf8"));
-    store.db.prepare('DELETE FROM members WHERE user=?').run(user.id);
-    store.db.prepare('UPDATE users SET family=? WHERE id=?').run(previous.familyID,user.id);
-    store.db.prepare('INSERT INTO members VALUES (?,?)').run(previous.familyID,user.id);
-    user.family=previous.familyID;
+    user.family=store.restorePreviewFamily(user,previous.familyID).family;
   } catch (error) { if (error.code !== "ENOENT") throw error; }
   const report = store.importNara(user, {
     csv: readFileSync(input, "utf8"),
@@ -22,7 +19,7 @@ try {
     timeZone: "America/New_York",
   });
   mkdirSync(dirname(output), { recursive: true });
-  writeFileSync(output, JSON.stringify(report.snapshot), { mode: 0o600 });
+  writeFileSync(output, JSON.stringify(store.snapshot(user, "America/New_York", {includeSource:true})), { mode: 0o600 });
   console.log(
     JSON.stringify({
       sourceRows: report.sourceRows,

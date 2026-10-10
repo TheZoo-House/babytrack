@@ -7,6 +7,7 @@ struct TodayView: View {
     @Environment(\.dynamicTypeSize) private var dynamicType
     @ScaledMetric(relativeTo: .largeTitle) private var childTitleSize = 28
     @State private var showActions = false
+    @State private var pendingAction: String?
     @State private var showJournal = false
     @State private var expandedType: String?
     @State private var historyLimit = 8
@@ -48,10 +49,12 @@ struct TodayView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showActions = true } label: { Image(systemName: "plus").font(.body.weight(.semibold)) }
-                        .buttonStyle(CareActionStyle(color: "neutral")).accessibilityLabel("Add record").accessibilityIdentifier("addRecord")
+                        .buttonStyle(.plain).frame(minWidth: 44, minHeight: 44).accessibilityLabel("Add record").accessibilityIdentifier("addRecord")
                 }
             }
-            .sheet(isPresented: $showActions) { AddRecordMenu() }
+            .sheet(isPresented: $showActions, onDismiss: {
+                if let type = pendingAction { store.form = FormRequest(type: type); pendingAction = nil }
+            }) { AddRecordMenu { pendingAction = $0; showActions = false } }
             .navigationDestination(isPresented: $showJournal) { JournalView() }
             .refreshable { await store.sync() }
             .onAppear {
@@ -65,7 +68,7 @@ struct TodayView: View {
     }
 
     private var header: some View {
-        TimelineView(.periodic(from: .now, by: 60)) { context in header(at: context.date) }
+        TimelineView(.periodic(from: .now, by: 60)) { _ in header(at: .now) }
     }
 
     private func header(at date: Date) -> some View {
@@ -114,17 +117,17 @@ struct TodayView: View {
     }
 
     private var careSections: some View {
-        TimelineView(.periodic(from: .now, by: 60)) { context in
-            let summary = store.summary(at: context.date)
+        TimelineView(.periodic(from: .now, by: 60)) { _ in
+            let summary = store.summary(at: .now)
             VStack(spacing: 0) {
                 activity(type: "feeding", identifier: "quickBottle", latestID: summary?.lastFeedingID,
-                         total: summary.map { store.unitSystem == "imperial" ? String(format: "%.1f oz today", Double($0.feedingML) / 29.5735295625) : "\($0.feedingML) mL today" })
+                         total: summary.map { CareTime.volume($0.feedingML, imperial: store.unitSystem == "imperial") + " today" })
                 Divider()
                 activity(type: "diaper", identifier: "quickDiaper", latestID: summary?.lastDiaperID,
                          total: summary.map { "\($0.diaperCount) diaper\($0.diaperCount == 1 ? "" : "s") today" })
                 Divider()
                 activity(type: "sleep", identifier: "toggleSleep", latestID: summary?.lastSleepID,
-                         total: summary.map { "\($0.sleepMinutes / 60)h \($0.sleepMinutes % 60)m today" })
+                         total: summary.map { CareTime.sleep($0.sleepMinutes) + " today" })
                 Divider()
             }
         }
@@ -165,6 +168,7 @@ struct TodayView: View {
                                 .monospacedDigit().accessibilityIdentifier("sleepTimer")
                         } else {
                             Text(latest?.displayDetail ?? "No records yet").lineLimit(dynamicType.isAccessibilitySize ? 3 : 1)
+                            if let latest { Text(CareTime.relative(latest.date)).font(.caption2) }
                         }
                         totalLabel(type: type, total: total)
                     }.font(.caption).foregroundStyle(Palette.secondary)
@@ -196,7 +200,7 @@ struct TodayView: View {
                 }
                 Button { store.detail = entity } label: { RecordRow(entity: entity, showTypeTitle: false, compact: true) }
                     .buttonStyle(.plain).accessibilityIdentifier("timeline-\(entity.type)")
-                Divider()
+                if index < rows.count - 1 { Divider() }
             }
             if all.count > historyLimit {
                 Button("Show more") { historyLimit += 10 }.font(.subheadline).frame(maxWidth: .infinity, minHeight: 44, alignment: .trailing)
@@ -255,7 +259,7 @@ struct TodayView: View {
 }
 
 struct AddRecordMenu: View {
-    @Environment(AppStore.self) private var store
+    var select: (String) -> Void
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         VStack(spacing: 0) {
@@ -269,97 +273,12 @@ struct AddRecordMenu: View {
 
     private func entry(_ type: TypeSpec) -> some View {
         Button {
-            dismiss(); Task { try? await Task.sleep(for: .milliseconds(250)); store.form = FormRequest(type: type.id) }
+            select(type.id)
         } label: {
             HStack(spacing: 14) { RecordSymbol(type: type.id); Text(type.title).foregroundStyle(Palette.ink); Spacer(); Image(systemName: "plus").foregroundStyle(Palette.tint(type.color)) }.padding(
                 .vertical,
                 4
             )
         }.accessibilityIdentifier("add-\(type.id)")
-    }
-}
-
-struct JournalView: View {
-    @Environment(AppStore.self) private var store
-    @Environment(\.dynamicTypeSize) private var dynamicType
-    var type: String? = nil
-    @State private var filter = "All"
-    @State private var search = ""
-    private var rows: [Entity] {
-        store.care
-            .filter {
-                (type == nil ? (filter == "All" || $0.type == filter) : $0.type == type) &&
-                    (search.isEmpty || $0.title.localizedCaseInsensitiveContains(search) || $0.detail
-                        .localizedCaseInsensitiveContains(search))
-            }
-    }
-
-    private var days: [Date] {
-        Array(Set(rows.map { Calendar.current.startOfDay(for: $0.date) })).sorted(by: >)
-    }
-
-    @ViewBuilder private var sleepStatus: some View {
-        if let active = store.activeSleep {
-            Text(timerInterval: active.date ... Date.distantFuture, countsDown: false)
-                .font(.title2.monospacedDigit()).accessibilityIdentifier("sleepTimer")
-        } else {
-            Text("Ready for sleep").foregroundStyle(Palette.secondary)
-        }
-    }
-
-    private var sleepAction: some View {
-        Button(store.activeSleep == nil ? "Start sleep" : "End sleep") { store.toggleSleep() }
-            .buttonStyle(CareActionStyle(color: "indigo")).accessibilityIdentifier("toggleSleep")
-    }
-
-    var body: some View {
-        AppList {
-            if type == "sleep" {
-                Section {
-                    if dynamicType.isAccessibilitySize {
-                        VStack(alignment: .leading, spacing: 12) {
-                            sleepStatus
-                            HStack { Spacer(); sleepAction }
-                        }.padding(.vertical, 4)
-                    } else {
-                        HStack { sleepStatus; Spacer(); sleepAction }.padding(.vertical, 4)
-                    }
-                }
-            }
-            ForEach(days, id: \.self) { day in
-                Section { ForEach(rows.filter { Calendar.current.isDate($0.date, inSameDayAs: day) }) { entity in
-                    Button { store.detail = entity } label: { RecordRow(entity: entity, showTypeTitle: type == nil) }.buttonStyle(.plain).accessibilityIdentifier("timeline-\(entity.type)")
-                }
-                } header: { Text(
-                    day,
-                    format: .dateTime.weekday(.wide).month().day()
-                ) }
-            }
-        }.appList()
-            .navigationTitle(type.map { Catalog.shared.spec($0).title } ?? "Journal").searchable(text: $search, prompt: "Search records")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    if let type {
-                        AddRecordButton(type: type, label: "Log " + Catalog.shared.spec(type).title)
-                            .accessibilityIdentifier("logRecord")
-                    } else {
-                        Menu { Button("All") { filter = "All" }; ForEach(Catalog.shared.types.filter { ![
-                            "child",
-                            "book",
-                            "toy",
-                            "clothing",
-                            "location",
-                            "reminder", "formula",
-                        ].contains($0.id) }) { type in Button(type.title) { filter = type.id } } } label: {
-                            Image(systemName: "line.3.horizontal.decrease")
-                        }.accessibilityLabel("Filter records")
-                    }
-                }
-            }
-            .overlay {
-                if rows.isEmpty && type != "sleep" {
-                    ContentUnavailableView("No records", systemImage: "clock")
-                }
-            }
     }
 }

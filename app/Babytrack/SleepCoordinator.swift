@@ -133,32 +133,3 @@ import UserNotifications
         /* Cached state remains usable until the next registration. */ }
     }
 }
-
-@MainActor final class NotificationDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
-    weak var store: AppStore?
-    func application(
-        _ application: UIApplication,
-        didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
-    ) -> Bool {
-        UNUserNotificationCenter.current().delegate = self
-        if UserDefaults.standard.bool(forKey: "notificationsEnabled") {
-            application.registerForRemoteNotifications()
-        }
-        return true
-    }
-
-    func application(_: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        if let store {
-            Task { await SleepCoordinator.shared.receivePushToken(deviceToken, store: store) }
-        }
-    }
-
-    nonisolated func userNotificationCenter(_: UNUserNotificationCenter,
-                                            willPresent _: UNNotification) async -> UNNotificationPresentationOptions
-    {
-        [
-            .banner,
-            .sound,
-        ]
-    }
-}
