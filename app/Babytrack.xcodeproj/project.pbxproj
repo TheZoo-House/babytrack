@@ -17,6 +17,7 @@
 		6CA242F3D3408822C4C739B7 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7124937E2453A2C2329AAF /* AppStore.swift */; };
 		8068D10A60EF78449D3F6E13 /* BabytrackApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46835C123B81BBDDEAAA785 /* BabytrackApp.swift */; };
 		816410634ED2E53DDFAA2008 /* AppShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 370742E622D5EE4E6D19A45A /* AppShortcuts.swift */; };
+		8738445CFC7B846B2AB5AD3C /* CombinedDatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF613F05EA1B6F9B5F9295C4 /* CombinedDatePicker.swift */; };
 		A3537207E9D90179666FF374 /* NaraImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC6F52EA68845A588687E2F /* NaraImportView.swift */; };
 		A4EBE4716424E012E5E69A9A /* RecordForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5248161E7D3F11D0D82D52D3 /* RecordForm.swift */; };
 		C0B24A9405AF107EFF7EF530 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7892086320009B4616926DCB /* RootView.swift */; };
@@ -85,6 +86,7 @@
 		D46835C123B81BBDDEAAA785 /* BabytrackApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabytrackApp.swift; sourceTree = "<group>"; };
 		DAC2FF607929A37D21AE00C0 /* BabyWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabyWidgets.swift; sourceTree = "<group>"; };
 		DE377DB22696A7294CFDF1B8 /* BabyWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = BabyWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DF613F05EA1B6F9B5F9295C4 /* CombinedDatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombinedDatePicker.swift; sourceTree = "<group>"; };
 		EAEA0B9986811360AF04D6EF /* BabytrackUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabytrackUITests.swift; sourceTree = "<group>"; };
 		EEC6F52EA68845A588687E2F /* NaraImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NaraImportView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -174,6 +176,7 @@
 				90E0FF58F9E693F7A9CE7FCE /* Babytrack.entitlements */,
 				D46835C123B81BBDDEAAA785 /* BabytrackApp.swift */,
 				03C4BD4849146B95138B1A55 /* BarcodeScanner.swift */,
+				DF613F05EA1B6F9B5F9295C4 /* CombinedDatePicker.swift */,
 				38ED0B8C85D74A823C6963A7 /* FamilyView.swift */,
 				40702E6B4772C8E4809F94DD /* HealthView.swift */,
 				63C6BE17664D9CAA6E8E88D2 /* Info.plist */,
@@ -328,6 +331,7 @@
 				6CA242F3D3408822C4C739B7 /* AppStore.swift in Sources */,
 				8068D10A60EF78449D3F6E13 /* BabytrackApp.swift in Sources */,
 				F2D43143F5D5DB6AEB6BFE67 /* BarcodeScanner.swift in Sources */,
+				8738445CFC7B846B2AB5AD3C /* CombinedDatePicker.swift in Sources */,
 				3B7F3E59A06DADC0B4EDBCFE /* FamilyView.swift in Sources */,
 				E1AABC9E8AF16285B66B2530 /* HealthView.swift in Sources */,
 				CF770B79FC5D26DE4022097B /* LibraryView.swift in Sources */,

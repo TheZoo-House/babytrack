@@ -37,9 +37,14 @@ import XCTest
     func testIsolatedBackendBottleSync() {
         let app = XCUIApplication(); app.launchArguments = ["--ui-http-test"]; app.launch()
         XCTAssertTrue(app.buttons["trySample"].waitForExistence(timeout: 10)); app.buttons["trySample"].tap()
-        XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15)); app.buttons["quickBottle"].tap()
-        app.buttons["saveRecord"].tap()
-        XCTAssertTrue(app.staticTexts["12.0 oz"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
+        let total = app.staticTexts["total-feeding"]
+        XCTAssertTrue(total.waitForExistence(timeout: 5))
+        let baseline = Double(total.label.split(separator: " ").first.map(String.init) ?? "") ?? 0
+        app.buttons["quickBottle"].tap(); app.buttons["saveRecord"].tap()
+        let expected = String(format: "%.1f oz", baseline + 4)
+        expectation(for: NSPredicate(format: "label BEGINSWITH %@", expected), evaluatedWith: total)
+        waitForExpectations(timeout: 15)
     }
 
     func testCustomFormulaAndEditorScreenshots() {
@@ -119,8 +124,9 @@ import XCTest
         for type in ["sleep", "reading", "medication", "temperature", "illness", "vaccine", "appointment", "milestone", "note", "reminder"] {
             app.buttons["addRecord"].tap()
             let action = app.buttons["add-\(type)"]
-            for _ in 0 ..< 4 where !action.isHittable {
-                app.collectionViews.firstMatch.swipeUp()
+            for _ in 0 ..< 14 where !action.isHittable {
+                let list = app.collectionViews.firstMatch
+                list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75)).press(forDuration: 0.1, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.55)))
             }
             XCTAssertTrue(action.exists); action.tap()
             XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5)); capture(app, "\(type) editor")
@@ -133,6 +139,40 @@ import XCTest
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15)); capture(app, "Large text Today")
         app.buttons["quickBottle"].tap(); XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5)); capture(app, "Large text bottle")
         app.buttons["Cancel"].tap(); navigate(app, "Health"); capture(app, "Large text health")
+    }
+
+    func testCompactSheetAndCombinedTimeWheel() {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
+        XCTAssertLessThan(app.buttons["quickBottle"].frame.minY, app.buttons["quickDiaper"].frame.minY)
+        XCTAssertLessThan(app.buttons["quickDiaper"].frame.minY, app.buttons["toggleSleep"].frame.minY)
+        capture(app, "Ordered colorful logging actions")
+        app.buttons["quickBottle"].tap()
+        XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5))
+        capture(app, "Compact bottle bottom sheet")
+        if !app.buttons["nav-Today"].exists {
+            XCTAssertGreaterThan(app.buttons["Cancel"].frame.minY, app.frame.height * 0.35)
+        }
+        XCTAssertLessThan(app.buttons["Cancel"].frame.midX, app.buttons["saveRecord"].frame.midX)
+        let originalTime = app.buttons["startTime"].value as? String
+        app.buttons["startTime"].tap()
+        XCTAssertTrue(app.pickerWheels.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertEqual(app.pickerWheels.count, 4)
+        capture(app, "Combined date and time wheel")
+        let minute = app.pickerWheels.element(boundBy: 2)
+        let digits = (minute.value as? String ?? "").components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+        if let current = Int(digits) {
+            minute.adjust(toPickerWheelValue: String(format: "%02d", (current + 5) % 60))
+        } else {
+            XCTFail("The combined picker did not expose its minute value")
+        }
+        app.buttons["startTime"].tap()
+        XCTAssertNotEqual(app.buttons["startTime"].value as? String, originalTime)
+        app.buttons["saveRecord"].tap()
+        app.buttons["quickDiaper"].tap(); capture(app, "Compact diaper bottom sheet"); app.buttons["Cancel"].tap()
+        app.buttons["Add past sleep"].tap(); capture(app, "Compact sleep bottom sheet")
+        app.buttons["endTime"].tap(); XCTAssertEqual(app.pickerWheels.count, 4)
+        capture(app, "Combined sleep end wheel"); app.buttons["Cancel"].tap()
     }
 
     private func navigate(_ app: XCUIApplication, _ name: String) {

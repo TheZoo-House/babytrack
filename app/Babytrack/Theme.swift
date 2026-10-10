@@ -150,3 +150,94 @@ extension Entity {
         }
     }
 }
+
+extension Palette {
+    static let buttonInk = Color(red: 0.12, green: 0.16, blue: 0.2)
+    static func fill(_ key: String) -> Color {
+        switch key {
+        case "amber": Color(red: 1, green: 0.82, blue: 0.31)
+        case "indigo": Color(red: 0.66, green: 0.69, blue: 0.96)
+        case "rose": Color(red: 0.96, green: 0.68, blue: 0.7)
+        default: Color(red: 0.57, green: 0.81, blue: 0.71)
+        }
+    }
+}
+
+struct CareActionStyle: ButtonStyle {
+    var color: String
+    @Environment(\.isEnabled) private var isEnabled
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.font(.subheadline.weight(.semibold))
+            .foregroundStyle(Palette.buttonInk)
+            .padding(.horizontal, 16).padding(.vertical, 10).frame(minHeight: 44)
+            .background(Palette.fill(color), in: Capsule())
+            .opacity(isEnabled ? (configuration.isPressed ? 0.75 : 1) : 0.45)
+    }
+}
+
+struct LogSheetHeader: View {
+    var title: String
+    var color: String
+    var closeLabel = "Cancel"
+    var actionTitle: String?
+    var actionEnabled = true
+    var actionID = "saveRecord"
+    var close: () -> Void
+    var action: (() -> Void)?
+    var body: some View {
+        HStack(spacing: 12) {
+            Button(action: close) { Image(systemName: "xmark").font(.title3).frame(width: 44, height: 44) }
+                .accessibilityLabel(closeLabel).buttonStyle(.plain)
+            Text(title).font(.system(.title3, design: .serif, weight: .medium))
+                .multilineTextAlignment(.center).frame(maxWidth: .infinity)
+            if let actionTitle, let action {
+                Button(actionTitle, action: action).font(.body.weight(.semibold))
+                    .frame(minWidth: 44, minHeight: 44).buttonStyle(.plain)
+                    .disabled(!actionEnabled).opacity(actionEnabled ? 1 : 0.45).accessibilityIdentifier(actionID)
+            } else {
+                Color.clear.frame(width: 44, height: 44)
+            }
+        }.foregroundStyle(Palette.buttonInk).padding(.horizontal, 12).padding(.vertical, 8)
+            .background(Palette.fill(color))
+    }
+}
+
+struct EntryRow<Content: View>: View {
+    var title: String
+    @ViewBuilder var content: () -> Content
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center, spacing: 16) {
+                Text(title).fixedSize(); Spacer(minLength: 12); content().frame(minHeight: 44)
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title).font(.subheadline).foregroundStyle(.secondary)
+                content().frame(maxWidth: .infinity, minHeight: 44, alignment: .trailing)
+            }
+        }.frame(minHeight: 48).padding(.horizontal, 20).padding(.vertical, 4)
+    }
+}
+
+struct CareSectionHeading<Action: View>: View {
+    var type: String
+    @ViewBuilder var action: () -> Action
+    @Environment(\.dynamicTypeSize) private var dynamicType
+    private var label: some View {
+        HStack(spacing: 10) {
+            RecordSymbol(type: type)
+            Text(Catalog.shared.spec(type).title).font(.title3.weight(.semibold))
+                .foregroundStyle(Palette.tint(Catalog.shared.spec(type).color))
+        }
+    }
+
+    var body: some View {
+        if dynamicType.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 12) {
+                label
+                HStack { Spacer(); action() }
+            }
+        } else {
+            HStack(spacing: 10) { label; Spacer(); action() }
+        }
+    }
+}

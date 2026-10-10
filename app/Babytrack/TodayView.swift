@@ -23,12 +23,12 @@ struct TodayView: View {
                 } else {
                     if sizeClass == .regular {
                         HStack(alignment: .top, spacing: 48) {
-                            VStack(alignment: .leading, spacing: 28) { sleep; careSections }
+                            VStack(alignment: .leading, spacing: 28) { careSections; sleep }
                                 .frame(maxWidth: .infinity)
                             VStack(alignment: .leading, spacing: 12) { recent; upcoming }.frame(maxWidth: .infinity)
                         }
                     } else {
-                        sleep; careSections; recent; upcoming
+                        careSections; sleep; recent; upcoming
                     }
                 }
                 if let notice = store.notice,
@@ -48,7 +48,7 @@ struct TodayView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showActions = true } label: { Image(systemName: "plus").font(.body.weight(.semibold)) }
-                        .accessibilityLabel("Add record").accessibilityIdentifier("addRecord")
+                        .buttonStyle(CareActionStyle(color: "mint")).accessibilityLabel("Add record").accessibilityIdentifier("addRecord")
                 }
             }
             .sheet(isPresented: $showActions) { AddRecordMenu() }
@@ -101,56 +101,24 @@ struct TodayView: View {
     }
 
     private var sleep: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Divider()
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 10) {
-                    Label(
-                        store.activeSleep == nil ? "Awake" : "Sleeping",
-                        systemImage: store.activeSleep == nil ? "sun.max" : "moon.zzz.fill"
-                    )
-                    .font(.headline).foregroundStyle(Palette.tint("indigo"))
-                    if let active = store.activeSleep {
-                        Text(timerInterval: active.date ... Date.distantFuture, countsDown: false).font(.system(
-                            size: timerSize,
-                            weight: .light,
-                            design: .rounded
-                        )).monospacedDigit().accessibilityIdentifier("sleepTimer")
-                        Text("Since \(active.date.formatted(date: .omitted, time: .shortened))").font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        if let last = store.entities.first(where: { $0.id == store.summary?.lastSleepID }), let end = last.end {
-                            Text("Awake since \(Date(timeIntervalSince1970: end).formatted(date: .omitted, time: .shortened))").font(.system(.title2, design: .rounded, weight: .medium))
-                            Text("Last sleep · " + last.detail).font(.subheadline).foregroundStyle(.secondary)
-                        } else {
-                            Text("Sleep timer").font(.system(.title2, design: .rounded, weight: .medium))
-                        }
-                    }
-                }
-                Spacer()
-                if !dynamicType.isAccessibilitySize {
-                    Image(systemName: store.activeSleep == nil ? "moon" : "moon.stars.fill").font(.system(
-                        size: 42,
-                        weight: .ultraLight
-                    )).foregroundStyle(Palette.tint("indigo").opacity(0.45)).accessibilityHidden(true)
-                }
-            }.padding(.top, 8)
+        VStack(alignment: .leading, spacing: 12) {
+            CareSectionHeading(type: "sleep") {
+                Button { store.toggleSleep() } label: { Label(store.activeSleep == nil ? "Start sleep" : "End sleep", systemImage: store.activeSleep == nil ? "play.fill" : "stop.fill") }
+                    .buttonStyle(CareActionStyle(color: "indigo")).accessibilityIdentifier("toggleSleep")
+            }
+            if let active = store.activeSleep {
+                Text(timerInterval: active.date ... Date.distantFuture, countsDown: false).font(.system(size: timerSize, weight: .light, design: .rounded)).monospacedDigit().accessibilityIdentifier("sleepTimer")
+                Text("Since \(active.date.formatted(date: .omitted, time: .shortened))").font(.subheadline).foregroundStyle(.secondary)
+            } else if let last = store.entities.first(where: { $0.id == store.summary?.lastSleepID }), let end = last.end {
+                Text("Awake since \(Date(timeIntervalSince1970: end).formatted(date: .omitted, time: .shortened))").font(.headline)
+                Text("Last sleep · " + last.detail).font(.subheadline).foregroundStyle(.secondary)
+            } else {
+                Text("No sleep recorded").foregroundStyle(.secondary)
+            }
             HStack {
-                Button { store.toggleSleep() } label: {
-                    Label(
-                        store.activeSleep == nil ? "Start sleep" : "End sleep",
-                        systemImage: store.activeSleep == nil ? "play.fill" : "stop.fill"
-                    )
-                    .font(.body.weight(.semibold)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
-                    .padding(
-                        .horizontal,
-                        18
-                    ).padding(.vertical, 13)
-                    .background(Palette.tint("indigo").opacity(0.12), in: Capsule())
-                    .foregroundStyle(Palette.tint("indigo"))
-                }.accessibilityIdentifier("toggleSleep")
                 Spacer()
-                Button("Add past sleep") { store.form = FormRequest(type: "sleep") }.font(.subheadline)
+                Button("Past sleep", systemImage: "plus") { store.form = FormRequest(type: "sleep") }
+                    .buttonStyle(CareActionStyle(color: "indigo")).accessibilityLabel("Add past sleep")
             }
             if let summary = store.summary {
                 Text("\(summary.sleepMinutes / 60)h \(summary.sleepMinutes % 60)m sleep today").font(.subheadline).foregroundStyle(.secondary)
@@ -160,7 +128,7 @@ struct TodayView: View {
     }
 
     private var careSections: some View {
-        VStack(alignment: .leading, spacing: 28) {
+        VStack(alignment: .leading, spacing: 18) {
             activity(type: "feeding", identifier: "quickBottle", latestID: store.summary?.lastFeedingID,
                      total: store.summary.map { store.unitSystem == "imperial" ? String(format: "%.1f oz", Double($0.feedingML) / 29.5735295625) : "\($0.feedingML) mL" },
                      count: store.summary.map { "\($0.feedingCount) bottle\($0.feedingCount == 1 ? "" : "s") today" })
@@ -174,18 +142,15 @@ struct TodayView: View {
     private func activity(type: String, identifier: String, latestID: String?, total: String?, count: String?) -> some View {
         let spec = Catalog.shared.spec(type)
         let latest = store.entities.first { $0.id == latestID }
-        return VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 10) {
-                RecordSymbol(type: type)
-                Text(spec.title).font(.title3.weight(.semibold)).foregroundStyle(Palette.tint(spec.color))
-                Spacer()
+        return VStack(alignment: .leading, spacing: 10) {
+            CareSectionHeading(type: type) {
                 Button { store.form = FormRequest(type: type) } label: { Label("Log", systemImage: "plus") }
-                    .font(.body.weight(.semibold)).foregroundStyle(Palette.tint(spec.color)).accessibilityIdentifier(identifier)
+                    .buttonStyle(CareActionStyle(color: spec.color)).accessibilityIdentifier(identifier)
             }
             if let latest {
                 Button { store.detail = latest } label: {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(latest.detail).font(.system(.title2, design: .rounded, weight: .medium)).foregroundStyle(Palette.ink)
+                        Text(latest.detail).font(.headline).foregroundStyle(Palette.ink)
                         Text(latest.date, format: .dateTime.month().day().hour().minute()).font(.subheadline).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }.buttonStyle(.plain)
@@ -198,7 +163,7 @@ struct TodayView: View {
                     if let count {
                         Text("· " + count).font(.subheadline).foregroundStyle(.secondary)
                     }
-                }.accessibilityElement(children: .combine)
+                }.accessibilityElement(children: .combine).accessibilityIdentifier("total-\(type)")
             }
             if store.pendingCount > 0 {
                 Text("Totals update after sync").font(.caption).foregroundStyle(.secondary)
@@ -253,35 +218,20 @@ struct AddRecordMenu: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            LogSheetHeader(title: "Add record", color: "mint", closeLabel: "Close", close: { dismiss() })
             AppList {
-                Section("Care") { ForEach(Catalog.shared.types.filter { [
-                    "feeding",
-                    "diaper",
-                    "sleep",
-                    "reading",
-                    "growth",
-                ].contains($0.id) }) { type in entry(type) } }
-                Section("Health & memories") { ForEach(Catalog.shared.types.filter { [
-                    "medication",
-                    "temperature",
-                    "illness",
-                    "vaccine",
-                    "appointment",
-                    "milestone",
-                    "note",
-                    "reminder",
-                ].contains($0.id) }) { type in entry(type) } }
-            }.appList().navigationTitle("Add record").navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
-        }
+                Section("Care") { ForEach(["feeding", "diaper", "sleep", "reading", "growth"], id: \.self) { type in entry(Catalog.shared.spec(type)) } }
+                Section("Health & memories") { ForEach(Catalog.shared.types.filter { ["medication", "temperature", "illness", "vaccine", "appointment", "milestone", "note", "reminder"].contains($0.id) }) { type in entry(type) } }
+            }
+        }.presentationDetents([.medium, .large]).presentationSizing(.page).presentationDragIndicator(.visible).presentationCornerRadius(24)
     }
 
     private func entry(_ type: TypeSpec) -> some View {
         Button {
             dismiss(); Task { try? await Task.sleep(for: .milliseconds(250)); store.form = FormRequest(type: type.id) }
         } label: {
-            HStack(spacing: 14) { RecordSymbol(type: type.id); Text(type.title).foregroundStyle(Palette.ink) }.padding(
+            HStack(spacing: 14) { RecordSymbol(type: type.id); Text(type.title).foregroundStyle(Palette.ink); Spacer(); Image(systemName: "plus").foregroundStyle(Palette.tint(type.color)) }.padding(
                 .vertical,
                 4
             )
