@@ -224,6 +224,7 @@ struct EntryRow<Content: View>: View {
 }
 
 struct ChoiceButtons: View {
+    static let compactWidth: CGFloat = 48
     var options: [String]
     @Binding var selection: String
     var color: String
@@ -245,7 +246,7 @@ struct ChoiceButtons: View {
                     HStack(spacing: 4) {
                         Text(label(option)).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                         if chosen && identifier != "unit" { Image(systemName: "checkmark").font(.caption.weight(.bold)) }
-                    }.font(.subheadline.weight(chosen ? .semibold : .regular)).padding(.horizontal, 8).frame(minWidth: horizontal ? 44 : minimumWidth, maxWidth: .infinity, minHeight: 44)
+                    }.font(.subheadline.weight(chosen ? .semibold : .regular)).padding(.horizontal, 8).frame(minWidth: horizontal ? Self.compactWidth : minimumWidth, maxWidth: .infinity, minHeight: 44)
                         .foregroundStyle(chosen ? Palette.buttonInk : Palette.ink)
                         .background(chosen ? Palette.fill(color) : Palette.tint(color).opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
                         .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.tint(color).opacity(chosen ? 0 : 0.25), lineWidth: 1))

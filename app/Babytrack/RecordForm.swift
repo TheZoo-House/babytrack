@@ -205,9 +205,9 @@ struct RecordForm: View {
 
     private func unitChoices(_ field: FieldSpec) -> some View {
         let values = options(field)
-        let buttonWidth = values.count * 44
+        let buttonWidth = CGFloat(values.count) * ChoiceButtons.compactWidth
         let spacing = max(0, values.count - 1) * 4
-        let width: CGFloat = dynamicType.isAccessibilitySize ? 132 : CGFloat(buttonWidth + spacing)
+        let width: CGFloat = dynamicType.isAccessibilitySize ? 132 : buttonWidth + CGFloat(spacing)
         return ChoiceButtons(options: values, selection: binding(field), color: spec.color,
                              identifier: "unit", minimumWidth: 44, horizontal: true).frame(width: width)
     }

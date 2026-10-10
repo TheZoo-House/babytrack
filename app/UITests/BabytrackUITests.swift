@@ -208,7 +208,7 @@ import XCTest
         XCTAssertEqual(pounds.midY, ounces.midY, accuracy: 1); XCTAssertEqual(pounds.midY, kilograms.midY, accuracy: 1)
         XCTAssertGreaterThanOrEqual(pounds.width, 44)
         capture(app, "Compact measurement units"); app.buttons["Cancel"].tap()
-        navigate(app, "Today"); app.buttons["addRecord"].tap(); app.buttons["add-temperature"].tap()
+        navigate(app, "Today"); openRecordMenu(app, "temperature")
         XCTAssertTrue(app.buttons["unit-°F"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.buttons["unit-°F"].frame.midY, app.buttons["unit-°C"].frame.midY, accuracy: 1)
         capture(app, "Compact temperature units")
@@ -245,17 +245,7 @@ import XCTest
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing", "-appearance", "dark"]; app.launch()
         XCTAssertTrue(app.buttons["addRecord"].waitForExistence(timeout: 15)); capture(app, "Dark Today")
         for type in ["sleep", "reading", "medication", "temperature", "illness", "vaccine", "appointment", "milestone", "note", "reminder"] {
-            app.buttons["addRecord"].tap()
-            let action = app.buttons["add-\(type)"]
-            let list = app.collectionViews.firstMatch
-            for _ in 0 ..< 14 {
-                // XCTest calls a partly clipped row hittable; its center may be outside the sheet.
-                if action.exists, action.isHittable, action.frame.maxY <= list.frame.maxY - 8 {
-                    break
-                }
-                list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75)).press(forDuration: 0.1, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.55)))
-            }
-            XCTAssertTrue(action.exists); action.tap()
+            openRecordMenu(app, type)
             XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5)); capture(app, "\(type) editor")
             app.buttons["Cancel"].tap()
         }
@@ -415,8 +405,21 @@ import XCTest
         }
         button.tap()
         if option == "sleepTimeline" {
-            app.buttons["addRecord"].tap(); app.buttons["add-sleep"].tap()
+            openRecordMenu(app, "sleep")
         }
+        XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5))
+    }
+
+    private func openRecordMenu(_ app: XCUIApplication, _ type: String) {
+        app.buttons["addRecord"].tap()
+        let action = app.buttons["add-\(type)"]
+        let list = app.collectionViews.firstMatch
+        for _ in 0 ..< 14 {
+            // Keep the whole row visible rather than overshooting short menu rows.
+            if action.exists, action.isHittable, action.frame.maxY <= list.frame.maxY - 8 { break }
+            list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75)).press(forDuration: 0.1, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.55)))
+        }
+        XCTAssertTrue(action.exists); action.tap()
         XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5))
     }
 
