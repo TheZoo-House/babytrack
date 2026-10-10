@@ -7,6 +7,10 @@ import SwiftUI
     @UIApplicationDelegateAdaptor(NotificationDelegate.self) var delegate
     @State private var store = AppStore()
     @Environment(\.scenePhase) private var phase
+    init() {
+        Palette.configureNavigation()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView().environment(store).tint(Palette.accent).foregroundStyle(Palette.ink)

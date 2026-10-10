@@ -64,7 +64,7 @@ struct CareWidgetView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Text(child?.title ?? "Add a child").font(.headline); Spacer(); Image(systemName: "leaf.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(CarePalette.accent)
                 }
                 let feed = entry.state.visibleEntities.filter { $0.type == "feeding" && $0.childID == child?.id }
                     .max { $0.at < $1.at }
@@ -91,7 +91,7 @@ struct CareWidgetView: View {
                     Button(intent: WetDiaperIntent()) {
                         Label("Wet", systemImage: "drop.fill").font(.caption.weight(.semibold))
                     }.buttonStyle(.plain)
-                }.foregroundStyle(.green)
+                }.foregroundStyle(CarePalette.accent)
             }
         }
     }
@@ -101,7 +101,7 @@ struct CareWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "BabyCare", provider: CareProvider()) { entry in
             CareWidgetView(entry: entry).containerBackground(
-                .background,
+                CarePalette.paper,
                 for: .widget
             )
         }
@@ -114,7 +114,7 @@ struct SleepWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: SleepAttributes.self) { context in
             HStack(spacing: 16) {
-                Image(systemName: "moon.zzz.fill").font(.title).foregroundStyle(.indigo)
+                Image(systemName: "moon.zzz.fill").font(.title).foregroundStyle(CarePalette.accent)
                 VStack(alignment: .leading, spacing: 5) {
                     Text(context.attributes.childName).font(.headline); Text(context.state.ended ? "Awake" : "Sleeping")
                         .font(.subheadline).foregroundStyle(.secondary)
@@ -128,11 +128,11 @@ struct SleepWidget: Widget {
                 }
                 Link(destination: URL(string: "babytrack://sleep?session=\(context.attributes.sessionID)")!) {
                     Image(systemName: "stop.fill").padding(12).background(
-                        .indigo.opacity(0.12),
+                        CarePalette.accent.opacity(0.12),
                         in: Circle()
                     )
                 }.accessibilityLabel("End sleep")
-            }.padding(18).activityBackgroundTint(Color(uiColor: .secondarySystemBackground))
+            }.padding(18).activityBackgroundTint(CarePalette.paper)
                 .widgetURL(URL(string: "babytrack://sleep?session=\(context.attributes.sessionID)"))
         } dynamicIsland: { context in
             DynamicIsland {

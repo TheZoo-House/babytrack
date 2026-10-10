@@ -99,7 +99,7 @@ struct GrowthView: View {
                         Text("\(value(last).formatted(.number.precision(.fractionLength(1)))) \(unit)").font(.system(
                             size: 44,
                             weight: .medium,
-                            design: .rounded
+                            design: .serif
                         )); Text(last.date, format: .dateTime.month().day().year()).font(.subheadline)
                             .foregroundStyle(.secondary)
                     }

@@ -4,14 +4,17 @@ import XCTest
     func testBottleDiaperSleepAndLibrary() {
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
-        app.buttons["quickBottle"].tap()
+        openLog(app, "quickBottle")
         XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5)); app.buttons["saveRecord"].tap()
-        XCTAssertTrue(app.buttons["quickDiaper"].waitForExistence(timeout: 5)); app.buttons["quickDiaper"].tap()
+        openLog(app, "quickDiaper")
         app.buttons["saveRecord"].tap()
+        app.navigationBars.buttons["BackButton"].tap()
+        app.buttons["sleepTimeline"].tap()
         app.buttons["toggleSleep"].tap()
         XCTAssertTrue(app.staticTexts["sleepTimer"].waitForExistence(timeout: 5))
         app.buttons["toggleSleep"].tap()
-        XCTAssertTrue(app.buttons["Start sleep"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["toggleSleep"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons["BackButton"].tap()
         navigate(app, "Library")
         XCTAssertTrue(app.staticTexts["Goodnight Moon"].waitForExistence(timeout: 5))
         app.buttons["addItem"].tap(); app.textFields["recordTitle"].tap(); app.textFields["recordTitle"]
@@ -25,9 +28,11 @@ import XCTest
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
         let attachment = XCTAttachment(screenshot: app.screenshot()); attachment.name = "Today"; attachment
             .lifetime = .keepAlways; add(attachment)
+        app.buttons["sleepTimeline"].tap()
         app.buttons["toggleSleep"].tap()
         XCTAssertTrue(app.staticTexts["sleepTimer"].waitForExistence(timeout: 5))
         capture(app, "Sleeping")
+        app.navigationBars.buttons["BackButton"].tap()
         navigate(app, "Library")
         XCTAssertTrue(app.staticTexts["Goodnight Moon"].waitForExistence(timeout: 5)); capture(app, "Library")
         navigate(app, "Health")
@@ -41,7 +46,8 @@ import XCTest
         let total = app.staticTexts["total-feeding"]
         XCTAssertTrue(total.waitForExistence(timeout: 5))
         let baseline = Double(total.label.split(separator: " ").first.map(String.init) ?? "") ?? 0
-        app.buttons["quickBottle"].tap(); app.buttons["saveRecord"].tap()
+        openLog(app, "quickBottle"); app.buttons["saveRecord"].tap()
+        app.navigationBars.buttons["BackButton"].tap()
         let expected = String(format: "%.1f oz", baseline + 4)
         expectation(for: NSPredicate(format: "label BEGINSWITH %@", expected), evaluatedWith: total)
         waitForExpectations(timeout: 15)
@@ -50,14 +56,14 @@ import XCTest
     func testCustomFormulaAndEditorScreenshots() {
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
-        app.buttons["quickBottle"].tap(); capture(app, "Bottle editor")
+        openLog(app, "quickBottle"); capture(app, "Bottle editor")
         app.buttons["formulaPicker"].tap(); app.buttons["Custom…"].tap()
         app.textFields["customFormulaName"].tap(); app.textFields["customFormulaName"].typeText("Example custom")
         app.buttons["addCustomFormula"].tap()
         XCTAssertTrue(app.buttons["formulaPicker"].waitForExistence(timeout: 5)); capture(app, "Custom formula selected")
-        app.buttons["saveRecord"].tap(); app.buttons["quickBottle"].tap()
+        app.buttons["saveRecord"].tap(); openLog(app, "quickBottle")
         XCTAssertTrue(app.buttons["formulaPicker"].waitForExistence(timeout: 5)); XCTAssertEqual(app.buttons["formulaPicker"].value as? String, "Example custom"); capture(app, "Remembered formula")
-        app.buttons["Cancel"].tap(); app.buttons["quickDiaper"].tap(); capture(app, "Diaper editor"); app.buttons["Cancel"].tap()
+        app.buttons["Cancel"].tap(); openLog(app, "quickDiaper"); capture(app, "Diaper editor"); app.buttons["Cancel"].tap()
         navigate(app, "Health"); navigate(app, "Growth"); capture(app, "Growth")
         app.buttons["Add measurement"].tap(); capture(app, "Measurement editor"); app.buttons["Cancel"].tap()
     }
@@ -137,17 +143,25 @@ import XCTest
     func testLargeTextScreenshots() {
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]; app.launch()
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15)); capture(app, "Large text Today")
-        app.buttons["quickBottle"].tap(); XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5)); capture(app, "Large text bottle")
-        app.buttons["Cancel"].tap(); navigate(app, "Health"); capture(app, "Large text health")
+        openLog(app, "quickBottle"); XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5)); capture(app, "Large text bottle")
+        app.buttons["Cancel"].tap(); app.navigationBars.buttons["BackButton"].tap()
+        for _ in 0 ..< 4 where !app.buttons["sleepTimeline"].isHittable {
+            app.scrollViews.firstMatch.swipeUp()
+        }
+        app.buttons["sleepTimeline"].tap(); capture(app, "Large text sleep timeline")
+        app.buttons["toggleSleep"].tap(); XCTAssertTrue(app.staticTexts["sleepTimer"].waitForExistence(timeout: 5))
+        capture(app, "Large text active sleep")
+        app.buttons["toggleSleep"].tap()
+        navigate(app, "Health"); capture(app, "Large text health")
     }
 
     func testCompactSheetAndCombinedTimeWheel() {
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
         XCTAssertLessThan(app.buttons["quickBottle"].frame.minY, app.buttons["quickDiaper"].frame.minY)
-        XCTAssertLessThan(app.buttons["quickDiaper"].frame.minY, app.buttons["toggleSleep"].frame.minY)
-        capture(app, "Ordered colorful logging actions")
-        app.buttons["quickBottle"].tap()
+        XCTAssertLessThan(app.buttons["quickDiaper"].frame.minY, app.buttons["sleepTimeline"].frame.minY)
+        capture(app, "Compact care timelines")
+        openLog(app, "quickBottle")
         XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5))
         capture(app, "Compact bottle bottom sheet")
         if !app.buttons["nav-Today"].exists {
@@ -169,10 +183,39 @@ import XCTest
         app.buttons["startTime"].tap()
         XCTAssertNotEqual(app.buttons["startTime"].value as? String, originalTime)
         app.buttons["saveRecord"].tap()
-        app.buttons["quickDiaper"].tap(); capture(app, "Compact diaper bottom sheet"); app.buttons["Cancel"].tap()
-        app.buttons["Add past sleep"].tap(); capture(app, "Compact sleep bottom sheet")
+        openLog(app, "quickDiaper"); capture(app, "Compact diaper bottom sheet"); app.buttons["Cancel"].tap()
+        openLog(app, "sleepTimeline"); capture(app, "Compact sleep bottom sheet")
         app.buttons["endTime"].tap(); XCTAssertEqual(app.pickerWheels.count, 4)
         capture(app, "Combined sleep end wheel"); app.buttons["Cancel"].tap()
+    }
+
+    func testFilteredCareTimelines() {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
+        XCTAssertFalse(app.buttons["Add past sleep"].exists)
+        if !app.buttons["nav-Today"].exists {
+            XCTAssertLessThan(app.buttons["sleepTimeline"].frame.maxY - app.buttons["quickBottle"].frame.minY, 330)
+        }
+        for (option, type) in [("quickBottle", "feeding"), ("quickDiaper", "diaper"), ("sleepTimeline", "sleep")] {
+            app.buttons[option].tap()
+            XCTAssertTrue(app.buttons["logRecord"].waitForExistence(timeout: 5))
+            XCTAssertTrue(app.buttons.matching(identifier: "timeline-\(type)").firstMatch.exists)
+            for other in ["feeding", "diaper", "sleep"] where other != type {
+                XCTAssertFalse(app.buttons["timeline-\(other)"].exists)
+            }
+            capture(app, "\(type) timeline")
+            app.buttons["logRecord"].tap(); XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5))
+            app.buttons["Cancel"].tap()
+            app.navigationBars.buttons["BackButton"].tap()
+        }
+    }
+
+    private func openLog(_ app: XCUIApplication, _ option: String) {
+        if app.buttons["logRecord"].exists {
+            app.navigationBars.buttons["BackButton"].tap()
+        }
+        XCTAssertTrue(app.buttons[option].waitForExistence(timeout: 5)); app.buttons[option].tap()
+        XCTAssertTrue(app.buttons["logRecord"].waitForExistence(timeout: 5)); app.buttons["logRecord"].tap()
     }
 
     private func navigate(_ app: XCUIApplication, _ name: String) {
