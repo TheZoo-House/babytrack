@@ -5,6 +5,7 @@ import SwiftUI
 struct GrowthView: View {
     @Environment(AppStore.self) private var store
     @State private var measure = "Weight"
+    @ScaledMetric(relativeTo: .largeTitle) private var measurementSize = 36
     private var records: [Entity] {
         store.care.filter { $0.type == "growth" && $0.fields["measure"] == measure }.sorted { $0.at < $1.at }
     }
@@ -44,7 +45,7 @@ struct GrowthView: View {
                 if let last = chartRecords.last {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("\(value(last).formatted(.number.precision(.fractionLength(1)))) \(unit)").font(.system(
-                            size: 36,
+                            size: measurementSize,
                             weight: .medium,
                             design: .rounded
                         )); Text(last.date, format: .dateTime.month().day().year()).font(.subheadline)

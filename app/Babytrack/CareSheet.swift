@@ -27,7 +27,7 @@ struct CareListBody<Content: View>: View {
     @ViewBuilder var content: () -> Content
     var body: some View {
         CareSheetBody {
-            VStack(alignment: .leading, spacing: 0) {
+            LazyVStack(alignment: .leading, spacing: 0) {
                 ForEach(sections: content()) { section in
                     ForEach(section.header) { header in header.font(.caption.weight(.semibold)).foregroundStyle(Palette.secondary).padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 8) }
                     ForEach(Array(section.content.enumerated()), id: \.element.id) { index, row in
