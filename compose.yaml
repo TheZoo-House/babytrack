@@ -1,0 +1,24 @@
+services:
+  backend:
+    build: .
+    restart: unless-stopped
+    ports: ['127.0.0.1:8792:8792']
+    volumes: [babytrack-data:/data]
+    environment:
+      DATABASE_PATH: /data/babytrack.sqlite
+      APPLE_CLIENT_ID: house.thezoo.babytrack
+      PREVIEW_ENABLED: ${PREVIEW_ENABLED:-0}
+  relay:
+    build: .
+    restart: unless-stopped
+    command: ['node', 'relay/worker.mjs']
+    volumes:
+      - babytrack-data:/data
+      - ${APNS_KEY_DIRECTORY:-./secrets}:/secrets:ro
+    environment:
+      DATABASE_PATH: /data/babytrack.sqlite
+      APNS_KEY_ID: ${APNS_KEY_ID:-}
+      APNS_KEY_PATH: /secrets/apns.p8
+      APNS_TEAM_ID: Q28NF3NH3D
+volumes:
+  babytrack-data:

@@ -1,0 +1,654 @@
+{
+  "version": 1,
+  "types": [
+    {
+      "id": "feeding",
+      "title": "Bottle",
+      "symbol": "waterbottle.fill",
+      "color": "amber",
+      "fields": [
+        {
+          "key": "amount",
+          "label": "Consumed",
+          "kind": "number",
+          "options": [],
+          "required": true
+        },
+        {
+          "key": "unit",
+          "label": "Unit",
+          "kind": "choice",
+          "options": [
+            "oz",
+            "mL"
+          ],
+          "required": true
+        },
+        {
+          "key": "offered",
+          "label": "Offered",
+          "kind": "number",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "brand",
+          "label": "Formula",
+          "kind": "text",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "diaper",
+      "title": "Diaper",
+      "symbol": "drop.fill",
+      "color": "mint",
+      "fields": [
+        {
+          "key": "contents",
+          "label": "Contents",
+          "kind": "choice",
+          "options": [
+            "Wet",
+            "Dirty",
+            "Both",
+            "Dry"
+          ],
+          "required": true
+        },
+        {
+          "key": "color",
+          "label": "Color",
+          "kind": "choice",
+          "options": [
+            "Yellow",
+            "Brown",
+            "Green",
+            "Black",
+            "Red",
+            "White"
+          ],
+          "required": false
+        },
+        {
+          "key": "consistency",
+          "label": "Consistency",
+          "kind": "choice",
+          "options": [
+            "Seedy",
+            "Soft",
+            "Pasty",
+            "Loose",
+            "Watery",
+            "Hard"
+          ],
+          "required": false
+        },
+        {
+          "key": "rash",
+          "label": "Rash",
+          "kind": "toggle",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "sleep",
+      "title": "Sleep",
+      "symbol": "moon.zzz.fill",
+      "color": "indigo",
+      "fields": [
+        {
+          "key": "category",
+          "label": "Type",
+          "kind": "choice",
+          "options": [
+            "Nap",
+            "Night"
+          ],
+          "required": true
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "reading",
+      "title": "Reading",
+      "symbol": "book.fill",
+      "color": "rose",
+      "fields": [
+        {
+          "key": "itemID",
+          "label": "Book",
+          "kind": "book",
+          "options": [],
+          "required": true
+        },
+        {
+          "key": "minutes",
+          "label": "Minutes",
+          "kind": "number",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "growth",
+      "title": "Measurement",
+      "symbol": "ruler.fill",
+      "color": "mint",
+      "fields": [
+        {
+          "key": "measure",
+          "label": "Measurement",
+          "kind": "choice",
+          "options": [
+            "Weight",
+            "Height",
+            "Head circumference"
+          ],
+          "required": true
+        },
+        {
+          "key": "value",
+          "label": "Value",
+          "kind": "number",
+          "options": [],
+          "required": true
+        },
+        {
+          "key": "unit",
+          "label": "Unit",
+          "kind": "choice",
+          "options": [
+            "lb",
+            "oz",
+            "kg",
+            "in",
+            "cm"
+          ],
+          "required": true
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "medication",
+      "title": "Medication",
+      "symbol": "pills.fill",
+      "color": "rose",
+      "fields": [
+        {
+          "key": "dose",
+          "label": "Dose",
+          "kind": "text",
+          "options": [],
+          "required": true
+        },
+        {
+          "key": "unit",
+          "label": "Dose unit",
+          "kind": "text",
+          "options": [],
+          "required": true
+        },
+        {
+          "key": "route",
+          "label": "Route",
+          "kind": "text",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "temperature",
+      "title": "Temperature",
+      "symbol": "thermometer.medium",
+      "color": "amber",
+      "fields": [
+        {
+          "key": "value",
+          "label": "Temperature",
+          "kind": "number",
+          "options": [],
+          "required": true
+        },
+        {
+          "key": "unit",
+          "label": "Unit",
+          "kind": "choice",
+          "options": [
+            "\u00b0F",
+            "\u00b0C"
+          ],
+          "required": true
+        },
+        {
+          "key": "method",
+          "label": "Method",
+          "kind": "choice",
+          "options": [
+            "Rectal",
+            "Armpit",
+            "Forehead",
+            "Ear",
+            "Oral"
+          ],
+          "required": false
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "illness",
+      "title": "Illness",
+      "symbol": "cross.case.fill",
+      "color": "rose",
+      "fields": [
+        {
+          "key": "symptoms",
+          "label": "Symptoms",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "vaccine",
+      "title": "Vaccine",
+      "symbol": "syringe.fill",
+      "color": "mint",
+      "fields": [
+        {
+          "key": "dose",
+          "label": "Dose number",
+          "kind": "text",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "provider",
+          "label": "Provider",
+          "kind": "text",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "lot",
+          "label": "Lot number",
+          "kind": "text",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "milestone",
+      "title": "Milestone",
+      "symbol": "sparkles",
+      "color": "amber",
+      "fields": [
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "appointment",
+      "title": "Appointment",
+      "symbol": "calendar",
+      "color": "indigo",
+      "fields": [
+        {
+          "key": "provider",
+          "label": "Provider",
+          "kind": "text",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "place",
+          "label": "Place",
+          "kind": "text",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "note",
+      "title": "Note",
+      "symbol": "note.text",
+      "color": "rose",
+      "fields": [
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "book",
+      "title": "Book",
+      "symbol": "books.vertical.fill",
+      "color": "rose",
+      "fields": [
+        {
+          "key": "isbn",
+          "label": "ISBN",
+          "kind": "barcode",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "author",
+          "label": "Author",
+          "kind": "text",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "giftGiver",
+          "label": "Gift giver",
+          "kind": "text",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "locationID",
+          "label": "Location",
+          "kind": "location",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "status",
+          "label": "Status",
+          "kind": "choice",
+          "options": [
+            "Owned",
+            "Lent",
+            "Outgrown",
+            "Donated"
+          ],
+          "required": false
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "kind": "number",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "toy",
+      "title": "Toy",
+      "symbol": "teddybear.fill",
+      "color": "amber",
+      "fields": [
+        {
+          "key": "brand",
+          "label": "Brand",
+          "kind": "text",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "minAge",
+          "label": "Minimum age (months)",
+          "kind": "number",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "maxAge",
+          "label": "Maximum age (months)",
+          "kind": "number",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "locationID",
+          "label": "Location",
+          "kind": "location",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "status",
+          "label": "Status",
+          "kind": "choice",
+          "options": [
+            "Owned",
+            "Lent",
+            "Outgrown",
+            "Donated"
+          ],
+          "required": false
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "kind": "number",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "clothing",
+      "title": "Clothing",
+      "symbol": "tshirt.fill",
+      "color": "mint",
+      "fields": [
+        {
+          "key": "size",
+          "label": "Size",
+          "kind": "text",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "brand",
+          "label": "Brand",
+          "kind": "text",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "locationID",
+          "label": "Location",
+          "kind": "location",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "status",
+          "label": "Status",
+          "kind": "choice",
+          "options": [
+            "Owned",
+            "Lent",
+            "Outgrown",
+            "Donated"
+          ],
+          "required": false
+        },
+        {
+          "key": "quantity",
+          "label": "Quantity",
+          "kind": "number",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "location",
+      "title": "Location",
+      "symbol": "mappin.and.ellipse",
+      "color": "indigo",
+      "fields": [
+        {
+          "key": "parentID",
+          "label": "Inside",
+          "kind": "location",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "child",
+      "title": "Child",
+      "symbol": "face.smiling.fill",
+      "color": "amber",
+      "fields": []
+    },
+    {
+      "id": "reminder",
+      "title": "Reminder",
+      "symbol": "bell.fill",
+      "color": "indigo",
+      "fields": [
+        {
+          "key": "kind",
+          "label": "For",
+          "kind": "choice",
+          "options": [
+            "feeding",
+            "medication",
+            "vaccine",
+            "appointment",
+            "other"
+          ],
+          "required": true
+        },
+        {
+          "key": "repeatHours",
+          "label": "Repeat interval (hours)",
+          "kind": "number",
+          "options": [],
+          "required": false
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "kind": "multiline",
+          "options": [],
+          "required": false
+        }
+      ]
+    }
+  ]
+}

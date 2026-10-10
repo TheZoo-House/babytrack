@@ -1,0 +1,12 @@
+#!/bin/zsh
+set -eu
+state_dir="$HOME/.local/share/babytrack"
+mkdir -p "$state_dir/backups"
+export DATABASE_PATH="$state_dir/babytrack.sqlite"
+export BACKUP_PATH="$state_dir/backups/babytrack-$(date +%Y%m%dT%H%M%S).sqlite"
+node --input-type=module <<'JS'
+import { DatabaseSync,backup } from 'node:sqlite';
+const db=new DatabaseSync(process.env.DATABASE_PATH,{readOnly:true});
+await backup(db,process.env.BACKUP_PATH);db.close();
+console.log('Backup saved to '+process.env.BACKUP_PATH);
+JS

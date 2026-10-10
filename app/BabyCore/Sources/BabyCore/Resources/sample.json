@@ -1,0 +1,343 @@
+{
+  "version": 1,
+  "familyID": "sample-family",
+  "serverTime": 1791589500,
+  "entities": [
+    {
+      "id": "sample-appointment",
+      "type": "appointment",
+      "title": "Well-child visit",
+      "at": 1792626300,
+      "fields": {
+        "provider": "Pediatrician"
+      },
+      "childID": "sample-child",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "Pediatrician",
+      "scheduled": true
+    },
+    {
+      "id": "sample-location",
+      "type": "location",
+      "title": "Nursery shelf",
+      "at": 1791589500,
+      "fields": {},
+      "childID": "",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "",
+      "scheduled": false
+    },
+    {
+      "id": "sample-book",
+      "type": "book",
+      "title": "Goodnight Moon",
+      "at": 1791589500,
+      "fields": {
+        "isbn": "9780064430173",
+        "author": "Margaret Wise Brown",
+        "giftGiver": "Grandma",
+        "locationID": "sample-location",
+        "status": "Owned",
+        "quantity": "1",
+        "imageURL": "https://covers.openlibrary.org/b/isbn/9780064430173-M.jpg"
+      },
+      "childID": "",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "Margaret Wise Brown · Nursery shelf · Owned",
+      "scheduled": false
+    },
+    {
+      "id": "sample-book-2",
+      "type": "book",
+      "title": "The Very Hungry Caterpillar",
+      "at": 1791589500,
+      "fields": {
+        "isbn": "9780399226908",
+        "author": "Eric Carle",
+        "giftGiver": "Sam",
+        "status": "Owned",
+        "locationID": "sample-location",
+        "imageURL": "https://covers.openlibrary.org/b/isbn/9780399226908-M.jpg"
+      },
+      "childID": "",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "Eric Carle · Nursery shelf · Owned",
+      "scheduled": false
+    },
+    {
+      "id": "sample-toy",
+      "type": "toy",
+      "title": "Little bear",
+      "at": 1791589500,
+      "fields": {
+        "brand": "Jellycat",
+        "minAge": "0",
+        "status": "Owned",
+        "locationID": "sample-location"
+      },
+      "childID": "",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "Jellycat · 0+ months · Nursery shelf · Owned",
+      "scheduled": false
+    },
+    {
+      "id": "sample-clothes",
+      "type": "clothing",
+      "title": "Striped sleep suit",
+      "at": 1791589500,
+      "fields": {
+        "brand": "Hanna Andersson",
+        "size": "3–6 months",
+        "status": "Owned",
+        "locationID": "sample-location"
+      },
+      "childID": "",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "3–6 months · Hanna Andersson · Nursery shelf · Owned",
+      "scheduled": false
+    },
+    {
+      "id": "sample-diaper",
+      "type": "diaper",
+      "title": "Diaper",
+      "at": 1791585900,
+      "fields": {
+        "contents": "Wet"
+      },
+      "childID": "sample-child",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "Wet",
+      "scheduled": false
+    },
+    {
+      "id": "sample-read",
+      "type": "reading",
+      "title": "Reading",
+      "at": 1791584500,
+      "fields": {
+        "itemID": "sample-book",
+        "minutes": "8"
+      },
+      "childID": "sample-child",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "Goodnight Moon · 8 min",
+      "scheduled": false
+    },
+    {
+      "id": "sample-feed-1",
+      "type": "feeding",
+      "title": "Bottle",
+      "at": 1791582300,
+      "fields": {
+        "amount": "4",
+        "unit": "oz",
+        "brand": "Formula"
+      },
+      "childID": "sample-child",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "4 oz · Formula",
+      "scheduled": false
+    },
+    {
+      "id": "sample-sleep",
+      "type": "sleep",
+      "title": "Sleep",
+      "at": 1791574500,
+      "fields": {
+        "category": "Nap"
+      },
+      "childID": "sample-child",
+      "end": 1791579000,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "75 min · Nap",
+      "scheduled": false
+    },
+    {
+      "id": "sample-feed-2",
+      "type": "feeding",
+      "title": "Bottle",
+      "at": 1791568500,
+      "fields": {
+        "amount": "4",
+        "unit": "oz",
+        "brand": "Formula"
+      },
+      "childID": "sample-child",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "4 oz · Formula",
+      "scheduled": false
+    },
+    {
+      "id": "sample-milestone",
+      "type": "milestone",
+      "title": "First laugh",
+      "at": 1791416700,
+      "fields": {
+        "notes": "During story time."
+      },
+      "childID": "sample-child",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "During story time.",
+      "scheduled": false
+    },
+    {
+      "id": "sample-weight",
+      "type": "growth",
+      "title": "Measurement",
+      "at": 1791243900,
+      "fields": {
+        "measure": "Weight",
+        "value": "13.2",
+        "unit": "lb"
+      },
+      "childID": "sample-child",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "Weight · 13.2 lb",
+      "scheduled": false
+    },
+    {
+      "id": "sample-height",
+      "type": "growth",
+      "title": "Measurement",
+      "at": 1791243900,
+      "fields": {
+        "measure": "Height",
+        "value": "24.1",
+        "unit": "in"
+      },
+      "childID": "sample-child",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "Height · 24.1 in",
+      "scheduled": false
+    },
+    {
+      "id": "sample-head",
+      "type": "growth",
+      "title": "Measurement",
+      "at": 1791243900,
+      "fields": {
+        "measure": "Head circumference",
+        "value": "16",
+        "unit": "in"
+      },
+      "childID": "sample-child",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "Head circumference · 16 in",
+      "scheduled": false
+    },
+    {
+      "id": "sample-vaccine",
+      "type": "vaccine",
+      "title": "DTaP",
+      "at": 1788997500,
+      "fields": {
+        "dose": "1",
+        "provider": "Pediatrician"
+      },
+      "childID": "sample-child",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "Pediatrician",
+      "scheduled": false
+    },
+    {
+      "id": "sample-child",
+      "type": "child",
+      "title": "Robin",
+      "at": 1783727100,
+      "fields": {},
+      "childID": "",
+      "end": null,
+      "version": 1,
+      "updatedAt": 1791589500,
+      "deleted": false,
+      "actor": "Alex",
+      "detail": "2 months old",
+      "scheduled": false
+    }
+  ],
+  "summaries": [
+    {
+      "childID": "sample-child",
+      "feedingCount": 2,
+      "feedingML": 237,
+      "diaperCount": 1,
+      "sleepMinutes": 75,
+      "readingCount": 1,
+      "day": "2026-10-09"
+    }
+  ],
+  "members": [
+    {
+      "id": "sample-user",
+      "name": "Alex"
+    }
+  ],
+  "user": {
+    "id": "sample-user",
+    "name": "Alex",
+    "preview": true
+  }
+}

@@ -1,0 +1,6 @@
+.git
+.codex-tmp
+app
+.env*
+secrets
+**/*.sqlite*

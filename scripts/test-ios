@@ -1,0 +1,20 @@
+#!/bin/zsh
+set -eu
+repo_dir="${0:A:h:h}"
+cd "$repo_dir"
+source "$repo_dir/scripts/ios-simulator-pool"
+if [[ -n "${BABYTRACK_SIMULATOR_ID:-}" ]]; then export IOS_SIMULATOR_ID="$BABYTRACK_SIMULATOR_ID"; fi
+ios_pool_acquire
+test_state=$(mktemp -d)
+DATABASE_PATH="$test_state/state.sqlite" PREVIEW_ENABLED=1 PORT=18792 HOST=127.0.0.1 node server/main.mjs > "$test_state/server.log" 2>&1 &
+test_server_pid=$!
+cleanup() { kill "$test_server_pid" >/dev/null 2>&1 || true; wait "$test_server_pid" >/dev/null 2>&1 || true; rm -rf "$test_state"; ios_pool_release; }
+trap cleanup EXIT
+for attempt in {1..20}; do
+    if curl --max-time 1 --fail --silent http://127.0.0.1:18792/health >/dev/null; then break; fi
+    kill -0 "$test_server_pid" || { cat "$test_state/server.log"; exit 1; }
+    sleep 0.1
+done
+mkdir -p .codex-tmp
+xcodegen generate --spec app/project.yml
+xcodebuild -project app/Babytrack.xcodeproj -scheme Babytrack -destination "platform=iOS Simulator,id=$simulator_id" -derivedDataPath .codex-tmp/build -parallel-testing-enabled NO -maximum-concurrent-test-simulator-destinations 1 -collect-test-diagnostics never test "$@"
