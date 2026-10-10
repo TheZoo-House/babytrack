@@ -44,13 +44,22 @@ jobs:
       - run: scripts/setup-ios-test-pool
         env:
           IOS_SIMULATOR_POOL_SIZE: '1'
-      - run: scripts/test-ios -resultBundlePath .codex-tmp/ci-ios.xcresult
-      - run: scripts/check-ios-dropdown-performance .codex-tmp/ci-ios.xcresult --relative
+      - name: Native journeys and paired dropdown benchmarks
+        run: |
+          dropdown_tests=(
+            BabytrackUITests/BabytrackUITests/testLargeHistoryDropdownPerformance
+            BabytrackUITests/BabytrackUITests/testSmallHistoryDropdownPerformance
+          )
+          scripts/test-ios "${dropdown_tests[@]/#/-skip-testing:}" -resultBundlePath .codex-tmp/ci-ios.xcresult
+          scripts/test-ios "${dropdown_tests[@]/#/-only-testing:}" -resultBundlePath .codex-tmp/ci-dropdown.xcresult
+      - run: scripts/check-ios-dropdown-performance .codex-tmp/ci-dropdown.xcresult --relative
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: ios-test-results
-          path: .codex-tmp/ci-ios.xcresult
+          path: |
+            .codex-tmp/ci-ios.xcresult
+            .codex-tmp/ci-dropdown.xcresult
   gate:
     name: CI Gate
     runs-on: ubuntu-latest
