@@ -1,6 +1,7 @@
+import { planNara } from './nara.mjs';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID, randomBytes, createHash } from 'node:crypto';
-import { validateEntity, decorate, summary, fail, seedEntities } from './domain.mjs';
+import { validateEntity, decorate, summary, fail, seedEntities, feedingPreferences } from './domain.mjs';
 export const hash=value=>createHash('sha256').update(value).digest('hex');
 export class Store {
  constructor(path=':memory:'){
@@ -27,7 +28,7 @@ export class Store {
  authenticate(token){const row=this.db.prepare('SELECT users.* FROM sessions JOIN users ON users.id=sessions.user WHERE token=? AND expires>?').get(hash(token??''),Date.now()/1000);if(!row||!this.db.prepare('SELECT 1 FROM members WHERE family=? AND user=?').get(row.family,row.id))fail('Sign in again',401);return row;}
  list(family){return this.db.prepare('SELECT body FROM entities WHERE family=?').all(family).map(r=>JSON.parse(r.body));}
  put(family,e){this.db.prepare('INSERT INTO entities VALUES (?,?,?) ON CONFLICT(family,id) DO UPDATE SET body=excluded.body').run(family,e.id,JSON.stringify(e));}
- snapshot(user,timeZone){const all=this.list(user.family);const entities=all.filter(e=>!e.deleted).map(e=>decorate(e,all)).sort((a,b)=>b.at-a.at||a.id.localeCompare(b.id));const children=entities.filter(e=>e.type==='child');return {version:1,familyID:user.family,serverTime:Date.now()/1000,entities,summaries:children.map(e=>summary(all,e.id,Date.now()/1000,timeZone)),members:this.db.prepare('SELECT users.id,users.name FROM members JOIN users ON users.id=members.user WHERE members.family=?').all(user.family),user:{id:user.id,name:user.name,preview:!!user.preview}};}
+ snapshot(user,timeZone){const all=this.list(user.family);const entities=all.filter(e=>!e.deleted).map(e=>decorate(e,all)).sort((a,b)=>b.at-a.at||a.id.localeCompare(b.id));const children=entities.filter(e=>e.type==='child');return {version:1,familyID:user.family,serverTime:Date.now()/1000,entities,summaries:children.map(e=>summary(all,e.id,Date.now()/1000,timeZone)),...feedingPreferences(all),members:this.db.prepare('SELECT users.id,users.name FROM members JOIN users ON users.id=members.user WHERE members.family=?').all(user.family),user:{id:user.id,name:user.name,preview:!!user.preview}};}
  preview(){const id='preview-'+randomUUID();const login=this.login(id,'Alex',true);const user=this.authenticate(login.token);for(const e of seedEntities())this.put(user.family,e);return {...login,snapshot:this.snapshot(user)};}
  command(user,command){
   if(!command||typeof command.id!=='string'||!/^[-\w]{1,80}$/.test(command.id))fail('Invalid operation ID');
@@ -42,7 +43,17 @@ export class Store {
     const end=command.entity?.end;if(!Number.isFinite(end)||end<previous.at||end-previous.at>86400*7)fail('Check the sleep end date');
     entity={...previous,end};
    }else{
-    entity=validateEntity(command.entity);
+    let input=command.entity;
+    if(input?.type==='feeding'&&command.action==='upsert'&&!Object.hasOwn(input.fields??{},'brand')){
+     const preferred=feedingPreferences(all).feedingDefaults.find(d=>d.childID===input.childID)?.formula;
+     if(preferred)input={...input,fields:{...input.fields,brand:preferred}};
+    }
+    entity=validateEntity(input,{imported:!!previous?.imported});
+    if(previous?.imported)entity.imported=previous.imported;
+    if(entity.type==='formula'){
+     const existing=all.find(e=>!e.deleted&&e.type==='formula'&&e.title.toLocaleLowerCase('en-US')===entity.title.toLocaleLowerCase('en-US')&&e.id!==entity.id);
+     if(existing&&command.action==='upsert'){const result={id:command.id,status:'accepted',entityID:existing.id};this.saveOperation(user,command,result);return result;}
+    }
     if(previous&&previous.type!==entity.type)fail('Record type cannot change');
     if(previous&&(command.baseVersion??0)!==previous.version){const result={id:command.id,status:'conflict',message:'This record changed on another device. The latest version has been loaded.',entityID:previous.id};this.saveOperation(user,command,result);return result;}
     if(command.action==='delete'){if(!previous)fail('Record no longer exists',404);entity={...previous,deleted:true};}
@@ -52,7 +63,7 @@ export class Store {
      if(active){const result={id:command.id,status:'conflict',message:'A caregiver already started sleep. The shared timer has been loaded.',entityID:active.id};this.saveOperation(user,command,result);return result;}
     }
    }
-   if(!['child','location','book','toy','clothing'].includes(entity.type)&&!all.some(e=>e.id===entity.childID&&e.type==='child'&&!e.deleted))fail('Choose a child in this family');
+   if(!['child','location','book','toy','clothing','formula'].includes(entity.type)&&!all.some(e=>e.id===entity.childID&&e.type==='child'&&!e.deleted))fail('Choose a child in this family');
    for(const field of ['locationID','parentID','itemID']){const id=entity.fields[field];if(id&&!all.some(e=>e.id===id&&!e.deleted&&(field==='itemID'?e.type==='book':e.type==='location')))fail('Referenced item is not in this family');}
    if(entity.type==='location'){
     let parent=entity.fields.parentID;const seen=new Set([entity.id]);while(parent){if(seen.has(parent))fail('A location cannot contain itself');seen.add(parent);parent=all.find(e=>e.id===parent)?.fields.parentID;}
@@ -64,6 +75,13 @@ export class Store {
    if(entity.type==='reminder'&&!entity.deleted){this.enqueue({type:'reminder',family:user.family,entity},entity.at);}
    return result;
   });
+ }
+ importNara(user,{csv,familyID,targetChildID='',commit=false,timeZone}){
+  if(familyID!==user.family)fail('The family changed. Preview the import again.',409);
+  const run=()=>{const report=planNara(csv,{familyID:user.family,existing:this.list(user.family),targetChildID});
+   if(commit){for(const e of report.records)this.put(user.family,{...e,updatedAt:Date.now()/1000});}
+   return {...report,records:undefined,...(commit?{snapshot:this.snapshot(user,timeZone)}:{})};};
+  return commit?this.transaction(run):run();
  }
  saveOperation(user,command,result){this.db.prepare('INSERT INTO operations VALUES (?,?,?,?)').run(user.family,user.id,command.id,JSON.stringify(result));}
  invite(user){const token=randomBytes(24).toString('base64url');this.db.prepare('INSERT INTO invites VALUES (?,?,?,?)').run(hash(token),user.family,Date.now()/1000+86400*7,user.preview);return {code:token,expiresAt:Date.now()/1000+86400*7};}

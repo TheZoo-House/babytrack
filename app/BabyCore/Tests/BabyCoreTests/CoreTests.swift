@@ -3,7 +3,7 @@ import XCTest
 
 final class CoreTests: XCTestCase {
     func testCatalogAndSnapshotContract() throws {
-        XCTAssertEqual(Catalog.shared.types.count, 18)
+        XCTAssertEqual(Catalog.shared.types.count, 19)
         let snapshot = try Snapshot.sample()
         XCTAssertEqual(snapshot.version, 1)
         XCTAssertTrue(snapshot.entities.contains { $0.type == "book" && $0.fields["giftGiver"] != nil })
@@ -88,5 +88,66 @@ final class CoreTests: XCTestCase {
         XCTAssertThrowsError(try state.accept(other))
         XCTAssertEqual(state.snapshot.familyID, refreshed.familyID)
         XCTAssertEqual(state.outbox.count, 1)
+    }
+
+    func testCareActionsAreDurableValidateChildAndDoNotToggleSleep() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let storage = SharedStorage(directory: dir)
+        try storage.update { state in state.snapshot = try Snapshot.sample(); state.selectedChildID = "sample-child" }
+        let first = try storage.record(.startSleep)
+        let second = try storage.record(.startSleep)
+        XCTAssertEqual(first.id, second.id)
+        XCTAssertEqual(try storage.read().outbox.count, 1)
+        _ = try storage.record(.endSleep, now: first.date.addingTimeInterval(61))
+        XCTAssertThrowsError(try storage.record(.endSleep))
+        XCTAssertThrowsError(try storage.record(.bottle(0, "oz")))
+        XCTAssertThrowsError(try storage.record(.diaper("Wet"), childID: "removed-child"))
+        _ = try storage.record(.bottle(4.5, "oz"))
+        XCTAssertEqual(try SharedStorage(directory: dir).read().outbox.last?.entity.fields["amount"], "4.5")
+    }
+
+    func testFormulaDraftAndCustomChoicesSurviveRestartAndServerAcknowledgement() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let storage = SharedStorage(directory: dir)
+        try storage.update { $0.snapshot = try Snapshot.sample(); $0.selectedChildID = "sample-child" }
+        try storage.enqueue(Command(entity: Entity(type: "formula", title: "Example custom")))
+        XCTAssertTrue(try SharedStorage(directory: dir).read().formulaOptions.contains("Example custom"))
+        let feed = Command(entity: Entity(type: "feeding", childID: "sample-child", title: "Bottle", fields: ["amount": "5", "unit": "oz", "brand": "Example custom"]))
+        try storage.enqueue(feed)
+        _ = try storage.record(.bottle(3, "oz"))
+        XCTAssertEqual(try storage.read().outbox.last?.entity.fields["brand"], "Example custom")
+        XCTAssertNil(try storage.read().preferredFormula(for: "different-child"))
+        let state = try storage.read()
+        var snapshot = state.snapshot
+        snapshot.feedingDefaults = [.init(childID: "sample-child", formula: "Server choice")]
+        snapshot.formulaBrands = ["Example custom", "Server choice"]
+        _ = try storage.update { $0.merge(.init(results: state.outbox.map { .init(id: $0.id, status: "accepted", message: nil, entityID: $0.entity.id) }, snapshot: snapshot)) }
+        XCTAssertEqual(try SharedStorage(directory: dir).read().preferredFormula(for: "sample-child"), "Server choice")
+    }
+
+    func testImportedSnapshotDecodesUnknownsAndSourceAttribution() throws {
+        let snapshot = try Snapshot.sampleNaraImport()
+        XCTAssertEqual(snapshot.entities.count, 11)
+        let feeds = snapshot.entities.filter { $0.type == "feeding" }
+        XCTAssertTrue(feeds.contains { $0.fields["amount"] == nil })
+        XCTAssertTrue(feeds.contains { $0.imported?.raw["Note"]?.contains("emoji") == true })
+        XCTAssertEqual(snapshot.entities.first { $0.type == "medication" }?.imported?.updatedBy, "Editor")
+        XCTAssertEqual(snapshot.summaries[0].feedingML, 148)
+    }
+
+    func testStorageChangePublishesAfterReleasingItsLock() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let storage = SharedStorage(directory: dir)
+        let published = expectation(description: "Saved state can be read from the change observer")
+        let observer = NotificationCenter.default.addObserver(forName: SharedStorage.didChange, object: nil, queue: nil) { _ in
+            XCTAssertEqual(try? storage.read().outbox.count, 1)
+            published.fulfill()
+        }
+        defer { NotificationCenter.default.removeObserver(observer) }
+        try storage.enqueue(Command(entity: Entity(type: "note", title: "Synthetic note")))
+        wait(for: [published], timeout: 1)
     }
 }

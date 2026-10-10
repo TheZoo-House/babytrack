@@ -12,9 +12,38 @@ locations. All family members can edit. Apple is the only real-account login.
 
 `Try sample family` opens isolated synthetic data. It connects to the test
 backend when available, or saves sample records on the device when offline.
-Local sample totals are labelled as sample totals. Real and server-backed
-sample families use server-computed totals. Sample identities cannot join real
-families. Do not store real child records in sample mode.
+Real and server-backed sample families use server-computed totals. Sample
+identities cannot join real families. Standard builds contain only synthetic
+sample data. An explicitly requested owner build can bundle a private local
+sample through `scripts/archive-owner`; this resource never enters Git, CI or
+the anonymous sample endpoint.
+
+## Nara import and voice logging
+
+Open Settings → Account & data → Import Nara Baby after signing in. Choose the
+CSV export and either create its child profiles or map a single profile to an
+existing child. Review counts, already imported records and warnings before
+Import. Original values, units, notes, time zones and caregiver attribution are
+retained. Missing amounts and dose units stay unknown. Re-importing skips both
+saved and deleted source records and cannot overwrite edits or add caregivers.
+
+Spotlight shows care shortcuts when searching for the app. Siri phrases include
+"Log a bottle in Babytrack", "Log a wet diaper in Babytrack", "Start sleep in
+Babytrack", "End sleep in Babytrack", "Log medication in Babytrack", "Log a
+temperature in Babytrack" and "Log a measurement in Babytrack". Siri prompts for
+required parameters; the child picker uses the selected child when available.
+Records enter the same durable offline queue used by the app and widgets. Open
+the app to sync queued records when connectivity returns.
+
+To prepare a private owner sample from a user-authorized export:
+
+```sh
+node scripts/owner-preview.mjs /private/export.csv "$HOME/.local/share/babytrack/imports/OwnerPreview.json"
+scripts/archive-owner
+```
+
+That archive contains personal data. Keep it in the owner's private delivery
+channel. Normal `scripts/archive` and CI exclude it.
 
 ## Develop
 

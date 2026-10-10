@@ -21,6 +21,7 @@ public struct TypeSpec: Codable, Sendable, Identifiable {
 
 public struct Catalog: Codable, Sendable {
     public var version: Int
+    public var formulaBrands: [String]
     public var types: [TypeSpec]
     public static let shared: Catalog = {
         guard let url = Bundle.module.url(forResource: "catalog", withExtension: "json"),
@@ -37,6 +38,17 @@ public struct Catalog: Codable, Sendable {
     }
 }
 
+public struct ImportSource: Codable, Sendable, Equatable {
+    public var source: String
+    public var profileKey: String
+    public var activityKey: String
+    public var part: String
+    public var createdBy: String
+    public var updatedBy: String
+    public var timeZone: String
+    public var raw: [String: String]
+}
+
 public struct Entity: Codable, Sendable, Identifiable, Equatable {
     public var id: String
     public var type: String
@@ -51,6 +63,7 @@ public struct Entity: Codable, Sendable, Identifiable, Equatable {
     public var actor: String
     public var detail: String
     public var scheduled: Bool?
+    public var imported: ImportSource?
     public var date: Date {
         Date(timeIntervalSince1970: at)
     }
@@ -97,6 +110,14 @@ public struct DaySummary: Codable, Sendable {
     public var sleepMinutes: Int
     public var readingCount: Int
     public var day: String
+    public var lastFeedingID: String?
+    public var lastDiaperID: String?
+    public var lastSleepID: String?
+}
+
+public struct FeedingDefault: Codable, Sendable {
+    public var childID: String
+    public var formula: String?
 }
 
 public struct Snapshot: Codable, Sendable {
@@ -107,6 +128,8 @@ public struct Snapshot: Codable, Sendable {
     public var summaries: [DaySummary]
     public var members: [Member]
     public var user: User
+    public var formulaBrands: [String]?
+    public var feedingDefaults: [FeedingDefault]?
     public static var empty: Snapshot {
         Snapshot(
             version: 1,
@@ -117,6 +140,14 @@ public struct Snapshot: Codable, Sendable {
             members: [],
             user: User(id: "", name: "Caregiver")
         )
+    }
+
+    public static func sampleNaraImport() throws -> Snapshot {
+        try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: Bundle.module.url(forResource: "nara-import-sample", withExtension: "json")!))
+    }
+
+    public static func sampleNaraCSV() throws -> String {
+        try String(contentsOf: Bundle.module.url(forResource: "nara-sample", withExtension: "csv")!, encoding: .utf8)
     }
 
     public static func sample() throws -> Snapshot {
@@ -159,7 +190,23 @@ public struct DiskState: Codable, Sendable {
     public var outbox: [Command] = []
     public var selectedChildID: String = ""
     public var localPreview: Bool = false
+    // Device-local input selections survive offline saves until the server acknowledges them.
+    public var draftFormulaSelections: [String: String]?
     public init() {}
+    public func preferredFormula(for childID: String) -> String? {
+        draftFormulaSelections?[childID] ?? snapshot.feedingDefaults?.first { $0.childID == childID }?.formula
+    }
+
+    public var formulaOptions: [String] {
+        var options = snapshot.formulaBrands ?? Catalog.shared.formulaBrands
+        for entity in visibleEntities where entity.type == "formula" {
+            if !options.contains(where: { $0.caseInsensitiveCompare(entity.title) == .orderedSame }) {
+                options.append(entity.title)
+            }
+        }
+        return options
+    }
+
     public mutating func accept(_ newSnapshot: Snapshot) throws {
         let switching = snapshot.familyID != newSnapshot.familyID || snapshot.user.id != newSnapshot.user.id
         if switching, !outbox.isEmpty {
@@ -189,7 +236,11 @@ public struct DiskState: Codable, Sendable {
 
     public mutating func merge(_ response: SyncResponse) -> [String] {
         let successful = Set(response.results.filter { ["accepted", "conflict"].contains($0.status) }.map(\.id))
+        let acknowledgedChildren = Set(outbox.filter { successful.contains($0.id) && $0.entity.type == "feeding" }.map { $0.entity.childID })
         outbox.removeAll { successful.contains($0.id) }
+        for childID in acknowledgedChildren where !outbox.contains(where: { $0.entity.type == "feeding" && $0.entity.childID == childID }) {
+            draftFormulaSelections?.removeValue(forKey: childID)
+        }
         for result in response.results where result.status == "rejected" {
             if let index = outbox
                 .firstIndex(where: { $0.id == result.id })

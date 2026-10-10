@@ -1,4 +1,6 @@
+import AppIntents
 import BabyCore
+import Combine
 import SwiftUI
 
 @main struct BabytrackApp: App {
@@ -10,8 +12,15 @@ import SwiftUI
             RootView().environment(store).tint(Palette.accent).foregroundStyle(Palette.ink)
                 .preferredColorScheme(store.appearance == "system" ? nil : store.appearance == "dark" ? .dark : .light)
                 .task {
-                    delegate.store = store; await store.prepareSignIn(); await store.sync(); await SleepCoordinator
+                    BabytrackShortcuts.updateAppShortcutParameters(); delegate.store = store; await store.prepareSignIn(); await store.sync(); await SleepCoordinator
                         .shared.observe(store: store)
+                }
+                .onReceive(NotificationCenter.default.publisher(for: SharedStorage.didChange).receive(on: RunLoop.main)) { _ in
+                    store.reload(); Task {
+                        if store.pendingCount > 0 {
+                            await store.sync()
+                        }; await SleepCoordinator.shared.reconcile(store: store)
+                    }
                 }
                 .onChange(of: phase) { _, phase in
                     if phase ==
@@ -32,6 +41,11 @@ import SwiftUI
                         store.form = FormRequest(type: "feeding")
                     } else if url.host == "diaper" {
                         store.form = FormRequest(type: "diaper")
+                    } else if url.host == "record",
+                              let type = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "type" })?.value,
+                              Catalog.shared.types.contains(where: { $0.id == type && !["formula", "child"].contains(type) })
+                    {
+                        store.form = FormRequest(type: type)
                     } else if url.host == "join",
                               let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?
                               .first(where: { $0.name == "code" })?.value

@@ -32,6 +32,7 @@ export function createServer(store,{preview=false,audience='house.thezoo.babytra
     const results=body.commands.map(command=>{try{return store.command(user,command);}catch(e){return {id:command?.id??'',status:'rejected',message:e.message};}});
     return json(200,{results,snapshot:store.snapshot(user,body.timeZone)});
    }
+   if(method==='POST'&&['/v1/import/nara/preview','/v1/import/nara/commit'].includes(url.pathname))return json(200,store.importNara(user,{...body,commit:url.pathname.endsWith('/commit')}));
    if(method==='POST'&&url.pathname==='/v1/invites')return json(200,store.invite(user));
    if(method==='POST'&&url.pathname==='/v1/invites/join')return json(200,{snapshot:store.snapshot(store.join(user,String(body.code??'')),body.timeZone)});
    if(method==='POST'&&url.pathname==='/v1/devices'){

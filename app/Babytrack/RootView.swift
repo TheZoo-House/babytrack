@@ -146,11 +146,11 @@ struct WelcomeView: View {
 
 struct MoreView: View {
     var body: some View {
-        List {
+        AppList {
             NavigationLink { JournalView() } label: { Label("Journal", systemImage: "clock") }
             NavigationLink { GrowthView() } label: { Label("Growth", systemImage: "chart.xyaxis.line") }
             NavigationLink { FamilyView() } label: { Label("Family", systemImage: "person.2") }
             NavigationLink { SettingsView() } label: { Label("Settings", systemImage: "gearshape") }
-        }.listStyle(.plain).scrollContentBackground(.hidden).background(Palette.paper).navigationTitle("More")
+        }.appList().navigationTitle("More")
     }
 }

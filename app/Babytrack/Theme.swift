@@ -66,10 +66,10 @@ struct RecordRow: View {
             RecordSymbol(type: entity.type)
             VStack(alignment: .leading, spacing: 4) {
                 Text(entity.title).font(.body.weight(.semibold)).foregroundStyle(Palette.ink)
-                if !entity.detail
+                if !entity.displayDetail
                     .isEmpty
                 {
-                    Text(entity.detail).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
+                    Text(entity.displayDetail).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
                 }
                 if pending {
                     Text("Waiting to sync").font(.caption).foregroundStyle(.secondary)
@@ -87,5 +87,66 @@ struct RecordRow: View {
             }
             Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
         }.padding(.vertical, 14).contentShape(Rectangle())
+    }
+}
+
+extension View {
+    func appList() -> some View {
+        listStyle(.plain).scrollContentBackground(.hidden).background(Palette.paper)
+            .environment(\.defaultMinListRowHeight, 54)
+    }
+}
+
+struct EntryHeading: View {
+    var type: String
+    var child: String?
+    var body: some View {
+        HStack(spacing: 14) {
+            RecordSymbol(type: type, size: 52)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(Catalog.shared.spec(type).title).font(.system(.title2, design: .rounded, weight: .semibold))
+                if let child, !child.isEmpty {
+                    Text(child).font(.subheadline).foregroundStyle(.secondary)
+                }
+            }
+        }.padding(.vertical, 12)
+    }
+}
+
+struct AppList<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+    var body: some View {
+        List { content().listRowBackground(Palette.paper) }.appList().labeledContentStyle(AppValueStyle())
+    }
+}
+
+struct AppValueStyle: LabeledContentStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline, spacing: 16) {
+                configuration.label.fixedSize()
+                Spacer(minLength: 16)
+                configuration.content.fixedSize()
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                configuration.label.font(.caption).foregroundStyle(.secondary)
+                configuration.content.frame(maxWidth: .infinity, alignment: .leading)
+            }.padding(.vertical, 6)
+        }
+    }
+}
+
+extension Entity {
+    /// Drafts have no server description yet; format only their entered fields.
+    var displayDetail: String {
+        if !detail.isEmpty {
+            return detail
+        }
+        switch type {
+        case "feeding": return [fields["amount"].map { $0 + " " + (fields["unit"] ?? "") } ?? "Amount not recorded", fields["brand"]].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+        case "diaper": return [fields["contents"], fields["color"], fields["consistency"]].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+        case "growth": return [fields["measure"], fields["value"].map { $0 + " " + (fields["unit"] ?? "") }].compactMap { $0 }.joined(separator: " · ")
+        default: return fields["notes"] ?? ""
+        }
     }
 }

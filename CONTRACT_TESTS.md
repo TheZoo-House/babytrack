@@ -49,3 +49,23 @@ app-to-backend sync; screenshots cover iPhone and iPad.
 Physical-device Apple sign-in, camera scanning, remote APNs delivery and external
 TestFlight availability require real device/Apple-service checks. Simulator tests
 are not proof of those capabilities.
+
+## Nara and App Intents
+
+The authenticated `/v1/import/nara/preview` and `/v1/import/nara/commit` routes
+accept `csv`, `familyID`, optional `targetChildID`, and `timeZone`. Preview does
+not write. Commit parses again inside one transaction and returns a fresh
+snapshot. Stable source IDs are family scoped; existing imported records and
+source mappings prevent duplicate children and overwriting edits. Historic
+imports do not enqueue notification jobs or grant caregiver access.
+
+Synthetic Nara fixtures cover quoted newlines/commas/emoji, epoch milliseconds,
+zero-duration sleeps, unknown amounts/dose units, combined diaper values,
+multiple measurements and vaccines, repeated imports, edits and family
+isolation. The generated import snapshot also decodes through Swift BabyCore.
+App/widget/intent actions share the locked `SharedStorage.record` path. Core
+tests verify durable queues, invalid-child/value rejection, per-child formulas,
+acknowledgement and explicit start/end semantics. Native UI tests exercise
+custom formula reuse, CSV preview/commit and all settings screens. App Intents
+metadata contains ten Spotlight shortcuts; physical Siri discovery is a device
+verification boundary.

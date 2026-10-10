@@ -33,32 +33,6 @@ struct CareProvider: TimelineProvider {
     }
 }
 
-struct WetDiaperIntent: AppIntent {
-    static let title: LocalizedStringResource = "Log wet diaper"
-    static let description = IntentDescription("Add a wet diaper to the selected child's journal.")
-    func perform() async throws -> some IntentResult {
-        let storage = SharedStorage.application
-        let state = try storage.read()
-        guard let child = state.visibleEntities
-            .first(where: { $0.id == state.selectedChildID && $0.type == "child" }) ?? state.visibleEntities
-            .first(where: { $0.type == "child" }) else { throw IntentError.noChild }
-        try storage.enqueue(Command(entity: Entity(
-            type: "diaper",
-            childID: child.id,
-            title: "Diaper",
-            fields: ["contents": "Wet"]
-        )))
-        WidgetCenter.shared.reloadAllTimelines()
-        return .result()
-    }
-
-    enum IntentError: Error,
-        LocalizedError
-    { case noChild; var errorDescription: String? {
-        "Open the app and add a child first."
-    } }
-}
-
 struct CareWidgetView: View {
     var entry: CareEntry
     @Environment(\.widgetFamily) private var family

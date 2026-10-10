@@ -6,7 +6,7 @@ struct FamilyView: View {
     @State private var invitation: String?
     @State private var joinCode = ""
     var body: some View {
-        List {
+        AppList {
             Section("Children") {
                 ForEach(store.children) { child in
                     Button { store.detail = child } label: {
@@ -62,13 +62,13 @@ struct FamilyView: View {
                     }.disabled(joinCode.isEmpty)
                 }
             }
-        }.listStyle(.plain).scrollContentBackground(.hidden).background(Palette.paper).navigationTitle("Family")
+        }.appList().navigationTitle("Family")
     }
 }
 
 struct SettingsView: View {
     var body: some View {
-        List {
+        AppList {
             NavigationLink { PreferenceView() } label: { Label("Appearance & units", systemImage: "paintpalette") }
             NavigationLink { NotificationSettingsView() } label: { Label(
                 "Notifications & reminders",
@@ -76,7 +76,7 @@ struct SettingsView: View {
             ) }
             NavigationLink { ConnectionView() } label: { Label("Connection & sync", systemImage: "network") }
             NavigationLink { AccountView() } label: { Label("Account & data", systemImage: "person.crop.circle") }
-        }.listStyle(.plain).scrollContentBackground(.hidden).background(Palette.paper).navigationTitle("Settings")
+        }.appList().navigationTitle("Settings")
     }
 }
 
@@ -84,7 +84,7 @@ struct PreferenceView: View {
     @Environment(AppStore.self) private var store
     var body: some View {
         @Bindable var store = store
-        Form {
+        AppList {
             Picker("Appearance", selection: $store.appearance) {
                 Text("System").tag("system"); Text("Light").tag("light"); Text("Dark").tag("dark")
             }
@@ -99,7 +99,7 @@ struct PreferenceView: View {
                 "units",
                 value
             ) }
-        }.navigationTitle("Appearance & units")
+        }.appList().navigationTitle("Appearance & units")
     }
 }
 
@@ -107,7 +107,7 @@ struct ConnectionView: View {
     @Environment(AppStore.self) private var store
     @State private var draft = ""
     var body: some View {
-        Form {
+        AppList {
             Section("Server") {
                 TextField("https://server.example", text: $draft).keyboardType(.URL).textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
@@ -145,7 +145,7 @@ struct ConnectionView: View {
                     }
                 }
             }
-        }.navigationTitle("Connection & sync").onAppear { draft = store.backendURL }
+        }.appList().navigationTitle("Connection & sync").onAppear { draft = store.backendURL }
     }
 }
 
@@ -153,7 +153,7 @@ struct NotificationSettingsView: View {
     @Environment(AppStore.self) private var store
     var body: some View {
         @Bindable var store = store
-        List {
+        AppList {
             Toggle("Notifications on this device", isOn: $store.notificationsEnabled)
                 .onChange(of: store.notificationsEnabled) { _, enabled in
                     Task { await SleepCoordinator.shared.setNotifications(
@@ -168,7 +168,7 @@ struct NotificationSettingsView: View {
                 Button("Add reminder", systemImage: "plus") { store.form = FormRequest(type: "reminder") }
                     .disabled(store.childID.isEmpty)
             }
-        }.listStyle(.plain).navigationTitle("Notifications & reminders")
+        }.appList().navigationTitle("Notifications & reminders")
     }
 }
 
@@ -177,12 +177,13 @@ struct AccountView: View {
     @State private var exportURL: URL?
     @State private var deleteAccount = false
     var body: some View {
-        List {
+        AppList {
             Section {
                 LabeledContent("Name", value: store.state.snapshot.user.name)
                 if store.isPreview {
                     Text("Sample family").foregroundStyle(.secondary)
                 }
+                NavigationLink { NaraImportView() } label: { Label("Import Nara Baby", systemImage: "doc.badge.arrow.up") }
                 Button("Export records") {
                     do {
                         let url = FileManager.default.temporaryDirectory
@@ -206,7 +207,7 @@ struct AccountView: View {
                         .disabled(store.pendingCount > 0)
                 }
             }
-        }.listStyle(.plain).navigationTitle("Account & data")
+        }.appList().navigationTitle("Account & data")
             .confirmationDialog(
                 "Delete your account? Shared records remain for other caregivers. If you are the last member, the family's records are deleted.",
                 isPresented: $deleteAccount,

@@ -15,6 +15,7 @@ public enum StorageError: Error, LocalizedError {
 
 /// Every app and widget write uses the same cross-process lock and atomic replace.
 public struct SharedStorage: Sendable {
+    public static let didChange = Notification.Name("house.thezoo.babytrack.stateChanged")
     public let directory: URL
     public init(directory: URL) {
         self.directory = directory
@@ -55,7 +56,7 @@ public struct SharedStorage: Sendable {
     }
 
     @discardableResult public func update<T>(_ body: (inout DiskState) throws -> T) throws -> T {
-        try locked {
+        let result = try locked {
             var state = try readUnlocked()
             let result = try body(&state)
             let file = directory.appendingPathComponent("state.json")
@@ -67,21 +68,40 @@ public struct SharedStorage: Sendable {
             #endif
             return result
         }
+        NotificationCenter.default.post(name: Self.didChange, object: nil)
+        return result
     }
 
     public func enqueue(_ command: Command) throws {
-        try update { state in
-            if state.localPreview {
-                state.snapshot.entities.removeAll { $0.id == command.entity.id }
-                if command
-                    .action !=
-                    "delete"
-                {
-                    var e = command.entity; e.version += 1; e.actor = "You"; state.snapshot.entities.append(e)
-                }
-            } else {
-                state.outbox.append(command)
+        try update { $0.enqueue(command) }
+    }
+}
+
+extension DiskState {
+    mutating func enqueue(_ original: Command) {
+        var command = original
+        if command.entity.type == "feeding", command.action == "upsert", !command.entity.deleted {
+            let explicit = command.entity.fields["brand"]?.trimmingCharacters(in: .whitespacesAndNewlines)
+            if explicit == nil {
+                command.entity.fields["brand"] = preferredFormula(for: command.entity.childID)
             }
+            if let brand = command.entity.fields["brand"], !brand.isEmpty {
+                if draftFormulaSelections == nil {
+                    draftFormulaSelections = [:]
+                }
+                draftFormulaSelections?[command.entity.childID] = brand
+            }
+        }
+        if localPreview {
+            snapshot.entities.removeAll { $0.id == command.entity.id }
+            if command
+                .action !=
+                "delete"
+            {
+                var e = command.entity; e.version += 1; e.actor = "You"; snapshot.entities.append(e)
+            }
+        } else {
+            outbox.append(command)
         }
     }
 }

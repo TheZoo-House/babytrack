@@ -1,0 +1,12 @@
+﻿"Type","Profile Name","Time Zone","_profileKey","_activityKey","Start Date/time (Epoch)","[Profile] Birth Date","[Bottle Feed] Formula Volume","[Bottle Feed] Formula Volume Unit","[Bottle Feed] Formula Name","Note","[Sleep] End Date/time (Epoch)","[Sleep] Duration (Seconds)","[Diaper] Type","[Diaper] Dirty Color","[Diaper] Dirty Texture","[Growth] Height","[Growth] Height Unit","[Growth] Weight","[Growth] Weight Unit","[Vaccine] Vaccine","[Medical] Medication","Created By Caregiver","Last Updated By Caregiver"
+"Profile","Sample child","America/New_York","synthetic-profile","synthetic-0","1791588649000","2026-06-01","","","","","","","","","","","","","","","","",""
+"Bottle Feed","Sample child","America/New_York","synthetic-profile","synthetic-1","1791588649000","","5","FLOZ","Sample formula","a comma, a ""quote""
+and emoji 😂","","","","","","","","","","","","",""
+"Bottle Feed","Sample child","America/New_York","synthetic-profile","synthetic-2","1791588649000","","","","","","","","","","","","","","","","","",""
+"Sleep","Sample child","America/New_York","synthetic-profile","synthetic-3","1791588649000","","","","","","1791588650178","1","","","","","","","","","","",""
+"Sleep","Sample child","America/New_York","synthetic-profile","synthetic-4","1791588649000","","","","","","1791588649000","0","","","","","","","","","","",""
+"Diaper","Sample child","America/New_York","synthetic-profile","synthetic-5","1791588649000","","","","","","","","Dirty Wet","BROWN YELLOW","MUCOUS MUSH","","","","","","","",""
+"Growth","Sample child","America/New_York","synthetic-profile","synthetic-6","1791588649000","","","","","","","","","","","23.5","IN","12.125","LB","","","",""
+"Vaccine","Sample child","America/New_York","synthetic-profile","synthetic-7","1791588649000","","","","","","","","","","","","","","","One
+Two","","",""
+"Medical","Sample child","America/New_York","synthetic-profile","synthetic-8","1791588649000","","","","","","","","","","","","","","","","Example medicine, 0.3","Writer","Editor"

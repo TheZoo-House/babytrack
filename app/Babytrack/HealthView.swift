@@ -6,7 +6,7 @@ struct HealthView: View {
     @Environment(AppStore.self) private var store
     private let types = ["medication", "temperature", "illness", "vaccine", "appointment", "milestone", "note"]
     var body: some View {
-        List {
+        AppList {
             Section { NavigationLink { GrowthView() } label: { Label("Growth", systemImage: "chart.xyaxis.line") } }
             Section {
                 ForEach(types, id: \.self) { type in
@@ -21,7 +21,7 @@ struct HealthView: View {
                     }
                 }
             }
-        }.listStyle(.plain).scrollContentBackground(.hidden).background(Palette.paper).navigationTitle("Health")
+        }.appList().navigationTitle("Health")
     }
 }
 
@@ -33,10 +33,10 @@ struct HealthRecords: View {
     }
 
     var body: some View {
-        List { ForEach(records) { entity in
+        AppList { ForEach(records) { entity in
             Button { store.detail = entity } label: { RecordRow(entity: entity) }.buttonStyle(.plain)
         } }
-        .listStyle(.plain).scrollContentBackground(.hidden).background(Palette.paper)
+        .appList()
         .navigationTitle(Catalog.shared.spec(type).title)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -60,6 +60,10 @@ struct GrowthView: View {
     @State private var measure = "Weight"
     private var records: [Entity] {
         store.care.filter { $0.type == "growth" && $0.fields["measure"] == measure }.sorted { $0.at < $1.at }
+    }
+
+    private var chartRecords: [Entity] {
+        records.filter { Double($0.fields["value"] ?? "") != nil && (measure == "Weight" ? ["lb", "oz", "kg"] : ["in", "cm"]).contains($0.fields["unit"] ?? "") }
     }
 
     private var unit: String {
@@ -90,7 +94,7 @@ struct GrowthView: View {
                     Text("Weight").tag("Weight"); Text("Height").tag("Height"); Text("Head").tag("Head circumference")
                 }
                 .pickerStyle(.segmented)
-                if let last = records.last {
+                if let last = chartRecords.last {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("\(value(last).formatted(.number.precision(.fractionLength(1)))) \(unit)").font(.system(
                             size: 44,
@@ -99,7 +103,7 @@ struct GrowthView: View {
                         )); Text(last.date, format: .dateTime.month().day().year()).font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
-                    Chart(records) { entity in
+                    Chart(chartRecords) { entity in
                         LineMark(x: .value("Date", entity.date), y: .value(unit, value(entity)))
                             .interpolationMethod(.monotone).foregroundStyle(Palette.accent)
                         PointMark(x: .value("Date", entity.date), y: .value(unit, value(entity)))
@@ -107,7 +111,7 @@ struct GrowthView: View {
                     }.chartYScale(domain: .automatic(includesZero: false)).frame(height: 240)
                         .accessibilityLabel("\(measure) measurements in \(unit)")
                 } else {
-                    ContentUnavailableView("No measurements", systemImage: "ruler")
+                    ContentUnavailableView(records.isEmpty ? "No measurements" : "No measurements with a recorded unit", systemImage: "ruler")
                 }
                 VStack(spacing: 0) { ForEach(records.reversed()) { entity in
                     Button { store.detail = entity } label: { RecordRow(entity: entity) }

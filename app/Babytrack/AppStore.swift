@@ -141,6 +141,7 @@ enum SessionKeychain {
         do { state = try storage.read() } catch { self.error = error.localizedDescription }
         showWelcome = children.isEmpty && token == nil
         WidgetCenter.shared.reloadAllTimelines()
+        BabytrackShortcuts.updateAppShortcutParameters()
     }
 
     func selectChild(_ id: String) {
@@ -211,6 +212,11 @@ enum SessionKeychain {
         guard pendingCount == 0,
               !reauthenticationRequired else { error = "Sign in again to sync your saved records first."; return }
         do {
+            if !testing, let url = Bundle.main.url(forResource: "OwnerPreview", withExtension: "json") {
+                var fresh = DiskState(); fresh.snapshot = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: url)); fresh.localPreview = true
+                fresh.selectedChildID = fresh.snapshot.entities.first { $0.type == "child" }?.id ?? ""
+                try storage.update { $0 = fresh }; reload(); notice = "Sample family is stored on this device."; return
+            }
             let login: LoginResponse = try await request(
                 "/v1/auth/preview",
                 body: Data("{}".utf8),
@@ -238,12 +244,13 @@ enum SessionKeychain {
         reload(); showWelcome = false
     }
 
-    func save(_ entity: Entity, action: String = "upsert") {
+    @discardableResult func save(_ entity: Entity, action: String = "upsert") -> Bool {
         do {
             try storage.enqueue(Command(action: action, entity: entity)); reload()
             notice = state.localPreview ? "Saved on this device" : "Saved"
             Task { await sync() }
-        } catch { self.error = error.localizedDescription }
+            return true
+        } catch { self.error = error.localizedDescription; return false }
     }
 
     func discard(_ id: String) {
@@ -282,13 +289,9 @@ enum SessionKeychain {
     }
 
     func toggleSleep() {
-        guard let child else { form = FormRequest(type: "child"); return }
-        if var sleep = activeSleep {
-            sleep.end = Date.now.timeIntervalSince1970; save(sleep, action: "sleepStop")
-        } else {
-            let sleep = Entity(type: "sleep", childID: child.id, title: "Sleep", fields: ["category": "Nap"])
-            save(sleep, action: "sleepStart")
-        }
+        guard child != nil else { form = FormRequest(type: "child"); return }
+        do { try storage.record(activeSleep == nil ? .startSleep : .endSleep, childID: childID); reload(); Task { await sync() } }
+        catch { self.error = error.localizedDescription }
         Task { await SleepCoordinator.shared.reconcile(store: self) }
     }
 
@@ -304,7 +307,7 @@ enum SessionKeychain {
     }
 
     func quickDiaper() {
-        save(Entity(type: "diaper", childID: childID, title: "Diaper", fields: ["contents": "Wet"]))
+        do { try storage.record(.diaper("Wet"), childID: childID); reload(); Task { await sync() } } catch { self.error = error.localizedDescription }
     }
 
     func signOut(revoke: Bool = true) async throws {

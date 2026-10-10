@@ -16,6 +16,8 @@
 		64F27D1112B01C76FE7A0CAA /* BabyCore in Frameworks */ = {isa = PBXBuildFile; productRef = 6758E30C5CBE2A6480518709 /* BabyCore */; };
 		6CA242F3D3408822C4C739B7 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7124937E2453A2C2329AAF /* AppStore.swift */; };
 		8068D10A60EF78449D3F6E13 /* BabytrackApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46835C123B81BBDDEAAA785 /* BabytrackApp.swift */; };
+		816410634ED2E53DDFAA2008 /* AppShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 370742E622D5EE4E6D19A45A /* AppShortcuts.swift */; };
+		A3537207E9D90179666FF374 /* NaraImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC6F52EA68845A588687E2F /* NaraImportView.swift */; };
 		A4EBE4716424E012E5E69A9A /* RecordForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5248161E7D3F11D0D82D52D3 /* RecordForm.swift */; };
 		C0B24A9405AF107EFF7EF530 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7892086320009B4616926DCB /* RootView.swift */; };
 		CF770B79FC5D26DE4022097B /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8B51AC159933344E70126B /* LibraryView.swift */; };
@@ -61,6 +63,7 @@
 /* Begin PBXFileReference section */
 		03C4BD4849146B95138B1A55 /* BarcodeScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScanner.swift; sourceTree = "<group>"; };
 		2B8B51AC159933344E70126B /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		370742E622D5EE4E6D19A45A /* AppShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShortcuts.swift; sourceTree = "<group>"; };
 		38ED0B8C85D74A823C6963A7 /* FamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyView.swift; sourceTree = "<group>"; };
 		40702E6B4772C8E4809F94DD /* HealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthView.swift; sourceTree = "<group>"; };
 		5248161E7D3F11D0D82D52D3 /* RecordForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordForm.swift; sourceTree = "<group>"; };
@@ -83,6 +86,7 @@
 		DAC2FF607929A37D21AE00C0 /* BabyWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabyWidgets.swift; sourceTree = "<group>"; };
 		DE377DB22696A7294CFDF1B8 /* BabyWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = BabyWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		EAEA0B9986811360AF04D6EF /* BabytrackUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabytrackUITests.swift; sourceTree = "<group>"; };
+		EEC6F52EA68845A588687E2F /* NaraImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NaraImportView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -164,6 +168,7 @@
 		DFE2346755E9F3F2BCE57A05 /* Babytrack */ = {
 			isa = PBXGroup;
 			children = (
+				370742E622D5EE4E6D19A45A /* AppShortcuts.swift */,
 				6B7124937E2453A2C2329AAF /* AppStore.swift */,
 				772B5C05C05F30ECACFCB72D /* Assets.xcassets */,
 				90E0FF58F9E693F7A9CE7FCE /* Babytrack.entitlements */,
@@ -173,6 +178,7 @@
 				40702E6B4772C8E4809F94DD /* HealthView.swift */,
 				63C6BE17664D9CAA6E8E88D2 /* Info.plist */,
 				2B8B51AC159933344E70126B /* LibraryView.swift */,
+				EEC6F52EA68845A588687E2F /* NaraImportView.swift */,
 				AEC46048FD2FC26AF806B8A9 /* PrivacyInfo.xcprivacy */,
 				5248161E7D3F11D0D82D52D3 /* RecordForm.swift */,
 				7892086320009B4616926DCB /* RootView.swift */,
@@ -318,12 +324,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				816410634ED2E53DDFAA2008 /* AppShortcuts.swift in Sources */,
 				6CA242F3D3408822C4C739B7 /* AppStore.swift in Sources */,
 				8068D10A60EF78449D3F6E13 /* BabytrackApp.swift in Sources */,
 				F2D43143F5D5DB6AEB6BFE67 /* BarcodeScanner.swift in Sources */,
 				3B7F3E59A06DADC0B4EDBCFE /* FamilyView.swift in Sources */,
 				E1AABC9E8AF16285B66B2530 /* HealthView.swift in Sources */,
 				CF770B79FC5D26DE4022097B /* LibraryView.swift in Sources */,
+				A3537207E9D90179666FF374 /* NaraImportView.swift in Sources */,
 				A4EBE4716424E012E5E69A9A /* RecordForm.swift in Sources */,
 				C0B24A9405AF107EFF7EF530 /* RootView.swift in Sources */,
 				6232C95BB24BDF81CD60E732 /* SleepCoordinator.swift in Sources */,

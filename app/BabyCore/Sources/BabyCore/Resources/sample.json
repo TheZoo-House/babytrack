@@ -326,7 +326,27 @@
       "diaperCount": 1,
       "sleepMinutes": 75,
       "readingCount": 1,
-      "day": "2026-10-09"
+      "day": "2026-10-09",
+      "lastFeedingID": "sample-feed-1",
+      "lastDiaperID": "sample-diaper",
+      "lastSleepID": "sample-sleep"
+    }
+  ],
+  "formulaBrands": [
+    "Enfamil",
+    "Similac",
+    "Kendamil",
+    "Bobbie",
+    "ByHeart",
+    "Earth’s Best",
+    "Kirkland Signature",
+    "Nara Organics",
+    "Formula"
+  ],
+  "feedingDefaults": [
+    {
+      "childID": "sample-child",
+      "formula": "Formula"
     }
   ],
   "members": [
