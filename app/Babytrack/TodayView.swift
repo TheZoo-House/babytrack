@@ -187,8 +187,8 @@ struct TodayView: View {
     }
 
     private func inlineHistory(_ type: String) -> some View {
-        let all = store.care.filter { $0.type == type }
-        let rows = Array(all.prefix(historyLimit))
+        let matches = Array(store.care.lazy.filter { $0.type == type }.prefix(historyLimit + 1))
+        let rows = Array(matches.prefix(historyLimit))
         return VStack(alignment: .leading, spacing: 0) {
             if rows.isEmpty {
                 Text("No records yet").font(.subheadline).foregroundStyle(Palette.secondary).padding(.vertical, 12)
@@ -202,7 +202,7 @@ struct TodayView: View {
                     .buttonStyle(.plain).accessibilityIdentifier("timeline-\(entity.type)")
                 if index < rows.count - 1 { Divider() }
             }
-            if all.count > historyLimit {
+            if matches.count > historyLimit {
                 Button("Show more") { historyLimit += 10 }.font(.subheadline).frame(maxWidth: .infinity, minHeight: 44, alignment: .trailing)
             }
         }.padding(.bottom, 8)

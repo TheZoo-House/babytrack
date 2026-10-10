@@ -81,15 +81,22 @@ verification boundary.
 The native `testLargeHistoryDropdownPerformance` benchmark expands and collapses
 bottle history over 1,700 synthetic records and records application CPU usage.
 Check its result with `scripts/check-ios-dropdown-performance <result.xcresult>`;
-two toggles must use less than 500 ms of application CPU. This excludes XCTest
-driver waits and catches repeated whole-history scans in selected-child lookup.
-On hosted CI, `--relative` compares the 1,700-record case with a 24-record control
-that has identical visible rows and actions on the same runner. Large-history
+every recorded open/close pair must use less than 500 ms of application CPU.
+This excludes XCTest driver waits and catches repeated whole-history scans in
+selected-child lookup.
+Both cases use XCTest's recommended measurement options and run together after
+the other native journeys. On hosted CI, `--relative` compares the 1,700-record
+case with a 24-record control that has identical visible rows and actions on the
+same runner. Large-history
 mean CPU must stay below 1.5 times the fastest control sample, so a noisy control
 cannot inflate the budget. This separates history-dependent work
-from the speed of a virtualized simulator; the local 500 ms budget still applies.
+from the speed of a virtualized simulator; the local 500 ms worst-sample budget
+still applies. Synthetic gate tests reject averaging away a single slow sample
+and reject inflating the hosted budget with a slow control.
 The app caches formatted records until data changes or the minute changes;
 selection and summaries read draft records without formatting the whole history.
+Inline histories filter lazily through their visible limit plus one lookahead
+record; the native Show more check verifies expansion from 8 to 18 rows.
 The filtered-history test also verifies that logging actions sit above the
 disclosure rows. Personal exports are excluded from both tests.
 

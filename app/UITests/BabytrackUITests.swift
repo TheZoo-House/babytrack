@@ -414,6 +414,18 @@ import XCTest
         measureHistoryDropdown(small: false)
     }
 
+    func testLargeHistoryShowMoreKeepsFeedingRows() {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing", "--history-stress-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["feedingTimeline"].waitForExistence(timeout: 15))
+        app.buttons["feedingTimeline"].tap()
+        XCTAssertEqual(app.buttons.matching(identifier: "timeline-feeding").count, 8)
+        let more = app.buttons["Show more"]
+        for _ in 0 ..< 6 where !more.isHittable { app.scrollViews.firstMatch.swipeUp() }
+        XCTAssertTrue(more.isHittable); more.tap()
+        XCTAssertEqual(app.buttons.matching(identifier: "timeline-feeding").count, 18)
+        capture(app, "Expanded large feeding history")
+    }
+
     func testSmallHistoryDropdownPerformance() {
         measureHistoryDropdown(small: true)
     }
@@ -421,8 +433,7 @@ import XCTest
     private func measureHistoryDropdown(small: Bool) {
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing", "--history-stress-testing"] + (small ? ["--small-history"] : []); app.launch()
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
-        let options = XCTMeasureOptions(); options.iterationCount = 3
-        measure(metrics: [XCTClockMetric(), XCTCPUMetric(application: app)], options: options) {
+        measure(metrics: [XCTClockMetric(), XCTCPUMetric(application: app)]) {
             app.buttons["feedingTimeline"].tap()
             XCTAssertTrue(app.buttons.matching(identifier: "timeline-feeding").firstMatch.exists)
             app.buttons["feedingTimeline"].tap()

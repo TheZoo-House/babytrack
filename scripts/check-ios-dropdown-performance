@@ -22,7 +22,8 @@ def cpu_measurements(test_name):
         sys.exit("Dropdown CPU measurements missing or invalid")
     return values
 
-average = statistics.mean(cpu_measurements("testLargeHistoryDropdownPerformance"))
+large = cpu_measurements("testLargeHistoryDropdownPerformance")
+average = statistics.mean(large)
 if len(sys.argv) == 3:
     # Same visible rows and actions on this runner; isolate work caused by history size.
     # A slow/noisy control must not inflate the allowed large-history budget.
@@ -32,7 +33,8 @@ if len(sys.argv) == 3:
     if ratio >= 1.5:
         sys.exit("FAIL: large care history adds excessive UI work")
 else:
-    print(f"Dropdown open/close CPU: {average * 1000:.1f} ms; limit 500 ms")
-    if average >= 0.5:
+    worst = max(large)
+    print(f"Dropdown open/close CPU: {average * 1000:.1f} ms mean, {worst * 1000:.1f} ms worst; limit 500 ms")
+    if worst >= 0.5:
         sys.exit("FAIL: care history exceeds the local CPU budget")
 print("PASS")
