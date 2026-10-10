@@ -199,6 +199,21 @@ import XCTest
         capture(app, "Today counters after care saves")
     }
 
+    func testCompactHealthUnitChoices() {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
+        navigate(app, "Health"); navigate(app, "Growth"); app.buttons["Add measurement"].tap()
+        XCTAssertTrue(app.buttons["unit-lb"].waitForExistence(timeout: 5))
+        let pounds = app.buttons["unit-lb"].frame, ounces = app.buttons["unit-oz"].frame, kilograms = app.buttons["unit-kg"].frame
+        XCTAssertEqual(pounds.midY, ounces.midY, accuracy: 1); XCTAssertEqual(pounds.midY, kilograms.midY, accuracy: 1)
+        XCTAssertGreaterThanOrEqual(pounds.width, 44)
+        capture(app, "Compact measurement units"); app.buttons["Cancel"].tap()
+        navigate(app, "Today"); app.buttons["addRecord"].tap(); app.buttons["add-temperature"].tap()
+        XCTAssertTrue(app.buttons["unit-°F"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["unit-°F"].frame.midY, app.buttons["unit-°C"].frame.midY, accuracy: 1)
+        capture(app, "Compact temperature units")
+    }
+
     func testAllPagesScreenshots() {
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
