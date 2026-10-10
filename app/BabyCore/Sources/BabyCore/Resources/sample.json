@@ -305,7 +305,7 @@
     {
       "id": "sample-child",
       "type": "child",
-      "title": "Robin",
+      "title": "Sample child",
       "at": 1783727100,
       "fields": {},
       "childID": "",

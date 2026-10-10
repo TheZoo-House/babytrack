@@ -5,9 +5,11 @@ struct TodayView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var dynamicType
-    @ScaledMetric(relativeTo: .largeTitle) private var childTitleSize = 34
+    @ScaledMetric(relativeTo: .largeTitle) private var childTitleSize = 28
     @State private var showActions = false
     @State private var showJournal = false
+    @State private var expandedType: String?
+    @State private var historyLimit = 8
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -24,7 +26,9 @@ struct TodayView: View {
                             VStack(alignment: .leading, spacing: 12) { recent; upcoming }.frame(maxWidth: .infinity)
                         }
                     } else {
-                        careSections; recent; upcoming
+                        careSections; if expandedType == nil {
+                            recent; upcoming
+                        }
                     }
                 }
                 if let notice = store.notice,
@@ -50,6 +54,14 @@ struct TodayView: View {
             .sheet(isPresented: $showActions) { AddRecordMenu() }
             .navigationDestination(isPresented: $showJournal) { JournalView() }
             .refreshable { await store.sync() }
+            .onAppear {
+                #if DEBUG
+                    let args = ProcessInfo.processInfo.arguments
+                    if args.contains("--owner-preview-testing"), let index = args.firstIndex(of: "--expanded-care"), args.indices.contains(index + 1), ["feeding", "diaper", "sleep"].contains(args[index + 1]) {
+                        expandedType = args[index + 1]
+                    }
+                #endif
+            }
     }
 
     private var header: some View {
@@ -71,6 +83,7 @@ struct TodayView: View {
                 Button("Add child", systemImage: "plus") { store.form = FormRequest(type: "child") }
             } label: {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    ProfileAvatar(photo: store.child?.fields["photo"], size: 36, child: true)
                     Text(store.child?.title ?? "Today").font(.system(size: childTitleSize, weight: .bold, design: .rounded))
                     if store.children.count > 1 {
                         Image(systemName: "chevron.down").font(.caption.weight(.bold))
@@ -110,30 +123,34 @@ struct TodayView: View {
         }
     }
 
+    private func toggleHistory(_ type: String) {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            expandedType = expandedType == type ? nil : type
+            historyLimit = 8
+        }
+    }
+
     private func activity(type: String, identifier: String, latestID: String?, total: String?) -> some View {
         let latest = (type == "sleep" ? store.activeSleep : nil) ?? store.entities.first { $0.id == latestID }
-        let layout = dynamicType.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
-            : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
-        return layout {
-            NavigationLink { JournalView(type: type) } label: {
-                HStack(spacing: 12) {
-                    RecordSymbol(type: type, size: 38)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(Catalog.shared.spec(type).title).font(.headline).foregroundStyle(Palette.ink)
-                        if type == "sleep", let active = store.activeSleep {
-                            Text(timerInterval: active.date ... Date.distantFuture, countsDown: false)
-                                .monospacedDigit().accessibilityIdentifier("sleepTimer")
-                        } else {
-                            Text(latest?.displayDetail ?? "No records yet")
-                                .lineLimit(dynamicType.isAccessibilitySize ? 3 : 1)
-                        }
-                        totalLabel(type: type, total: total)
-                    }.font(.subheadline).foregroundStyle(Palette.secondary)
-                    Spacer(minLength: 0)
-                    Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Palette.secondary)
-                }.contentShape(Rectangle())
-            }.buttonStyle(.plain).accessibilityIdentifier("\(type)Timeline")
+        let open = expandedType == type
+        let summary = Button { toggleHistory(type) } label: {
+            HStack(spacing: 8) {
+                RecordSymbol(type: type, size: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(Catalog.shared.spec(type).title).font(.subheadline.weight(.semibold)).foregroundStyle(Palette.ink)
+                    if type == "sleep", let active = store.activeSleep {
+                        Text(timerInterval: active.date ... Date.distantFuture, countsDown: false)
+                            .monospacedDigit().accessibilityIdentifier("sleepTimer")
+                    } else {
+                        Text(latest?.displayDetail ?? "No records yet").lineLimit(dynamicType.isAccessibilitySize ? 3 : 1)
+                    }
+                    totalLabel(type: type, total: total)
+                }.font(.caption).foregroundStyle(Palette.secondary)
+                Spacer(minLength: 0)
+            }.contentShape(Rectangle())
+        }.buttonStyle(.plain).accessibilityIdentifier("\(type)Timeline")
+            .accessibilityValue(open ? "Expanded" : "Collapsed")
+        let actions = HStack(spacing: 8) {
             Button {
                 if type == "sleep" {
                     store.toggleSleep()
@@ -141,12 +158,53 @@ struct TodayView: View {
                     store.form = FormRequest(type: type)
                 }
             } label: {
-                Text(type == "sleep" ? (store.activeSleep == nil ? "Start sleep" : "End sleep")
-                    : "Add " + Catalog.shared.spec(type).title.lowercased()).fixedSize(horizontal: false, vertical: true)
-            }.buttonStyle(CareActionStyle(color: Catalog.shared.spec(type).color))
+                Text(type == "sleep" ? (store.activeSleep == nil ? "Start" : "End") : "Add")
+            }.buttonStyle(CompactCareActionStyle(color: Catalog.shared.spec(type).color))
+                .accessibilityLabel(type == "sleep" ? (store.activeSleep == nil ? "Start sleep" : "End sleep") : "Add " + Catalog.shared.spec(type).title.lowercased())
                 .accessibilityIdentifier(identifier)
-                .frame(maxWidth: dynamicType.isAccessibilitySize ? .infinity : nil, alignment: .trailing)
-        }.padding(.vertical, 12)
+            Button { toggleHistory(type) } label: {
+                Image(systemName: open ? "chevron.up" : "chevron.down")
+                    .font(.caption.weight(.semibold)).foregroundStyle(Palette.secondary)
+                    .frame(width: 44, height: 44)
+            }.buttonStyle(.plain).accessibilityLabel((open ? "Hide " : "Show ") + Catalog.shared.spec(type).title.lowercased() + " history")
+        }
+        return VStack(spacing: 0) {
+            Group {
+                if dynamicType.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 4) {
+                        summary
+                        HStack { Spacer(); actions }
+                    }
+                } else {
+                    HStack(spacing: 8) { summary; actions }
+                }
+            }.padding(.vertical, 8)
+            if open {
+                inlineHistory(type)
+            }
+        }
+    }
+
+    private func inlineHistory(_ type: String) -> some View {
+        let all = store.care.filter { $0.type == type }
+        let rows = Array(all.prefix(historyLimit))
+        return VStack(alignment: .leading, spacing: 0) {
+            if rows.isEmpty {
+                Text("No records yet").font(.subheadline).foregroundStyle(Palette.secondary).padding(.vertical, 12)
+            }
+            ForEach(Array(rows.enumerated()), id: \.element.id) { index, entity in
+                if index == 0 || !Calendar.current.isDate(rows[index - 1].date, inSameDayAs: entity.date) {
+                    Text(entity.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
+                        .font(.caption.weight(.semibold)).foregroundStyle(Palette.secondary).padding(.top, 12).padding(.bottom, 4)
+                }
+                Button { store.detail = entity } label: { RecordRow(entity: entity, showTypeTitle: false, compact: true) }
+                    .buttonStyle(.plain).accessibilityIdentifier("timeline-\(entity.type)")
+                Divider()
+            }
+            if all.count > historyLimit {
+                Button("Show more") { historyLimit += 10 }.font(.subheadline).frame(maxWidth: .infinity, minHeight: 44, alignment: .trailing)
+            }
+        }.padding(.leading, 36).padding(.bottom, 8)
     }
 
     @ViewBuilder private func totalLabel(type: String, total: String?) -> some View {

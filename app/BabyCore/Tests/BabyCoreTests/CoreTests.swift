@@ -150,4 +150,39 @@ final class CoreTests: XCTestCase {
         try storage.enqueue(Command(entity: Entity(type: "note", title: "Synthetic note")))
         wait(for: [published], timeout: 1)
     }
+
+    func testOwnerSampleUpgradePreservesAddedRecordsAndDoesNotOverwriteRealFamilies() throws {
+        var sample = try Snapshot.sampleNaraImport()
+        sample.user = User(id: "owner-synthetic", name: "Owner", preview: true)
+        let childID = try XCTUnwrap(sample.entities.first { $0.type == "child" }?.id)
+        var state = DiskState(); state.snapshot = try Snapshot.sample()
+        let added = Entity(id: "added-log", type: "note", childID: "sample-child", title: "Keep this", fields: ["notes": "Offline note"])
+        state.outbox = [Command(entity: added)]
+        XCTAssertTrue(try state.installOwnerSample(sample))
+        XCTAssertFalse(state.snapshot.entities.contains { $0.id == "sample-child" })
+        XCTAssertEqual(state.snapshot.entities.first { $0.id == added.id }?.childID, childID)
+        XCTAssertTrue(state.outbox.isEmpty)
+        state.snapshot.entities[0].fields["notes"] = "Later edit"
+        XCTAssertFalse(try state.installOwnerSample(sample))
+        XCTAssertEqual(state.snapshot.entities[0].fields["notes"], "Later edit")
+        state.snapshot.user.preview = false; state.snapshot.familyID = "real-family"; state.snapshot.entities = []
+        XCTAssertFalse(try state.installOwnerSample(sample))
+    }
+
+    func testCaregiverPhotoDraftSurvivesRestartAndBlocksAccountSwitch() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let storage = SharedStorage(directory: dir)
+        try storage.update { $0.snapshot = try Snapshot.sample(); $0.setCaregiverPhoto("synthetic-photo") }
+        XCTAssertEqual(try storage.read().caregiverPhotoDraft?.photo, "synthetic-photo")
+        var changed = try Snapshot.sample(); changed.user.id = "other-user"
+        XCTAssertThrowsError(try storage.update { try $0.accept(changed) })
+        try storage.update { $0.setCaregiverPhoto(nil) }
+        XCTAssertNotNil(try storage.read().caregiverPhotoDraft)
+        XCTAssertNil(try storage.read().caregiverPhotoDraft?.photo)
+        let removal = try XCTUnwrap(storage.read().caregiverPhotoDraft)
+        try storage.update { $0.setCaregiverPhoto("newer-photo") }
+        try storage.update { try $0.acknowledgeCaregiverPhoto(removal.id, snapshot: $0.snapshot) }
+        XCTAssertEqual(try storage.read().caregiverPhotoDraft?.photo, "newer-photo")
+    }
 }

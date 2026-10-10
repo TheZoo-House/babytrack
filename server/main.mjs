@@ -26,6 +26,7 @@ export function createServer(store,{preview=false,audience='house.thezoo.babytra
    if(method==='POST'&&url.pathname==='/v1/auth/preview'){if(!preview)fail('Sample mode is disabled',404);return json(200,store.preview());}
    const user=store.authenticate(req.headers.authorization?.replace(/^Bearer /,''));
    if(method==='POST'&&url.pathname==='/v1/auth/logout'){store.db.prepare('DELETE FROM sessions WHERE token=?').run(hash(req.headers.authorization.replace(/^Bearer /,'')));return json(200,{ok:true});}
+   if(method==='POST'&&url.pathname==='/v1/caregiver/profile')return json(200,store.updateCaregiver(user,body));
    if(method==='GET'&&url.pathname==='/v1/snapshot')return json(200,store.snapshot(user,url.searchParams.get('timeZone')));
    if(method==='POST'&&url.pathname==='/v1/sync'){
     if(!Array.isArray(body.commands)||body.commands.length>50)fail('Send at most 50 operations');

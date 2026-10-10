@@ -1,7 +1,7 @@
 import { planNara } from './nara.mjs';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID, randomBytes, createHash } from 'node:crypto';
-import { validateEntity, decorate, summary, fail, seedEntities, feedingPreferences } from './domain.mjs';
+import { validateEntity, decorate, summary, fail, seedEntities, feedingPreferences, validatePhoto } from './domain.mjs';
 export const hash=value=>createHash('sha256').update(value).digest('hex');
 export class Store {
  constructor(path=':memory:'){
@@ -12,6 +12,7 @@ export class Store {
    CREATE TABLE IF NOT EXISTS entities (family TEXT NOT NULL, id TEXT NOT NULL, body TEXT NOT NULL, PRIMARY KEY(family,id));
    CREATE TABLE IF NOT EXISTS operations (family TEXT NOT NULL, user TEXT NOT NULL, id TEXT NOT NULL, result TEXT NOT NULL, PRIMARY KEY(family,user,id));
    CREATE TABLE IF NOT EXISTS invites (token TEXT PRIMARY KEY, family TEXT NOT NULL, expires REAL NOT NULL, preview INTEGER NOT NULL);
+   CREATE TABLE IF NOT EXISTS caregiver_profiles (user TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, photo TEXT);
    CREATE TABLE IF NOT EXISTS challenges (nonce TEXT PRIMARY KEY, expires REAL NOT NULL);
    CREATE TABLE IF NOT EXISTS devices (user TEXT NOT NULL, id TEXT NOT NULL, body TEXT NOT NULL, PRIMARY KEY(user,id));
    CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, body TEXT NOT NULL, due REAL NOT NULL, attempts INTEGER NOT NULL DEFAULT 0);
@@ -24,11 +25,18 @@ export class Store {
   if(!user){user={id,name,family:randomUUID(),preview:Number(preview)};this.db.prepare('INSERT INTO users VALUES (?,?,?,?)').run(id,name,user.family,user.preview);this.db.prepare('INSERT INTO members VALUES (?,?)').run(user.family,id);}
   return user;
  }
- login(id,name,preview=false){const user=this.account(id,name,preview);const token=randomBytes(32).toString('base64url');this.db.prepare('INSERT INTO sessions VALUES (?,?,?)').run(hash(token),id,Date.now()/1000+86400*30);return {token,user:{id:user.id,name:user.name,preview:!!user.preview}};}
+ login(id,name,preview=false){const user=this.account(id,name,preview);const token=randomBytes(32).toString('base64url');this.db.prepare('INSERT INTO sessions VALUES (?,?,?)').run(hash(token),id,Date.now()/1000+86400*30);return {token,user:{id:user.id,name:user.name,preview:!!user.preview,photo:this.db.prepare('SELECT photo FROM caregiver_profiles WHERE user=?').get(user.id)?.photo??null}};}
  authenticate(token){const row=this.db.prepare('SELECT users.* FROM sessions JOIN users ON users.id=sessions.user WHERE token=? AND expires>?').get(hash(token??''),Date.now()/1000);if(!row||!this.db.prepare('SELECT 1 FROM members WHERE family=? AND user=?').get(row.family,row.id))fail('Sign in again',401);return row;}
  list(family){return this.db.prepare('SELECT body FROM entities WHERE family=?').all(family).map(r=>JSON.parse(r.body));}
  put(family,e){this.db.prepare('INSERT INTO entities VALUES (?,?,?) ON CONFLICT(family,id) DO UPDATE SET body=excluded.body').run(family,e.id,JSON.stringify(e));}
- snapshot(user,timeZone){const all=this.list(user.family);const entities=all.filter(e=>!e.deleted).map(e=>decorate(e,all)).sort((a,b)=>b.at-a.at||a.id.localeCompare(b.id));const children=entities.filter(e=>e.type==='child');return {version:1,familyID:user.family,serverTime:Date.now()/1000,entities,summaries:children.map(e=>summary(all,e.id,Date.now()/1000,timeZone)),...feedingPreferences(all),members:this.db.prepare('SELECT users.id,users.name FROM members JOIN users ON users.id=members.user WHERE members.family=?').all(user.family),user:{id:user.id,name:user.name,preview:!!user.preview}};}
+ snapshot(user,timeZone){const all=this.list(user.family);const entities=all.filter(e=>!e.deleted).map(e=>decorate(e,all)).sort((a,b)=>b.at-a.at||a.id.localeCompare(b.id));const children=entities.filter(e=>e.type==='child');return {version:1,familyID:user.family,serverTime:Date.now()/1000,entities,summaries:children.map(e=>summary(all,e.id,Date.now()/1000,timeZone)),...feedingPreferences(all),members:this.db.prepare('SELECT users.id,users.name,caregiver_profiles.photo FROM members JOIN users ON users.id=members.user LEFT JOIN caregiver_profiles ON caregiver_profiles.user=users.id WHERE members.family=?').all(user.family),user:{id:user.id,name:user.name,preview:!!user.preview,photo:this.db.prepare('SELECT photo FROM caregiver_profiles WHERE user=?').get(user.id)?.photo??null}};}
+ updateCaregiver(user,body){
+  if(!body||!Object.hasOwn(body,'photo'))fail('Choose a profile photo');
+  if(Object.keys(body).some(k=>!['photo','timeZone'].includes(k)))fail('Only your own profile can be changed');
+  if(body.photo!==null)validatePhoto(body.photo);
+  this.db.prepare('INSERT INTO caregiver_profiles(user,photo) VALUES (?,?) ON CONFLICT(user) DO UPDATE SET photo=excluded.photo').run(user.id,body.photo);
+  return this.snapshot(user,body.timeZone);
+ }
  preview(){const id='preview-'+randomUUID();const login=this.login(id,'Alex',true);const user=this.authenticate(login.token);for(const e of seedEntities())this.put(user.family,e);return {...login,snapshot:this.snapshot(user)};}
  command(user,command){
   if(!command||typeof command.id!=='string'||!/^[-\w]{1,80}$/.test(command.id))fail('Invalid operation ID');

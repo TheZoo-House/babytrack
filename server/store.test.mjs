@@ -21,3 +21,20 @@ test('formula choices persist independently and defaults are per child and chron
  const unknown={...record('feeding',{amount:'2',unit:'oz',brand:''}),at:next.at+1};s.command(a,cmd(unknown));assert.equal(s.list(a.family).find(e=>e.id===unknown.id).fields.brand,'');
  assert.equal(s.snapshot(s.account('unrelated-user')).formulaBrands.includes('Example custom'),false);
 });
+
+test('child and caregiver photos sync to family members, replace and remove without leaking',t=>{
+ const {s,a}=fixture(t);const b=s.join(s.authenticate(s.login('photo-caregiver-b','B').token),s.invite(a).code);
+ const outsider=s.account('photo-outsider','Outsider');
+ const photo='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5FoAAAAASUVORK5CYII=';
+ const childPhoto={...child(),fields:{photo}};
+ assert.equal(s.command(a,cmd(childPhoto,'upsert',1)).status,'accepted');
+ assert.equal(s.snapshot(b).entities.find(e=>e.id===childPhoto.id).fields.photo,photo);
+ s.updateCaregiver(a,{photo});assert.equal(s.snapshot(b).members.find(m=>m.id===a.id).photo,photo);
+ assert.equal(s.snapshot(outsider).members.some(m=>m.id===a.id),false);
+ assert.throws(()=>s.updateCaregiver(b,{photo,userID:a.id}),/own profile/);
+ assert.throws(()=>s.updateCaregiver(a,{photo:'not an image'}),/valid photo/);
+ const oversized=Buffer.from(photo,'base64');oversized.writeUInt32BE(100000,16);assert.throws(()=>s.updateCaregiver(a,{photo:oversized.toString('base64')}),/4096/);
+ s.updateCaregiver(a,{photo:null});assert.equal(s.snapshot(b).members.find(m=>m.id===a.id).photo,null);
+ assert.equal(s.command(b,cmd({...childPhoto,fields:{}},'upsert',2)).status,'accepted');
+ assert.equal(s.snapshot(a).entities.find(e=>e.id===childPhoto.id).fields.photo,undefined);
+});

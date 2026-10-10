@@ -92,6 +92,7 @@ public struct User: Codable, Sendable, Equatable {
     public var id: String
     public var name: String
     public var preview: Bool
+    public var photo: String?
     public init(id: String, name: String, preview: Bool = false) {
         self.id = id; self.name = name; self.preview = preview
     }
@@ -100,6 +101,7 @@ public struct User: Codable, Sendable, Equatable {
 public struct Member: Codable, Sendable, Identifiable {
     public var id: String
     public var name: String
+    public var photo: String?
 }
 
 public struct DaySummary: Codable, Sendable {
@@ -185,6 +187,12 @@ public struct LoginResponse: Codable, Sendable {
     public var snapshot: Snapshot
 }
 
+public struct CaregiverPhotoDraft: Codable, Sendable {
+    public var id = UUID().uuidString
+    public var userID: String
+    public var photo: String?
+}
+
 public struct DiskState: Codable, Sendable {
     public var snapshot: Snapshot = .empty
     public var outbox: [Command] = []
@@ -192,6 +200,7 @@ public struct DiskState: Codable, Sendable {
     public var localPreview: Bool = false
     // Device-local input selections survive offline saves until the server acknowledges them.
     public var draftFormulaSelections: [String: String]?
+    public var caregiverPhotoDraft: CaregiverPhotoDraft?
     public init() {}
     public func preferredFormula(for childID: String) -> String? {
         draftFormulaSelections?[childID] ?? snapshot.feedingDefaults?.first { $0.childID == childID }?.formula
@@ -209,7 +218,7 @@ public struct DiskState: Codable, Sendable {
 
     public mutating func accept(_ newSnapshot: Snapshot) throws {
         let switching = snapshot.familyID != newSnapshot.familyID || snapshot.user.id != newSnapshot.user.id
-        if switching, !outbox.isEmpty {
+        if switching, !outbox.isEmpty || caregiverPhotoDraft != nil {
             throw SessionChangeError.pendingChanges
         }
         if switching {

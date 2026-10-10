@@ -93,7 +93,7 @@ enum SessionKeychain {
     }
 
     var pendingCount: Int {
-        state.outbox.count
+        state.outbox.count + (state.caregiverPhotoDraft == nil ? 0 : 1)
     }
 
     var care: [Entity] {
@@ -104,7 +104,7 @@ enum SessionKeychain {
     init() {
         #if DEBUG
             testing = ProcessInfo.processInfo.arguments.contains("--ui-testing") || ProcessInfo.processInfo.arguments
-                .contains("--ui-http-test")
+                .contains("--ui-http-test") || ProcessInfo.processInfo.arguments.contains("--owner-preview-testing")
         #else
             testing = false
         #endif
@@ -134,6 +134,22 @@ enum SessionKeychain {
                 } catch { self.error = error.localizedDescription }
             }
         #endif
+        do {
+            #if DEBUG
+                let ownerRender = ProcessInfo.processInfo.arguments.contains("--owner-preview-testing")
+            #else
+                let ownerRender = false
+            #endif
+            if !testing || ownerRender, state.snapshot.user.preview || token == nil, let url = Bundle.main.url(forResource: "OwnerPreview", withExtension: "json") {
+                let sample = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: url))
+                let upgraded = try storage.update { try $0.installOwnerSample(sample) }
+                if upgraded {
+                    if !testing {
+                        try SessionKeychain.write(nil)
+                    }; token = nil; state = try storage.read()
+                }
+            }
+        } catch { self.error = error.localizedDescription }
         showWelcome = children.isEmpty && token == nil
     }
 
@@ -260,10 +276,14 @@ enum SessionKeychain {
     }
 
     func sync() async {
-        guard !syncing, signedIn, !reauthenticationRequired else { return }
+        guard !syncing, signedIn, !state.localPreview, !reauthenticationRequired else { return }
         syncing = true; defer { syncing = false }
         do {
             let disk = try storage.read()
+            if let draft = disk.caregiverPhotoDraft, draft.userID == disk.snapshot.user.id {
+                let snap: Snapshot = try await request("/v1/caregiver/profile", body: body(["photo": draft.photo as Any? ?? NSNull(), "timeZone": TimeZone.current.identifier]))
+                try storage.update { try $0.acknowledgeCaregiverPhoto(draft.id, snapshot: snap) }
+            }
             let commands = Array(disk.outbox.filter { $0.error == nil }.prefix(50))
             if commands.isEmpty {
                 let snap: Snapshot =
@@ -286,6 +306,22 @@ enum SessionKeychain {
         } catch {
             notice = pendingCount > 0 ? "Offline · \(pendingCount) waiting to sync" : "Offline · showing saved records"
         }
+    }
+
+    var caregiverPhoto: String? {
+        if let draft = state.caregiverPhotoDraft, draft.userID == state.snapshot.user.id {
+            return draft.photo
+        }
+        return state.snapshot.user.photo
+    }
+
+    func caregiverPhoto(for member: Member) -> String? {
+        member.id == state.snapshot.user.id ? caregiverPhoto : member.photo
+    }
+
+    @discardableResult func setCaregiverPhoto(_ photo: String?) -> Bool {
+        do { try storage.update { $0.setCaregiverPhoto(photo) }; reload(); Task { await sync() }; return true }
+        catch { self.error = error.localizedDescription; return false }
     }
 
     func toggleSleep() {

@@ -4,6 +4,24 @@ export const catalog=JSON.parse(readFileSync(new URL('../contracts/catalog.json'
 const inventory=new Set(['book','toy','clothing','location','formula']);
 export const careTypes=new Set(catalog.types.map(t=>t.id).filter(t=>!inventory.has(t)&&!['child','reminder'].includes(t)));
 export function fail(message,status=400){throw Object.assign(new Error(message),{status});}
+export function validatePhoto(value){
+ if(typeof value!=='string'||value.length>1500000||value.length%4!==0||!value||!/^[-A-Za-z0-9+/]*={0,2}$/.test(value))fail('Choose a valid photo');
+ const bytes=Buffer.from(value,'base64');
+ let width=0,height=0;
+ if(bytes.length>=24&&bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))&&bytes.toString('ascii',12,16)==='IHDR'){
+  width=bytes.readUInt32BE(16);height=bytes.readUInt32BE(20);
+ }else if(bytes.length>=4&&bytes[0]===255&&bytes[1]===216&&bytes.at(-2)===255&&bytes.at(-1)===217){
+  for(let offset=2;offset+4<bytes.length;){
+   if(bytes[offset]!==255)break;
+   if(bytes[offset+1]===255){offset++;continue;}
+   const marker=bytes[offset+1],length=bytes.readUInt16BE(offset+2);
+   if(length<2||offset+2+length>bytes.length||marker===218||marker===217)break;
+   if([192,193,194,195,197,198,199,201,202,203,205,206,207].includes(marker)&&length>=8){height=bytes.readUInt16BE(offset+5);width=bytes.readUInt16BE(offset+7);break;}
+   offset+=length+2;
+  }
+ }
+ if(!width||!height||width>4096||height>4096)fail('Choose a JPEG or PNG photo no larger than 4096 pixels');
+}
 export function validateEntity(input,{imported=false}={}){
  if(!input||typeof input!=='object')fail('A record is required');
  const spec=catalog.types.find(t=>t.id===input.type);if(!spec)fail('Unknown record type');
@@ -17,6 +35,7 @@ export function validateEntity(input,{imported=false}={}){
  const allowed=new Set(spec.fields.map(f=>f.key).concat(['photo','imageURL'],input.type==='feeding'?['offered']:[]));
  for(const [key,value] of Object.entries(fields)){
    if(!allowed.has(key)||typeof value!=='string'||value.length>(key==='photo'?1500000:4000))fail(`Invalid ${key}`);
+   if(key==='photo')validatePhoto(value);
    if(key==='imageURL'&&value&&!/^https:\/\/(covers\.openlibrary\.org|openlibrary\.org)\//.test(value))fail('Invalid cover URL');
  }
  for(const field of spec.fields){const value=fields[field.key];
@@ -82,7 +101,7 @@ export function summary(entities,childID,now=Date.now()/1000,timeZone='America/N
 export function seedEntities(now=Date.now()/1000){
  const child='sample-child',book='sample-book';
  const e=(id,type,title,at,fields={},childID=child,end=null)=>({id,type,title,at,fields,childID,end,version:1,updatedAt:now,deleted:false,actor:'Alex',detail:''});
- return [e(child,'child','Robin',now-86400*91,{},''),e('sample-location','location','Nursery shelf',now,{},''),
+ return [e(child,'child','Sample child',now-86400*91,{},''),e('sample-location','location','Nursery shelf',now,{},''),
  e(book,'book','Goodnight Moon',now,{isbn:'9780064430173',author:'Margaret Wise Brown',giftGiver:'Grandma',locationID:'sample-location',status:'Owned',quantity:'1',imageURL:'https://covers.openlibrary.org/b/isbn/9780064430173-M.jpg'},''),
  e('sample-book-2','book','The Very Hungry Caterpillar',now,{isbn:'9780399226908',author:'Eric Carle',giftGiver:'Sam',status:'Owned',locationID:'sample-location',imageURL:'https://covers.openlibrary.org/b/isbn/9780399226908-M.jpg'},''),
  e('sample-toy','toy','Little bear',now,{brand:'Jellycat',minAge:'0',status:'Owned',locationID:'sample-location'},''),

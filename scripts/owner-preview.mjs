@@ -8,6 +8,13 @@ if (!input || !output)
 const store = new Store();
 try {
   const user = store.account("owner-local-sample", "You", true);
+  try {
+    const previous = JSON.parse(readFileSync(output, "utf8"));
+    store.db.prepare('DELETE FROM members WHERE user=?').run(user.id);
+    store.db.prepare('UPDATE users SET family=? WHERE id=?').run(previous.familyID,user.id);
+    store.db.prepare('INSERT INTO members VALUES (?,?)').run(previous.familyID,user.id);
+    user.family=previous.familyID;
+  } catch (error) { if (error.code !== "ENOENT") throw error; }
   const report = store.importNara(user, {
     csv: readFileSync(input, "utf8"),
     familyID: user.family,

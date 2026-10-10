@@ -20,3 +20,14 @@ test('Nara preview and commit are authorized and preview does not write',async t
  const committed=await call('/v1/import/nara/commit',body,login.token);assert.equal(committed.status,200);assert.equal(committed.body.snapshot.entities.length,before+11);
  const again=await call('/v1/import/nara/commit',body,login.token);assert.equal(again.body.duplicates,11);
 });
+test('caregiver profile endpoint authenticates and publishes only self changes to the family',async t=>{
+ const {store,call}=await fixture(t);const a=store.login('photo-api-a','A');const b=store.login('photo-api-b','B');
+ const ua=store.authenticate(a.token);store.join(store.authenticate(b.token),store.invite(ua).code);
+ const photo='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5FoAAAAASUVORK5CYII=';
+ assert.equal((await call('/v1/caregiver/profile',{photo})).status,401);
+ assert.equal((await call('/v1/caregiver/profile',{photo,userID:'photo-api-b'},a.token)).status,400);
+ assert.equal((await call('/v1/caregiver/profile',{photo},a.token)).status,200);
+ assert.equal((await call('/v1/snapshot',null,b.token)).body.members.find(m=>m.id===ua.id).photo,photo);
+ assert.equal((await call('/v1/caregiver/profile',{photo:null},a.token)).status,200);
+ assert.equal((await call('/v1/snapshot',null,b.token)).body.members.find(m=>m.id===ua.id).photo,null);
+});

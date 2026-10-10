@@ -41,13 +41,14 @@ struct RecordRow: View {
     var entity: Entity
     var pending = false
     var showTypeTitle = true
+    var compact = false
     @Environment(\.dynamicTypeSize) private var dynamicType
     var body: some View {
         let detailIsTitle = !showTypeTitle && entity.title == Catalog.shared.spec(entity.type).title && !entity.displayDetail.isEmpty
         HStack(alignment: .center, spacing: 14) {
-            RecordSymbol(type: entity.type)
+            RecordSymbol(type: entity.type, size: compact ? 24 : 38)
             VStack(alignment: .leading, spacing: 4) {
-                Text(detailIsTitle ? entity.displayDetail : entity.title).font(.body.weight(.semibold)).lineLimit(2).foregroundStyle(Palette.ink)
+                Text(detailIsTitle ? entity.displayDetail : entity.title).font((compact ? Font.subheadline : .body).weight(.semibold)).lineLimit(2).foregroundStyle(Palette.ink)
                 if !detailIsTitle && !entity.displayDetail
                     .isEmpty
                 {
@@ -65,13 +66,13 @@ struct RecordRow: View {
                 metadata
             }
             Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Palette.secondary)
-        }.padding(.vertical, 8).contentShape(Rectangle())
+        }.padding(.vertical, compact ? 6 : 8).contentShape(Rectangle())
     }
 
     @ViewBuilder private var metadata: some View {
         if !["book", "toy", "clothing", "location", "child"].contains(entity.type) {
             VStack(alignment: dynamicType.isAccessibilitySize ? .leading : .trailing, spacing: 4) {
-                Text(entity.date, format: .dateTime.hour().minute()).font(.subheadline.monospacedDigit())
+                Text(entity.date, format: .dateTime.hour().minute()).font((compact ? Font.caption : .subheadline).monospacedDigit())
                     .foregroundStyle(Palette.secondary)
                 if !entity.actor.isEmpty {
                     Text(entity.actor).font(.caption).foregroundStyle(Palette.secondary)
@@ -151,6 +152,17 @@ struct CareActionStyle: ButtonStyle {
             .padding(.horizontal, 16).padding(.vertical, 10).frame(minHeight: 44)
             .background(Palette.fill(color), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .opacity(isEnabled ? (configuration.isPressed ? 0.75 : 1) : 0.45)
+    }
+}
+
+struct CompactCareActionStyle: ButtonStyle {
+    var color: String
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.font(.caption.weight(.semibold)).foregroundStyle(Palette.buttonInk)
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .background(Palette.fill(color), in: RoundedRectangle(cornerRadius: 9))
+            .frame(minWidth: 44, minHeight: 44)
+            .contentShape(Rectangle()).opacity(configuration.isPressed ? 0.7 : 1)
     }
 }
 

@@ -133,7 +133,7 @@ struct WelcomeView: View {
                             } else {
                                 Text("Try sample family").fontWeight(.semibold)
                             }; Spacer()
-                        }.frame(height: 44)
+                        }.frame(height: 44).contentShape(Rectangle())
                     }.disabled(loading).accessibilityIdentifier("trySample")
                 }
                 NavigationLink("Connection", destination: ConnectionView()).font(.subheadline)

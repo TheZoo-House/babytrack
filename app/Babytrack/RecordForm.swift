@@ -78,8 +78,8 @@ struct RecordForm: View {
                         EntryRow(title: "Notes") { TextField("Add", text: binding(notes), axis: .vertical).lineLimit(1 ... 4).multilineTextAlignment(.trailing).accessibilityLabel("Notes").accessibilityIdentifier("notes") }
                         Divider()
                     }
-                    if !["child", "location", "formula"].contains(request.type) {
-                        let photoLabel = fields["photo"] == nil ? "Add photo" : "Replace photo"
+                    if !["location", "formula"].contains(request.type) {
+                        let photoLabel = fields["photo"] == nil ? (request.type == "child" ? "Add profile photo" : "Add photo") : "Replace photo"
                         HStack {
                             Spacer()
                             PhotosPicker(selection: $photo, matching: .images) { Label(photoLabel, systemImage: "photo") }
@@ -310,10 +310,9 @@ struct RecordForm: View {
     }
 
     private func loadPhoto(_ item: PhotosPickerItem?) async {
-        guard let data = try? await item?.loadTransferable(type: Data.self), let image = UIImage(data: data) else { return }
-        let ratio = min(1, 1000 / max(image.size.width, image.size.height))
-        let size = CGSize(width: image.size.width * ratio, height: image.size.height * ratio)
-        fields["photo"] = UIGraphicsImageRenderer(size: size).image { _ in image.draw(in: CGRect(origin: .zero, size: size)) }.jpegData(compressionQuality: 0.65)?.base64EncodedString()
+        guard let data = try? await item?.loadTransferable(type: Data.self), photo == item,
+              let encoded = PhotoEncoding.encode(data, longestSide: request.type == "child" ? 256 : 1000) else { return }
+        fields["photo"] = encoded
     }
 
     private func lookup() async {

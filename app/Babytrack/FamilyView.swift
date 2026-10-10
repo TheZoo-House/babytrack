@@ -2,6 +2,7 @@ import BabyCore
 import SwiftUI
 
 struct FamilyView: View {
+    @State private var showProfile = false
     @Environment(AppStore.self) private var store
     @State private var invitation: String?
     @State private var joinCode = ""
@@ -11,7 +12,7 @@ struct FamilyView: View {
                 ForEach(store.children) { child in
                     Button { store.detail = child } label: {
                         HStack(spacing: 14) {
-                            RecordSymbol(type: "child"); VStack(alignment: .leading, spacing: 4) {
+                            ProfileAvatar(photo: child.fields["photo"], child: true); VStack(alignment: .leading, spacing: 4) {
                                 Text(child.title).foregroundStyle(Palette.ink); if !child.detail
                                     .isEmpty
                                 {
@@ -22,14 +23,20 @@ struct FamilyView: View {
                             {
                                 Image(systemName: "checkmark").foregroundStyle(Palette.accent)
                             }
-                        }
+                        }.contentShape(Rectangle())
                     }
                 }
                 Button("Add child", systemImage: "plus") { store.form = FormRequest(type: "child") }
             }
             Section("Caregivers") {
                 ForEach(store.state.snapshot.members) { member in
-                    Label(member.name, systemImage: "person.crop.circle")
+                    if member.id == store.state.snapshot.user.id {
+                        Button { showProfile = true } label: {
+                            HStack { ProfileAvatar(photo: store.caregiverPhoto(for: member)); Text(member.name); Spacer(); Image(systemName: "pencil").font(.caption) }.contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityLabel("Edit caregiver profile")
+                    } else {
+                        HStack { ProfileAvatar(photo: store.caregiverPhoto(for: member)); Text(member.name) }
+                    }
                 }
                 if store.signedIn {
                     Button("Create invitation", systemImage: "person.badge.plus") {
@@ -62,7 +69,7 @@ struct FamilyView: View {
                     }.disabled(joinCode.isEmpty)
                 }
             }
-        }.appList().navigationTitle("Family")
+        }.appList().navigationTitle("Family").sheet(isPresented: $showProfile) { CaregiverProfileView() }
     }
 }
 
@@ -173,13 +180,16 @@ struct NotificationSettingsView: View {
 }
 
 struct AccountView: View {
+    @State private var showProfile = false
     @Environment(AppStore.self) private var store
     @State private var exportURL: URL?
     @State private var deleteAccount = false
     var body: some View {
         AppList {
             Section {
-                LabeledContent("Name", value: store.state.snapshot.user.name)
+                Button { showProfile = true } label: {
+                    HStack { ProfileAvatar(photo: store.caregiverPhoto); Text("Caregiver profile"); Spacer(); Text(store.state.snapshot.user.name).foregroundStyle(Palette.secondary) }
+                }
                 if store.isPreview {
                     Text("Sample family").foregroundStyle(.secondary)
                 }
@@ -207,7 +217,7 @@ struct AccountView: View {
                         .disabled(store.pendingCount > 0)
                 }
             }
-        }.appList().navigationTitle("Account & data")
+        }.appList().navigationTitle("Account & data").sheet(isPresented: $showProfile) { CaregiverProfileView() }
             .confirmationDialog(
                 "Delete your account? Shared records remain for other caregivers. If you are the last member, the family's records are deleted.",
                 isPresented: $deleteAccount,

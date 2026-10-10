@@ -29,7 +29,6 @@ import XCTest
         app.buttons["toggleSleep"].tap()
         XCTAssertTrue(app.staticTexts["sleepTimer"].waitForExistence(timeout: 5))
         capture(app, "Sleeping")
-        app.navigationBars.buttons["BackButton"].tap()
         navigate(app, "Library")
         XCTAssertTrue(app.staticTexts["Goodnight Moon"].waitForExistence(timeout: 5)); capture(app, "Library")
         navigate(app, "Health")
@@ -193,21 +192,40 @@ import XCTest
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
         XCTAssertFalse(app.buttons["Add past sleep"].exists)
-        if !app.buttons["nav-Today"].exists {
-            XCTAssertLessThan(app.buttons["sleepTimeline"].frame.maxY - app.buttons["quickBottle"].frame.minY, 330)
-        }
+        XCTAssertLessThan(app.buttons["quickBottle"].frame.width, 80)
         for (option, type) in [("feedingTimeline", "feeding"), ("diaperTimeline", "diaper"), ("sleepTimeline", "sleep")] {
             app.buttons[option].tap()
-            XCTAssertTrue(app.buttons["logRecord"].waitForExistence(timeout: 5))
+            XCTAssertEqual(app.buttons[option].value as? String, "Expanded")
             XCTAssertTrue(app.buttons.matching(identifier: "timeline-\(type)").firstMatch.exists)
             for other in ["feeding", "diaper", "sleep"] where other != type {
                 XCTAssertFalse(app.buttons["timeline-\(other)"].exists)
             }
-            capture(app, "\(type) timeline")
-            app.buttons["logRecord"].tap(); XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5))
-            app.buttons["Cancel"].tap()
-            app.navigationBars.buttons["BackButton"].tap()
+            capture(app, "\(type) inline history")
+            app.buttons[option].tap()
+            XCTAssertEqual(app.buttons[option].value as? String, "Collapsed")
         }
+    }
+
+    func testProfilePhotoEditors() {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
+        if app.buttons["nav-Family"].exists {
+            navigate(app, "Family")
+        } else {
+            navigate(app, "More"); app.buttons["Family"].tap()
+        }
+        XCTAssertTrue(app.staticTexts["Caregivers"].exists)
+        app.buttons["Edit caregiver profile"].tap()
+        XCTAssertTrue(app.buttons["Add profile photo"].waitForExistence(timeout: 5))
+        capture(app, "Caregiver photo editor"); app.buttons["Cancel"].tap()
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Sample child")).firstMatch.tap()
+        app.buttons["Edit"].tap()
+        let picker = app.buttons["Add profile photo"]
+        for _ in 0 ..< 4 where !picker.isHittable {
+            app.scrollViews.firstMatch.swipeUp()
+        }
+        XCTAssertTrue(picker.exists); capture(app, "Child profile photo editor")
+        app.buttons["Cancel"].tap()
     }
 
     private func openLog(_ app: XCUIApplication, _ option: String) {
@@ -216,7 +234,7 @@ import XCTest
         }
         XCTAssertTrue(app.buttons[option].waitForExistence(timeout: 5)); app.buttons[option].tap()
         if option == "sleepTimeline" {
-            XCTAssertTrue(app.buttons["logRecord"].waitForExistence(timeout: 5)); app.buttons["logRecord"].tap()
+            app.buttons["addRecord"].tap(); app.buttons["add-sleep"].tap()
         }
         XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5))
     }
