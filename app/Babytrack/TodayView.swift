@@ -133,52 +133,42 @@ struct TodayView: View {
     private func activity(type: String, identifier: String, latestID: String?, total: String?) -> some View {
         let latest = (type == "sleep" ? store.activeSleep : nil) ?? store.entities.first { $0.id == latestID }
         let open = expandedType == type
-        let summary = Button { toggleHistory(type) } label: {
+        return VStack(spacing: 0) {
             HStack(spacing: 8) {
                 RecordSymbol(type: type, size: 28)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(Catalog.shared.spec(type).title).font(.subheadline.weight(.semibold)).foregroundStyle(Palette.ink)
-                    if type == "sleep", let active = store.activeSleep {
-                        Text(timerInterval: active.date ... Date.distantFuture, countsDown: false)
-                            .monospacedDigit().accessibilityIdentifier("sleepTimer")
+                Text(Catalog.shared.spec(type).title).font(.headline).foregroundStyle(Palette.ink)
+                Spacer(minLength: 8)
+                Button {
+                    if type == "sleep" {
+                        store.toggleSleep()
                     } else {
-                        Text(latest?.displayDetail ?? "No records yet").lineLimit(dynamicType.isAccessibilitySize ? 3 : 1)
+                        store.form = FormRequest(type: type)
                     }
-                    totalLabel(type: type, total: total)
-                }.font(.caption).foregroundStyle(Palette.secondary)
-                Spacer(minLength: 0)
-            }.contentShape(Rectangle())
-        }.buttonStyle(.plain).accessibilityIdentifier("\(type)Timeline")
-            .accessibilityValue(open ? "Expanded" : "Collapsed")
-        let actions = HStack(spacing: 8) {
-            Button {
-                if type == "sleep" {
-                    store.toggleSleep()
-                } else {
-                    store.form = FormRequest(type: type)
-                }
-            } label: {
-                Text(type == "sleep" ? (store.activeSleep == nil ? "Start" : "End") : "Add")
-            }.buttonStyle(CompactCareActionStyle(color: Catalog.shared.spec(type).color))
-                .accessibilityLabel(type == "sleep" ? (store.activeSleep == nil ? "Start sleep" : "End sleep") : "Add " + Catalog.shared.spec(type).title.lowercased())
-                .accessibilityIdentifier(identifier)
+                } label: {
+                    Text(type == "sleep" ? (store.activeSleep == nil ? "Start" : "End") : "Add")
+                }.buttonStyle(CompactCareActionStyle(color: Catalog.shared.spec(type).color))
+                    .accessibilityLabel(type == "sleep" ? (store.activeSleep == nil ? "Start sleep" : "End sleep") : "Add " + Catalog.shared.spec(type).title.lowercased())
+                    .accessibilityIdentifier(identifier)
+            }.padding(.top, 8)
             Button { toggleHistory(type) } label: {
-                Image(systemName: open ? "chevron.up" : "chevron.down")
-                    .font(.caption.weight(.semibold)).foregroundStyle(Palette.secondary)
-                    .frame(width: 44, height: 44)
-            }.buttonStyle(.plain).accessibilityLabel((open ? "Hide " : "Show ") + Catalog.shared.spec(type).title.lowercased() + " history")
-        }
-        return VStack(spacing: 0) {
-            Group {
-                if dynamicType.isAccessibilitySize {
-                    VStack(alignment: .leading, spacing: 4) {
-                        summary
-                        HStack { Spacer(); actions }
-                    }
-                } else {
-                    HStack(spacing: 8) { summary; actions }
-                }
-            }.padding(.vertical, 8)
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        if type == "sleep", let active = store.activeSleep {
+                            Text(timerInterval: active.date ... Date.distantFuture, countsDown: false)
+                                .monospacedDigit().accessibilityIdentifier("sleepTimer")
+                        } else {
+                            Text(latest?.displayDetail ?? "No records yet").lineLimit(dynamicType.isAccessibilitySize ? 3 : 1)
+                        }
+                        totalLabel(type: type, total: total)
+                    }.font(.caption).foregroundStyle(Palette.secondary)
+                    Spacer(minLength: 0)
+                    Image(systemName: open ? "chevron.up" : "chevron.down")
+                        .font(.caption.weight(.semibold)).foregroundStyle(Palette.secondary)
+                        .frame(width: 64, height: 44)
+                }.frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
+            }.buttonStyle(.plain).accessibilityIdentifier("\(type)Timeline")
+                .accessibilityLabel((open ? "Hide " : "Show ") + Catalog.shared.spec(type).title.lowercased() + " history")
+                .accessibilityValue(open ? "Expanded" : "Collapsed")
             if open {
                 inlineHistory(type)
             }
@@ -204,7 +194,7 @@ struct TodayView: View {
             if all.count > historyLimit {
                 Button("Show more") { historyLimit += 10 }.font(.subheadline).frame(maxWidth: .infinity, minHeight: 44, alignment: .trailing)
             }
-        }.padding(.leading, 36).padding(.bottom, 8)
+        }.padding(.bottom, 8)
     }
 
     @ViewBuilder private func totalLabel(type: String, total: String?) -> some View {

@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+"""Check the native large-history dropdown benchmark in an XCTest result."""
+import json
+import statistics
+import subprocess
+import sys
+
+if len(sys.argv) != 2:
+    sys.exit("Usage: scripts/check-ios-dropdown-performance <result.xcresult>")
+results = json.loads(subprocess.check_output([
+    "xcrun", "xcresulttool", "get", "test-results", "metrics", "--path", sys.argv[1],
+    "--test-id", "BabytrackUITests/testLargeHistoryDropdownPerformance()",
+]))
+values = [value for test in results for run in test["testRuns"]
+          for metric in run["metrics"]
+          if metric["identifier"] == "com.apple.dt.XCTMetric_CPU-house.thezoo.babytrack.time"
+          for value in metric["measurements"]]
+if not values:
+    sys.exit("Dropdown CPU measurements missing")
+average = statistics.mean(values)
+# Two toggles over 1700 records must not monopolize the main thread.
+print(f"Dropdown open/close CPU: {average * 1000:.1f} ms; limit 500 ms")
+if average >= 0.5:
+    sys.exit("FAIL: care history blocks the UI")
+print("PASS")

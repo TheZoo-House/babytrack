@@ -69,7 +69,8 @@ enum SessionKeychain {
     }
 
     var child: Entity? {
-        children.first { $0.id == state.selectedChildID } ?? children.first
+        let profiles = children
+        return profiles.first { $0.id == state.selectedChildID } ?? profiles.first
     }
 
     var childID: String {
@@ -77,7 +78,8 @@ enum SessionKeychain {
     }
 
     var activeSleep: Entity? {
-        entities.first { $0.type == "sleep" && $0.childID == childID && $0.end == nil }
+        let selectedChildID = childID
+        return entities.first { $0.type == "sleep" && $0.childID == selectedChildID && $0.end == nil }
     }
 
     var summary: DaySummary? {
@@ -97,7 +99,9 @@ enum SessionKeychain {
     }
 
     var care: [Entity] {
-        entities.filter { $0.childID == childID && !["child", "reminder"].contains($0.type) && $0.scheduled != true }
+        // Resolve the child once; doing it inside the filter scans all records for every row.
+        let selectedChildID = childID
+        return entities.filter { $0.childID == selectedChildID && !["child", "reminder"].contains($0.type) && $0.scheduled != true }
             .sorted { $0.at > $1.at }
     }
 
@@ -128,7 +132,18 @@ enum SessionKeychain {
                 // UI tests explicitly opt into synthetic state and never use personal sessions.
                 token = nil
                 do {
-                    var fresh = DiskState(); fresh.snapshot = try Snapshot.sample(); fresh.localPreview = true; fresh
+                    var fresh = DiskState(); fresh.snapshot = try Snapshot.sample()
+                    if ProcessInfo.processInfo.arguments.contains("--history-stress-testing") {
+                        let templates = fresh.snapshot.entities.filter { ["feeding", "diaper", "sleep"].contains($0.type) }
+                        for index in 0 ..< 1700 {
+                            var record = templates[index % templates.count]
+                            record.id = "stress-\(index)"
+                            let offset = Double(index * 3600); record.at -= offset
+                            if let end = record.end { record.end = end - offset }
+                            fresh.snapshot.entities.append(record)
+                        }
+                    }
+                    fresh.localPreview = true; fresh
                         .selectedChildID = fresh.snapshot.entities.first { $0.type == "child" }?
                         .id ?? ""; state = fresh; try storage.update { $0 = fresh }
                 } catch { self.error = error.localizedDescription }

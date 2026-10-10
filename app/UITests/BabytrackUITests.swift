@@ -192,7 +192,10 @@ import XCTest
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
         XCTAssertFalse(app.buttons["Add past sleep"].exists)
-        XCTAssertLessThan(app.buttons["quickBottle"].frame.width, 80)
+        XCTAssertLessThan(app.buttons["quickBottle"].frame.width, 100)
+        XCTAssertLessThanOrEqual(app.buttons["quickBottle"].frame.maxY, app.buttons["feedingTimeline"].frame.minY)
+        XCTAssertLessThanOrEqual(app.buttons["quickDiaper"].frame.maxY, app.buttons["diaperTimeline"].frame.minY)
+        XCTAssertLessThanOrEqual(app.buttons["toggleSleep"].frame.maxY, app.buttons["sleepTimeline"].frame.minY)
         for (option, type) in [("feedingTimeline", "feeding"), ("diaperTimeline", "diaper"), ("sleepTimeline", "sleep")] {
             app.buttons[option].tap()
             XCTAssertEqual(app.buttons[option].value as? String, "Expanded")
@@ -204,6 +207,19 @@ import XCTest
             app.buttons[option].tap()
             XCTAssertEqual(app.buttons[option].value as? String, "Collapsed")
         }
+    }
+
+    func testLargeHistoryDropdownPerformance() {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing", "--history-stress-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
+        let options = XCTMeasureOptions(); options.iterationCount = 3
+        measure(metrics: [XCTClockMetric(), XCTCPUMetric(application: app)], options: options) {
+            app.buttons["feedingTimeline"].tap()
+            XCTAssertTrue(app.buttons.matching(identifier: "timeline-feeding").firstMatch.exists)
+            app.buttons["feedingTimeline"].tap()
+            XCTAssertEqual(app.buttons["feedingTimeline"].value as? String, "Collapsed")
+        }
+        capture(app, "Large history Today")
     }
 
     func testProfilePhotoEditors() {

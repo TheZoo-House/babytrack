@@ -1,1 +1,1 @@
-{"type":"ux","ticket":"BABY-2","summary":"Use compact care actions with trailing disclosure buttons and inline filtered histories; upgrade owner sample data from the full Nara export while preserving added records."}
+{"type":"ux","ticket":"BABY-2","summary":"Place larger care logging actions above disclosure rows and full-width inline histories below their headers; resolve selected-child lookup once per history projection to eliminate repeated whole-history scans."}

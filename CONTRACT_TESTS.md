@@ -69,3 +69,13 @@ acknowledgement and explicit start/end semantics. Native UI tests exercise
 custom formula reuse, CSV preview/commit and all settings screens. App Intents
 metadata contains ten Spotlight shortcuts; physical Siri discovery is a device
 verification boundary.
+
+## Large care history responsiveness
+
+The native `testLargeHistoryDropdownPerformance` benchmark expands and collapses
+bottle history over 1,700 synthetic records and records application CPU usage.
+Check its result with `scripts/check-ios-dropdown-performance <result.xcresult>`;
+two toggles must use less than 500 ms of application CPU. This excludes XCTest
+driver waits and catches repeated whole-history scans in selected-child lookup.
+The filtered-history test also verifies that logging actions sit above the
+disclosure rows. Personal exports are excluded from both tests.

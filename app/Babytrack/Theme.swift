@@ -158,10 +158,10 @@ struct CareActionStyle: ButtonStyle {
 struct CompactCareActionStyle: ButtonStyle {
     var color: String
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.caption.weight(.semibold)).foregroundStyle(Palette.buttonInk)
-            .padding(.horizontal, 10).padding(.vertical, 6)
-            .background(Palette.fill(color), in: RoundedRectangle(cornerRadius: 9))
-            .frame(minWidth: 44, minHeight: 44)
+        configuration.label.font(.subheadline.weight(.semibold)).foregroundStyle(Palette.buttonInk)
+            .padding(.horizontal, 14).padding(.vertical, 8).frame(minWidth: 64, minHeight: 40)
+            .background(Palette.fill(color), in: RoundedRectangle(cornerRadius: 11))
+            .frame(minHeight: 44)
             .contentShape(Rectangle()).opacity(configuration.isPressed ? 0.7 : 1)
     }
 }
