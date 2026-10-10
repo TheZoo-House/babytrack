@@ -7,7 +7,8 @@ struct BarcodeScanner: View {
     @Environment(\.dismiss) private var dismiss
     @State private var allowed: Bool?
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            LogSheetHeader(title: "Scan book", color: "rose", close: { dismiss() })
             Group {
                 if allowed == true, DataScannerViewController.isSupported, DataScannerViewController.isAvailable {
                     ScannerRepresentable(scanned: scanned).ignoresSafeArea(edges: .bottom)
@@ -20,10 +21,8 @@ struct BarcodeScanner: View {
                         description: Text("Allow camera access in Settings, or enter the ISBN manually.")
                     )
                 }
-            }.navigationTitle("Scan book").navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
-                .task { allowed = await AVCaptureDevice.requestAccess(for: .video) }
-        }
+            }.task { allowed = await AVCaptureDevice.requestAccess(for: .video) }
+        }.presentationDetents([.large]).careSheetStyle()
     }
 }
 

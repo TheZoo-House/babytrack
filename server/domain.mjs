@@ -40,7 +40,11 @@ export function validateEntity(input,{imported=false}={}){
  }
  for(const field of spec.fields){const value=fields[field.key];
    if(!imported&&field.required&&!value?.trim())fail(`Enter ${field.label.toLowerCase()}`);
-   if(!imported&&value&&field.kind==='choice'&&!field.options.includes(value))fail(`Invalid ${field.label.toLowerCase()}`);
+   if(!imported&&value&&field.kind==='choice'){
+    const choices=input.type==='diaper'&&['color','consistency'].includes(field.key)?value.split(' ').filter(Boolean):[value];
+    if(choices.some(choice=>!field.options.includes(choice)))fail(`Invalid ${field.label.toLowerCase()}`);
+   }
+   if(value&&field.kind==='toggle'&&!['true','false'].includes(value))fail(`Invalid ${field.label.toLowerCase()}`);
    if(value&&field.kind==='number'&&(!Number.isFinite(Number(value))||Number(value)<0||Number(value)>100000))fail(`Check ${field.label.toLowerCase()}`);
  }
  if(input.type==='feeding'&&fields.amount!=null&&Number(fields.amount)<=0)fail('Amount must be greater than zero');
@@ -71,7 +75,11 @@ export function decorate(entity,entities){
  const location=id=>{const names=[];const seen=new Set();while(id&&!seen.has(id)){seen.add(id);const e=entities.find(e=>e.id===id&&!e.deleted&&e.type==='location');if(!e)break;names.unshift(e.title);id=e.fields.parentID;}return names.join(' → ');};
  switch(entity.type){
  case 'feeding':detail=[f.amount?`${f.amount} ${f.unit}`:'Amount not recorded',f.brand].filter(Boolean).join(' · ');break;
- case 'diaper':detail=[f.contents,...(f.contents==='Dirty'||f.contents==='Both'?[f.detail,f.color,f.consistency]:[])].filter(Boolean).join(' · ');break;
+ case 'diaper':{
+  const legacyBlowout=f.detail?.trim().toLowerCase()==='blowout';
+  const blowout=f.blowout==null?legacyBlowout:f.blowout==='true';
+  detail=[f.contents,...(['Dirty','Both'].includes(f.contents)?[legacyBlowout?'':f.detail,f.color,f.consistency]:[]),blowout?'Blowout':'',f.rash==='true'?'Diaper rash':''].filter(Boolean).join(' · ');break;
+ }
  case 'sleep':detail=entity.end!=null?[`${Math.round((entity.end-entity.at)/60)} min`,f.category].filter(Boolean).join(' · '):(f.category||'Sleeping');break;
  case 'reading':detail=[reference(f.itemID),f.minutes?f.minutes+' min':''].filter(Boolean).join(' · ');break;
  case 'growth':detail=`${f.measure} · ${f.value} ${f.unit||"· unit unknown"}`;break;

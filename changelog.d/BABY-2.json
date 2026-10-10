@@ -1,1 +1,1 @@
-{"type":"ux","ticket":"BABY-2","summary":"Place larger care logging actions above disclosure rows and full-width inline histories below their headers; resolve selected-child lookup once per history projection to eliminate repeated whole-history scans."}
+{"type":"ux","ticket":"BABY-2","summary":"Use direct wet/dirty/dry buttons, visual texture and color choices and explicit diaper flags; unify bottom-sheet headers and surfaces, and replace short option menus with direct selections."}

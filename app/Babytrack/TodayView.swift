@@ -257,7 +257,7 @@ struct AddRecordMenu: View {
                 Section("Care") { ForEach(["feeding", "diaper", "sleep", "reading", "growth"], id: \.self) { type in entry(Catalog.shared.spec(type)) } }
                 Section("Health & memories") { ForEach(Catalog.shared.types.filter { ["medication", "temperature", "illness", "vaccine", "appointment", "milestone", "note", "reminder"].contains($0.id) }) { type in entry(type) } }
             }
-        }.presentationDetents([.medium, .large]).presentationSizing(.page).presentationDragIndicator(.visible).presentationCornerRadius(24)
+        }.presentationDetents([.medium, .large]).careSheetStyle()
     }
 
     private func entry(_ type: TypeSpec) -> some View {

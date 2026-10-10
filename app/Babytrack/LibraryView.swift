@@ -112,7 +112,11 @@ struct RecordDetail: View {
     }
 
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            LogSheetHeader(title: Catalog.shared.spec(current.type).title, color: Catalog.shared.spec(current.type).color,
+                           closeLabel: "Close", actionTitle: "Edit", actionEnabled: !store.state.outbox.contains { $0.entity.id == current.id }, actionID: "editRecord", close: { dismiss() }) {
+                dismiss(); Task { try? await Task.sleep(for: .milliseconds(250)); store.form = FormRequest(type: current.type, entity: current) }
+            }
             AppList {
                 Section {
                     if current.type == "book" {
@@ -121,7 +125,9 @@ struct RecordDetail: View {
                             height: 190
                         ); Spacer() }.listRowBackground(Color.clear)
                     }
-                    EntryHeading(type: current.type, child: store.children.first { $0.id == current.childID }?.title).listRowSeparator(.hidden)
+                    if let child = store.children.first(where: { $0.id == current.childID }) {
+                        Text(child.title).font(.subheadline).foregroundStyle(Palette.secondary).listRowSeparator(.hidden)
+                    }
                     if current.title != Catalog.shared.spec(current.type).title {
                         Text(current.title).font(.system(.title2, design: .rounded, weight: .semibold)).listRowSeparator(.hidden)
                     }
@@ -146,7 +152,9 @@ struct RecordDetail: View {
                 }
                 Section {
                     ForEach(Catalog.shared.spec(current.type).fields) { field in
-                        if let value = current.fields[field.key], !value.isEmpty {
+                        let value = current.type == "diaper" && field.key == "blowout" && DiaperFields.hasBlowout(current.fields) ? "true" : current.fields[field.key]
+                        let legacyBlowout = current.type == "diaper" && field.key == "detail" && value?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "blowout"
+                        if let value, !value.isEmpty, !legacyBlowout {
                             LabeledContent(field.label) {
                                 if ["location", "book"]
                                     .contains(field.kind)
@@ -202,25 +210,13 @@ struct RecordDetail: View {
                     Button("Delete record", role: .destructive) { confirmDelete = true }
                         .disabled(store.state.outbox.contains { $0.entity.id == current.id })
                 }
-            }.appList().navigationTitle(Catalog.shared.spec(current.type).title)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Edit") {
-                            dismiss(); Task { try? await Task.sleep(for: .milliseconds(250)); store.form = FormRequest(
-                                type: current.type,
-                                entity: current
-                            ) }
-                        }.disabled(store.state.outbox.contains { $0.entity.id == current.id })
-                    }
-                }
+            }.appList()
                 .confirmationDialog("Delete this record?", isPresented: $confirmDelete, titleVisibility: .visible) {
                     Button(
                         "Delete",
                         role: .destructive
                     ) { store.save(current, action: "delete"); dismiss() }
                 }
-        }
+        }.presentationDetents([.medium, .large]).careSheetStyle()
     }
 }

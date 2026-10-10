@@ -166,6 +166,14 @@ enum SessionKeychain {
             }
         } catch { self.error = error.localizedDescription }
         showWelcome = children.isEmpty && token == nil
+        #if DEBUG
+            let args = ProcessInfo.processInfo.arguments
+            if args.contains("--owner-preview-testing"), let index = args.firstIndex(of: "--owner-form"), args.indices.contains(index + 1), Catalog.shared.types.contains(where: { $0.id == args[index + 1] }) {
+                let type = args[index + 1]
+                let existing = args.contains("--owner-form-existing") ? entities.first { $0.type == type && (type != "diaper" || $0.fields["contents"] == "Both") } : nil
+                form = FormRequest(type: type, entity: existing)
+            }
+        #endif
     }
 
     func reload() {

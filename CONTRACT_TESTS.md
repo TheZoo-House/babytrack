@@ -79,3 +79,14 @@ two toggles must use less than 500 ms of application CPU. This excludes XCTest
 driver waits and catches repeated whole-history scans in selected-child lookup.
 The filtered-history test also verifies that logging actions sit above the
 disclosure rows. Personal exports are excluded from both tests.
+
+## Direct care choices
+
+Diaper `contents` remains Wet, Dirty, Both or Dry. The editor presents Wet and
+Dirty independently and Dry exclusively. Color and consistency accept multiple
+catalog tokens separated by spaces; imported unknown tokens remain editable.
+Optional `blowout` and `rash` fields use the strings `true` and `false`. Legacy
+`detail: Blowout` still renders as a blowout until an explicit flag overrides it.
+An explicit editor change replaces that legacy flag while retaining original
+export columns in `ImportSource`. Synthetic tests cover combined selections,
+flag persistence, invalid values and reopening a server-saved diaper.

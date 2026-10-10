@@ -52,8 +52,7 @@ struct CaregiverProfileView: View {
                     Button("Remove photo", role: .destructive) { photo = nil }
                 }
             }.padding(24) }
-        }.background(Palette.paper).presentationDetents([.height(360), .large]).presentationSizing(.page)
-            .presentationDragIndicator(.visible)
+        }.background(Palette.paper).presentationDetents([.height(360), .large]).careSheetStyle()
             .onAppear { photo = store.caregiverPhoto }
             .onChange(of: selected) { _, item in
                 Task {

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0D09DB7FE8F93F27BF5CDA30 /* BabyWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC2FF607929A37D21AE00C0 /* BabyWidgets.swift */; };
+		327A2EB68A49430A94885436 /* DiaperControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CAEDFCB359E1A87620FCDF5 /* DiaperControls.swift */; };
 		334D7963E434650BAC0BA084 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF7DF5ADC50B12BBFE6C8B1 /* TodayView.swift */; };
 		3B7F3E59A06DADC0B4EDBCFE /* FamilyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38ED0B8C85D74A823C6963A7 /* FamilyView.swift */; };
 		3EC81D390BF20CAF2307DFEE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 772B5C05C05F30ECACFCB72D /* Assets.xcassets */; };
@@ -67,6 +68,7 @@
 		2B8B51AC159933344E70126B /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		370742E622D5EE4E6D19A45A /* AppShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShortcuts.swift; sourceTree = "<group>"; };
 		38ED0B8C85D74A823C6963A7 /* FamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyView.swift; sourceTree = "<group>"; };
+		3CAEDFCB359E1A87620FCDF5 /* DiaperControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaperControls.swift; sourceTree = "<group>"; };
 		40702E6B4772C8E4809F94DD /* HealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthView.swift; sourceTree = "<group>"; };
 		5248161E7D3F11D0D82D52D3 /* RecordForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordForm.swift; sourceTree = "<group>"; };
 		63C6BE17664D9CAA6E8E88D2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -179,6 +181,7 @@
 				D46835C123B81BBDDEAAA785 /* BabytrackApp.swift */,
 				03C4BD4849146B95138B1A55 /* BarcodeScanner.swift */,
 				DF613F05EA1B6F9B5F9295C4 /* CombinedDatePicker.swift */,
+				3CAEDFCB359E1A87620FCDF5 /* DiaperControls.swift */,
 				38ED0B8C85D74A823C6963A7 /* FamilyView.swift */,
 				40702E6B4772C8E4809F94DD /* HealthView.swift */,
 				63C6BE17664D9CAA6E8E88D2 /* Info.plist */,
@@ -335,6 +338,7 @@
 				8068D10A60EF78449D3F6E13 /* BabytrackApp.swift in Sources */,
 				F2D43143F5D5DB6AEB6BFE67 /* BarcodeScanner.swift in Sources */,
 				8738445CFC7B846B2AB5AD3C /* CombinedDatePicker.swift in Sources */,
+				327A2EB68A49430A94885436 /* DiaperControls.swift in Sources */,
 				3B7F3E59A06DADC0B4EDBCFE /* FamilyView.swift in Sources */,
 				E1AABC9E8AF16285B66B2530 /* HealthView.swift in Sources */,
 				CF770B79FC5D26DE4022097B /* LibraryView.swift in Sources */,

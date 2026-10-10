@@ -85,7 +85,8 @@
             "Green",
             "Black",
             "Red",
-            "White"
+            "White",
+            "Gray"
           ],
           "required": false
         },
@@ -103,13 +104,21 @@
             "Mushy",
             "Runny",
             "Mucous",
-            "Solid"
+            "Solid",
+            "Pebbles"
           ],
           "required": false
         },
         {
+          "key": "blowout",
+          "label": "Blowout",
+          "kind": "toggle",
+          "options": [],
+          "required": false
+        },
+        {
           "key": "rash",
-          "label": "Rash",
+          "label": "Diaper rash",
           "kind": "toggle",
           "options": [],
           "required": false

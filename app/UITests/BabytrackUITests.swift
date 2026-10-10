@@ -52,7 +52,7 @@ import XCTest
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
         openLog(app, "quickBottle"); capture(app, "Bottle editor")
-        app.buttons["formulaPicker"].tap(); app.buttons["Custom…"].tap()
+        app.buttons["formulaPicker"].tap(); app.buttons["customFormula"].tap()
         app.textFields["customFormulaName"].tap(); app.textFields["customFormulaName"].typeText("Example custom")
         app.buttons["addCustomFormula"].tap()
         XCTAssertTrue(app.buttons["formulaPicker"].waitForExistence(timeout: 5)); capture(app, "Custom formula selected")
@@ -85,11 +85,54 @@ import XCTest
             app.collectionViews.firstMatch.swipeUp()
         }
         XCTAssertTrue(diaper.waitForExistence(timeout: 5)); diaper.tap(); capture(app, "Imported record details")
+        for _ in 0 ..< 4 where !app.staticTexts["Nara Baby"].exists { app.collectionViews.firstMatch.swipeUp() }
         XCTAssertTrue(app.staticTexts["Nara Baby"].exists)
         app.buttons["Edit"].tap(); XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.buttons["color"].value as? String, "Brown Yellow")
-        XCTAssertEqual(app.buttons["consistency"].value as? String, "Mucous Mushy")
+        XCTAssertTrue(app.buttons["diaper-color-Brown"].isSelected)
+        XCTAssertTrue(app.buttons["diaper-color-Yellow"].isSelected)
+        XCTAssertTrue(app.buttons["diaper-consistency-Mucous"].isSelected)
+        XCTAssertTrue(app.buttons["diaper-consistency-Mushy"].isSelected)
         capture(app, "Imported diaper editor"); app.buttons["Cancel"].tap()
+    }
+
+    func testDirectDiaperControls() {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-http-test"]; app.launch()
+        app.buttons["trySample"].tap(); XCTAssertTrue(app.buttons["quickDiaper"].waitForExistence(timeout: 15))
+        openLog(app, "quickDiaper")
+        XCTAssertTrue(app.buttons["diaper-Wet"].isSelected)
+        app.buttons["diaper-Dirty"].tap()
+        XCTAssertTrue(app.buttons["diaper-Wet"].isSelected)
+        XCTAssertTrue(app.buttons["diaper-Dirty"].isSelected)
+        XCTAssertTrue(app.buttons["diaper-consistency-Mushy"].waitForExistence(timeout: 5))
+        app.buttons["diaper-consistency-Mushy"].tap(); app.buttons["diaper-consistency-Mucous"].tap()
+        app.buttons["diaper-color-Brown"].tap(); app.buttons["diaper-color-Yellow"].tap()
+        app.switches["diaperBlowout"].tap(); app.switches["diaperRash"].tap()
+        capture(app, "Direct diaper choices")
+        app.buttons["saveRecord"].tap()
+        let saved = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Blowout")).firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 15)); saved.tap()
+        app.buttons["Edit"].tap()
+        XCTAssertTrue(app.buttons["diaper-color-Brown"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["diaper-color-Brown"].isSelected)
+        XCTAssertTrue(app.buttons["diaper-color-Yellow"].isSelected)
+        XCTAssertTrue(app.buttons["diaper-consistency-Mucous"].isSelected)
+        XCTAssertEqual(app.switches["diaperBlowout"].value as? String, "1")
+        app.buttons["diaper-Dry"].tap()
+        XCTAssertTrue(app.buttons["diaper-Dry"].isSelected)
+        XCTAssertFalse(app.buttons["diaper-Wet"].isSelected)
+        XCTAssertFalse(app.buttons["diaper-Dirty"].isSelected)
+        XCTAssertFalse(app.buttons["diaperDetails"].exists)
+        capture(app, "Dry diaper sheet"); app.buttons["Cancel"].tap()
+    }
+
+    func testEditedDiaperUpdatesLocalPreview() {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["quickDiaper"].waitForExistence(timeout: 15))
+        let old = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Diaper, Wet")).firstMatch
+        XCTAssertTrue(old.waitForExistence(timeout: 5)); old.tap(); app.buttons["Edit"].tap()
+        XCTAssertTrue(app.buttons["diaper-Dirty"].waitForExistence(timeout: 5)); app.buttons["diaper-Dirty"].tap()
+        app.switches["diaperBlowout"].tap(); app.buttons["saveRecord"].tap()
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Both · Blowout")).firstMatch.waitForExistence(timeout: 5))
     }
 
     func testAllPagesScreenshots() {
@@ -152,6 +195,39 @@ import XCTest
         capture(app, "Large text active sleep")
         app.buttons["toggleSleep"].tap()
         navigate(app, "Health"); capture(app, "Large text health")
+    }
+
+    func testDiaperLargeTextScreenshots() {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]; app.launch()
+        XCTAssertTrue(app.buttons["quickDiaper"].waitForExistence(timeout: 15))
+        for _ in 0 ..< 5 where !app.buttons["quickDiaper"].isHittable { app.scrollViews.firstMatch.swipeUp() }
+        app.buttons["quickDiaper"].tap()
+        let dirty = app.buttons["diaper-Dirty"]
+        for _ in 0 ..< 5 where !dirty.isHittable { app.scrollViews.firstMatch.swipeUp() }
+        dirty.tap(); XCTAssertTrue(dirty.isSelected)
+        capture(app, "Large text diaper selection")
+        let mushy = app.buttons["diaper-consistency-Mushy"]
+        for _ in 0 ..< 6 where !mushy.isHittable { app.scrollViews.firstMatch.swipeUp() }
+        mushy.tap(); XCTAssertTrue(mushy.isSelected)
+        capture(app, "Large text diaper textures")
+        app.buttons["Cancel"].tap()
+    }
+
+    func testLargeTextAuxiliarySheets() {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]; app.launch()
+        XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15))
+        openLog(app, "quickBottle")
+        let formula = app.buttons["formulaPicker"]
+        for _ in 0 ..< 5 where !formula.isHittable { app.scrollViews.firstMatch.swipeUp() }
+        formula.tap(); app.buttons["customFormula"].tap()
+        XCTAssertTrue(app.textFields["customFormulaName"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textFields["customFormulaName"].isHittable)
+        capture(app, "Large text custom formula"); app.buttons["closeSheet-Custom formula"].tap(); app.buttons["closeSheet-Formula"].tap(); app.buttons["closeSheet-Bottle"].tap()
+        if app.buttons["nav-Family"].exists { navigate(app, "Family") } else { navigate(app, "More"); app.buttons["Family"].tap() }
+        let profile = app.buttons["Edit caregiver profile"]
+        for _ in 0 ..< 6 where !profile.isHittable { app.collectionViews.firstMatch.swipeUp() }
+        profile.tap(); XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5))
+        capture(app, "Large text caregiver profile"); app.buttons["Cancel"].tap()
     }
 
     func testCompactSheetAndCombinedTimeWheel() {

@@ -9,7 +9,7 @@ def choice(key,label,options,required=False): return f(key,label,'choice',option
 notes=f('notes','Notes','multiline')
 catalog=[
  ('feeding','Bottle','waterbottle.fill','amber',[f('amount','Amount','number',required=True),choice('unit','Unit',['oz','mL'],True),f('brand','Formula','formula'),notes]),
- ('diaper','Diaper','drop.fill','mint',[choice('contents','Contents',['Wet','Dirty','Both','Dry'],True),f('detail','Detail'),choice('color','Color',['Yellow','Brown','Green','Black','Red','White']),choice('consistency','Consistency',['Seedy','Soft','Pasty','Loose','Watery','Hard','Mushy','Runny','Mucous','Solid']),f('rash','Rash','toggle'),notes]),
+ ('diaper','Diaper','drop.fill','mint',[choice('contents','Contents',['Wet','Dirty','Both','Dry'],True),f('detail','Detail'),choice('color','Color',['Yellow','Brown','Green','Black','Red','White','Gray']),choice('consistency','Consistency',['Seedy','Soft','Pasty','Loose','Watery','Hard','Mushy','Runny','Mucous','Solid','Pebbles']),f('blowout','Blowout','toggle'),f('rash','Diaper rash','toggle'),notes]),
  ('sleep','Sleep','moon.zzz.fill','indigo',[choice('category','Type',['Nap','Night'],True),notes]),
  ('reading','Reading','book.fill','rose',[f('itemID','Book','book',required=True),f('minutes','Minutes','number'),notes]),
  ('growth','Measurement','ruler.fill','mint',[choice('measure','Measurement',['Weight','Height','Head circumference'],True),f('value','Value','number',required=True),choice('unit','Unit',['lb','oz','kg','in','cm'],True),notes]),

@@ -16,7 +16,7 @@ struct RecordForm: View {
     @State private var lookingUp = false
     @State private var lookupNote: String?
     @State private var validation: String?
-    @State private var customFormula = false
+    @State private var choosingFormula = false
     private var spec: TypeSpec {
         Catalog.shared.spec(request.type)
     }
@@ -47,19 +47,21 @@ struct RecordForm: View {
     }
 
     @Environment(\.dynamicTypeSize) private var dynamicType
-    private static let compactDetent = PresentationDetent.height(420)
+    private static let compactDetent = PresentationDetent.height(460)
     private static let timeDetent = PresentationDetent.height(660)
     @State private var detent = RecordForm.compactDetent
     @State private var dateTarget: String?
+    @State private var diaperExpanded = false
+    private var baseDetent: PresentationDetent { request.type == "diaper" ? .height(560) : Self.compactDetent }
 
     var body: some View {
         VStack(spacing: 0) {
-            LogSheetHeader(title: request.entity == nil ? spec.title : "Edit " + spec.title.lowercased(), color: spec.color,
+            LogSheetHeader(title: spec.title, color: spec.color,
                            actionTitle: "Save", actionEnabled: !requiredMissing, close: { dismiss() }, action: save)
             ScrollView {
                 VStack(spacing: 0) {
                     if !inventory {
-                        timeRow(request.type == "child" ? "Birthday" : "Start time", target: "start", value: date)
+                        timeRow(request.type == "child" ? "Birthday" : request.type == "diaper" ? "Time" : "Start time", target: "start", value: date)
                         if request.type == "sleep" {
                             timeRow("End time", target: "end", value: end)
                         }
@@ -68,11 +70,10 @@ struct RecordForm: View {
                         EntryRow(title: titleLabel) { TextField("Required", text: $title).multilineTextAlignment(.trailing).accessibilityLabel(titleLabel).accessibilityIdentifier("recordTitle") }
                         Divider()
                     }
-                    ForEach(entryFields) { field in
-                        if request.type != "diaper" || !["color", "consistency", "detail"].contains(field.key) || ["Dirty", "Both"].contains(fields["contents"] ?? "") {
-                            control(field)
-                            Divider()
-                        }
+                    if request.type == "diaper" {
+                        DiaperControls(fields: $fields, expanded: $diaperExpanded)
+                    } else {
+                        ForEach(entryFields) { field in control(field); Divider() }
                     }
                     if let notes = spec.fields.first(where: { $0.key == "notes" }) {
                         EntryRow(title: "Notes") { TextField("Add", text: binding(notes), axis: .vertical).lineLimit(1 ... 4).multilineTextAlignment(.trailing).accessibilityLabel("Notes").accessibilityIdentifier("notes") }
@@ -97,14 +98,18 @@ struct RecordForm: View {
                         Text(lookupNote).font(.subheadline).foregroundStyle(.secondary).padding(20)
                     }
                 }.padding(.bottom, 12)
-            }.scrollDismissesKeyboard(.interactively)
+            }.scrollDismissesKeyboard(.interactively).defaultScrollAnchor(.top)
         }.background(Palette.paper).tint(tint).foregroundStyle(Palette.ink)
-            .presentationDetents([Self.compactDetent, Self.timeDetent, .large], selection: $detent)
-            .presentationSizing(.page).presentationDragIndicator(.visible).presentationCornerRadius(24).presentationBackground(Palette.paper)
+            .presentationDetents([baseDetent, Self.timeDetent, .large], selection: $detent)
+            .careSheetStyle()
             .onAppear {
-                load(); if dynamicType.isAccessibilitySize {
-                    detent = .large
-                }
+                load()
+                diaperExpanded = request.type == "diaper" && DiaperFields.selected("Dirty", in: fields)
+                updateDetent()
+            }
+            .onChange(of: diaperExpanded) { _, _ in updateDetent() }
+            .onChange(of: fields["contents"]) { _, _ in
+                if request.type == "diaper" { diaperExpanded = DiaperFields.selected("Dirty", in: fields) }
             }
             .onChange(of: date) {
                 _, value in if end < value {
@@ -113,7 +118,7 @@ struct RecordForm: View {
             }
             .onChange(of: photo) { _, item in Task { await loadPhoto(item) } }
             .sheet(isPresented: $scanning) { BarcodeScanner { code in fields["isbn"] = code; scanning = false; Task { await lookup() } } }
-            .sheet(isPresented: $customFormula) { CustomFormulaView { fields["brand"] = $0 } }
+            .sheet(isPresented: $choosingFormula) { FormulaChooser(current: fields["brand"] ?? "") { fields["brand"] = $0 } }
     }
 
     private func timeRow(_ label: String, target: String, value: Date) -> some View {
@@ -122,7 +127,7 @@ struct RecordForm: View {
                 Button {
                     withAnimation {
                         dateTarget = dateTarget == target ? nil : target
-                        detent = dynamicType.isAccessibilitySize ? .large : dateTarget == nil ? Self.compactDetent : Self.timeDetent
+                        updateDetent()
                     }
                 } label: {
                     if dateTarget == target {
@@ -169,9 +174,7 @@ struct RecordForm: View {
                     .font(.title3.weight(.medium)).monospacedDigit().multilineTextAlignment(.trailing)
                     .frame(width: 80).accessibilityLabel(field.label).accessibilityIdentifier(field.key)
                 if let unit = spec.fields.first(where: { $0.key == "unit" }) {
-                    Picker("Unit", selection: binding(unit)) {
-                        ForEach(options(unit), id: \.self) { Text($0).tag($0) }
-                    }.labelsHidden().pickerStyle(.menu).accessibilityIdentifier("unit")
+                    ChoiceButtons(options: options(unit), selection: binding(unit), color: spec.color, identifier: "unit", minimumWidth: 44, horizontal: true).frame(width: dynamicType.isAccessibilitySize ? 132 : CGFloat(options(unit).count * 44 + max(0, options(unit).count - 1) * 4))
                 } else if field.key == "minutes" {
                     Text("min").foregroundStyle(.secondary)
                 }
@@ -183,37 +186,14 @@ struct RecordForm: View {
         switch field.kind {
         case "formula":
             EntryRow(title: field.label) {
-                Menu {
-                    Button("Not recorded") { fields[field.key] = "" }
-                    ForEach(store.state.formulaOptions, id: \.self) { brand in Button(brand) { fields[field.key] = brand } }
-                    Divider(); Button("Custom…", systemImage: "plus") { customFormula = true }
-                } label: { choiceLabel(fields[field.key]) }
-                    .accessibilityLabel(field.label).accessibilityIdentifier("formulaPicker").accessibilityValue(fields[field.key] ?? "Not recorded")
+                Button { choosingFormula = true } label: { choiceLabel(fields[field.key]) }
+                    .buttonStyle(.plain).accessibilityLabel(field.label).accessibilityIdentifier("formulaPicker").accessibilityValue(fields[field.key] ?? "Not recorded")
             }
         case "choice":
-            EntryRow(title: field.label) {
-                if request.type == "diaper" && ["color", "consistency"].contains(field.key) {
-                    Menu {
-                        Button("Not recorded") { fields[field.key] = "" }
-                        ForEach(multiOptions(field), id: \.self) { option in
-                            Toggle(option, isOn: Binding(get: { (fields[field.key] ?? "").split(separator: " ").map(String.init).contains(option) }, set: { selected in
-                                var values = (fields[field.key] ?? "").split(separator: " ").map(String.init)
-                                values.removeAll { $0 == option }; if selected {
-                                    values.append(option)
-                                }; fields[field.key] = values.joined(separator: " ")
-                            }))
-                        }
-                    } label: { choiceLabel(fields[field.key]) }
-                        .accessibilityLabel(field.label).accessibilityIdentifier(field.key).accessibilityValue(fields[field.key] ?? "Not recorded")
-                } else {
-                    Picker(field.label, selection: binding(field)) {
-                        if !field.required || request.entity?.imported != nil {
-                            Text("Not recorded").tag("")
-                        }
-                        ForEach(options(field), id: \.self) { Text($0).tag($0) }
-                    }.labelsHidden().pickerStyle(.menu).accessibilityIdentifier(field.key)
-                }
-            }
+            VStack(alignment: .leading, spacing: 10) {
+                Text(field.label).font(.body.weight(.medium)).foregroundStyle(Palette.ink)
+                ChoiceButtons(options: options(field), selection: binding(field), color: spec.color, identifier: field.key, optional: !field.required || request.entity?.imported != nil)
+            }.padding(.horizontal, 20).padding(.vertical, 12)
         case "toggle":
             EntryRow(title: field.label) { Toggle(field.label, isOn: Binding(get: { fields[field.key] == "true" }, set: { fields[field.key] = String($0) })).labelsHidden().fixedSize() }
         case "number":
@@ -248,9 +228,8 @@ struct RecordForm: View {
         }.foregroundStyle(Palette.ink)
     }
 
-    private func multiOptions(_ field: FieldSpec) -> [String] {
-        let tokens = (fields[field.key] ?? "").split(separator: " ").map(String.init)
-        return field.options + tokens.filter { !field.options.contains($0) }
+    private func updateDetent() {
+        detent = dynamicType.isAccessibilitySize ? .large : dateTarget != nil || diaperExpanded ? Self.timeDetent : baseDetent
     }
 
     private func options(_ field: FieldSpec) -> [String] {
@@ -301,6 +280,7 @@ struct RecordForm: View {
         var entity = request.entity ?? Entity(type: request.type, childID: inventory || request.type == "child" ? "" : store.childID, title: spec.title)
         entity.title = needsTitle ? title.trimmingCharacters(in: .whitespacesAndNewlines) : spec.title
         entity.at = date.timeIntervalSince1970; entity.fields = fields
+        if request.type == "diaper" { entity.detail = "" }
         if request.type == "sleep" {
             entity.end = end.timeIntervalSince1970
         }
@@ -338,7 +318,7 @@ struct CustomFormulaView: View {
                            actionID: "addCustomFormula", close: { dismiss() }, action: add)
             EntryRow(title: "Name") { TextField("Required", text: $name).textInputAutocapitalization(.words).multilineTextAlignment(.trailing).accessibilityLabel("Formula name").accessibilityIdentifier("customFormulaName") }
             Spacer(minLength: 0)
-        }.background(Palette.paper).presentationDetents([.height(230), .large]).presentationDragIndicator(.visible)
+        }.background(Palette.paper).presentationDetents([.height(230), .large]).careSheetStyle()
     }
 
     private func add() {
@@ -348,5 +328,35 @@ struct CustomFormulaView: View {
         } else if store.save(Entity(type: "formula", title: trimmed)) {
             selected(trimmed); dismiss()
         }
+    }
+}
+
+struct FormulaChooser: View {
+    var current: String
+    var selected: (String) -> Void
+    @Environment(AppStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @State private var search = ""
+    @State private var custom = false
+    var body: some View {
+        VStack(spacing: 0) {
+            LogSheetHeader(title: "Formula", color: "amber", closeLabel: "Close", close: { dismiss() })
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass").foregroundStyle(Palette.secondary)
+                TextField("Search formulas", text: $search).textInputAutocapitalization(.words).accessibilityIdentifier("formulaSearch")
+            }.padding(.horizontal, 20).padding(.vertical, 12)
+            Divider()
+            AppList {
+                Button("Custom formula", systemImage: "plus") { custom = true }.accessibilityIdentifier("customFormula")
+                Button("Not recorded") { selected(""); dismiss() }
+                ForEach(store.state.formulaOptions.filter { search.isEmpty || $0.localizedCaseInsensitiveContains(search) }, id: \.self) { name in
+                    Button { selected(name); dismiss() } label: {
+                        HStack { Text(name).foregroundStyle(Palette.ink); Spacer(); if name == current { Image(systemName: "checkmark").foregroundStyle(Palette.tint("amber")) } }
+                            .frame(minHeight: 44).contentShape(Rectangle())
+                    }.accessibilityAddTraits(name == current ? .isSelected : [])
+                }
+            }
+        }.background(Palette.paper).presentationDetents([.medium, .large]).careSheetStyle()
+            .sheet(isPresented: $custom) { CustomFormulaView { value in selected(value); dismiss() } }
     }
 }
