@@ -126,8 +126,12 @@ import XCTest
         for type in ["sleep", "reading", "medication", "temperature", "illness", "vaccine", "appointment", "milestone", "note", "reminder"] {
             app.buttons["addRecord"].tap()
             let action = app.buttons["add-\(type)"]
-            for _ in 0 ..< 14 where !action.isHittable {
-                let list = app.collectionViews.firstMatch
+            let list = app.collectionViews.firstMatch
+            for _ in 0 ..< 14 {
+                // XCTest calls a partly clipped row hittable; its center may be outside the sheet.
+                if action.exists, action.isHittable, action.frame.maxY <= list.frame.maxY - 8 {
+                    break
+                }
                 list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75)).press(forDuration: 0.1, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.55)))
             }
             XCTAssertTrue(action.exists); action.tap()
