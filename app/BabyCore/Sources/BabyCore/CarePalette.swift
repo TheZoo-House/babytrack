@@ -3,39 +3,39 @@
     import UIKit
 
     public enum CarePalette {
-        public static let ink = Color(
-            light: UIColor(red: 0.13, green: 0.22, blue: 0.19, alpha: 1),
-            dark: .init(red: 0.92, green: 0.92, blue: 0.9, alpha: 1)
-        )
-        public static let paper = Color(
-            light: .init(red: 0.98, green: 0.97, blue: 0.94, alpha: 1),
-            dark: .init(red: 0.07, green: 0.12, blue: 0.10, alpha: 1)
-        )
-        public static let accent = Color(
-            light: .init(red: 0.24, green: 0.38, blue: 0.34, alpha: 1),
-            dark: .init(red: 0.55, green: 0.77, blue: 0.67, alpha: 1)
-        )
-        public static let secondary = Color(light: .init(red: 0.36, green: 0.42, blue: 0.39, alpha: 1),
-                                            dark: .init(red: 0.68, green: 0.75, blue: 0.71, alpha: 1))
-        /// The catalog's color keys remain protocol-compatible; all activity chrome
-        /// shares the same botanical identity. Symbols distinguish record types.
-        public static func tint(_: String) -> Color {
-            accent
+        public static let ink = color(0x24263C, 0xF4F5FB)
+        public static let paper = color(0xF7F8FC, 0x161824)
+        public static let accent = color(0x5752A2, 0xBBB4EB)
+        public static let secondary = color(0x5C6075, 0xB8BCD0)
+        public static let buttonInk = color(0x24263C)
+
+        /// Catalog keys stay stable; each care category carries its color throughout.
+        public static func tint(_ key: String) -> Color {
+            switch key {
+            case "amber": color(0x865516, 0xF4C56E)
+            case "mint": color(0x286380, 0x95CCE8)
+            case "indigo": color(0x5752A2, 0xBBB4EB)
+            case "rose": color(0x97415F, 0xF2B0C1)
+            default: accent
+            }
         }
 
-        public static let ochre = Color(light: .init(red: 0.62, green: 0.43, blue: 0.16, alpha: 1),
-                                        dark: .init(red: 0.84, green: 0.67, blue: 0.36, alpha: 1))
-        public static let buttonInk = Color(light: .init(red: 0.98, green: 0.97, blue: 0.94, alpha: 1),
-                                            dark: .init(red: 0.07, green: 0.12, blue: 0.10, alpha: 1))
-        public static func fill(_: String) -> Color {
-            accent
+        public static func fill(_ key: String) -> Color {
+            switch key {
+            case "amber": color(0xF4C56E)
+            case "mint": color(0x95CCE8)
+            case "indigo": color(0xBBB4EB)
+            case "rose": color(0xF2B0C1)
+            default: color(0xD7D8EE)
+            }
+        }
+
+        private static func color(_ light: UInt32, _ dark: UInt32? = nil) -> Color {
+            func uiColor(_ hex: UInt32) -> UIColor {
+                UIColor(red: CGFloat((hex >> 16) & 255) / 255, green: CGFloat((hex >> 8) & 255) / 255,
+                        blue: CGFloat(hex & 255) / 255, alpha: 1)
+            }
+            return Color(uiColor: UIColor { uiColor($0.userInterfaceStyle == .dark ? (dark ?? light) : light) })
         }
     }
-
-    extension Color {
-        init(light: UIColor, dark: UIColor) {
-            self.init(uiColor: UIColor { $0.userInterfaceStyle == .dark ? dark : light })
-        }
-    }
-
 #endif

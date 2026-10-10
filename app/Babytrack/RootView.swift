@@ -15,8 +15,8 @@ struct RootView: View {
                 NavigationSplitView {
                     VStack(alignment: .leading, spacing: 18) {
                         HStack(spacing: 10) {
-                            Image(systemName: "leaf.fill").foregroundStyle(Palette.accent); Text(store.branding)
-                                .font(.system(.title2, design: .serif, weight: .medium)).lineLimit(1).minimumScaleFactor(0.6)
+                            Image(systemName: "moon.stars.fill").foregroundStyle(Palette.accent); Text(store.branding)
+                                .font(.system(.title2, design: .rounded, weight: .medium)).lineLimit(1).minimumScaleFactor(0.6)
                         }.padding(
                             .horizontal,
                             20
@@ -94,8 +94,8 @@ struct WelcomeView: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 24) {
                 Spacer()
-                Image(systemName: "leaf.fill").font(.system(size: 60, weight: .light)).foregroundStyle(Palette.accent)
-                Text(store.branding).font(.system(.largeTitle, design: .serif, weight: .medium))
+                Image(systemName: "moon.stars.fill").font(.system(size: 60, weight: .light)).foregroundStyle(Palette.accent)
+                Text(store.branding).font(.system(.largeTitle, design: .rounded, weight: .medium))
                 Spacer()
                 SignInWithAppleButton(.signIn) { request in
                     request.requestedScopes = [.fullName, .email]

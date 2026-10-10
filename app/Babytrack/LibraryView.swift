@@ -70,8 +70,7 @@ struct LibraryView: View {
         }.background(Palette.paper).navigationTitle("Library").searchable(text: $search, prompt: "Search your library")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { store.form = FormRequest(type: kind) } label: { Image(systemName: "plus") }
-                        .accessibilityLabel("Add \(Catalog.shared.spec(kind).title.lowercased())")
+                    AddRecordButton(type: kind)
                         .accessibilityIdentifier("addItem")
                 }
             }
@@ -94,7 +93,7 @@ struct BookCover: View {
                         Image(systemName: "book.closed").font(.title3); Text(entity.title).font(.system(
                             size: 10,
                             weight: .semibold,
-                            design: .serif
+                            design: .rounded
                         )).lineLimit(3)
                     }.foregroundStyle(Palette.tint("rose")).padding(8)
                 }
@@ -124,7 +123,7 @@ struct RecordDetail: View {
                     }
                     EntryHeading(type: current.type, child: store.children.first { $0.id == current.childID }?.title).listRowSeparator(.hidden)
                     if current.title != Catalog.shared.spec(current.type).title {
-                        Text(current.title).font(.system(.title2, design: .serif, weight: .semibold)).listRowSeparator(.hidden)
+                        Text(current.title).font(.system(.title2, design: .rounded, weight: .semibold)).listRowSeparator(.hidden)
                     }
                     if !["book", "toy", "clothing", "location"].contains(current.type) {
                         LabeledContent(

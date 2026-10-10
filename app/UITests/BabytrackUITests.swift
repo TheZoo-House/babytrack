@@ -8,13 +8,10 @@ import XCTest
         XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5)); app.buttons["saveRecord"].tap()
         openLog(app, "quickDiaper")
         app.buttons["saveRecord"].tap()
-        app.navigationBars.buttons["BackButton"].tap()
-        app.buttons["sleepTimeline"].tap()
         app.buttons["toggleSleep"].tap()
         XCTAssertTrue(app.staticTexts["sleepTimer"].waitForExistence(timeout: 5))
         app.buttons["toggleSleep"].tap()
         XCTAssertTrue(app.buttons["toggleSleep"].waitForExistence(timeout: 5))
-        app.navigationBars.buttons["BackButton"].tap()
         navigate(app, "Library")
         XCTAssertTrue(app.staticTexts["Goodnight Moon"].waitForExistence(timeout: 5))
         app.buttons["addItem"].tap(); app.textFields["recordTitle"].tap(); app.textFields["recordTitle"]
@@ -47,7 +44,6 @@ import XCTest
         XCTAssertTrue(total.waitForExistence(timeout: 5))
         let baseline = Double(total.label.split(separator: " ").first.map(String.init) ?? "") ?? 0
         openLog(app, "quickBottle"); app.buttons["saveRecord"].tap()
-        app.navigationBars.buttons["BackButton"].tap()
         let expected = String(format: "%.1f oz", baseline + 4)
         expectation(for: NSPredicate(format: "label BEGINSWITH %@", expected), evaluatedWith: total)
         waitForExpectations(timeout: 15)
@@ -126,7 +122,7 @@ import XCTest
 
     func testRemainingEditors() {
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing", "-appearance", "dark"]; app.launch()
-        XCTAssertTrue(app.buttons["addRecord"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["addRecord"].waitForExistence(timeout: 15)); capture(app, "Dark Today")
         for type in ["sleep", "reading", "medication", "temperature", "illness", "vaccine", "appointment", "milestone", "note", "reminder"] {
             app.buttons["addRecord"].tap()
             let action = app.buttons["add-\(type)"]
@@ -144,7 +140,7 @@ import XCTest
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]; app.launch()
         XCTAssertTrue(app.buttons["quickBottle"].waitForExistence(timeout: 15)); capture(app, "Large text Today")
         openLog(app, "quickBottle"); XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5)); capture(app, "Large text bottle")
-        app.buttons["Cancel"].tap(); app.navigationBars.buttons["BackButton"].tap()
+        app.buttons["Cancel"].tap()
         for _ in 0 ..< 4 where !app.buttons["sleepTimeline"].isHittable {
             app.scrollViews.firstMatch.swipeUp()
         }
@@ -196,7 +192,7 @@ import XCTest
         if !app.buttons["nav-Today"].exists {
             XCTAssertLessThan(app.buttons["sleepTimeline"].frame.maxY - app.buttons["quickBottle"].frame.minY, 330)
         }
-        for (option, type) in [("quickBottle", "feeding"), ("quickDiaper", "diaper"), ("sleepTimeline", "sleep")] {
+        for (option, type) in [("feedingTimeline", "feeding"), ("diaperTimeline", "diaper"), ("sleepTimeline", "sleep")] {
             app.buttons[option].tap()
             XCTAssertTrue(app.buttons["logRecord"].waitForExistence(timeout: 5))
             XCTAssertTrue(app.buttons.matching(identifier: "timeline-\(type)").firstMatch.exists)
@@ -215,7 +211,10 @@ import XCTest
             app.navigationBars.buttons["BackButton"].tap()
         }
         XCTAssertTrue(app.buttons[option].waitForExistence(timeout: 5)); app.buttons[option].tap()
-        XCTAssertTrue(app.buttons["logRecord"].waitForExistence(timeout: 5)); app.buttons["logRecord"].tap()
+        if option == "sleepTimeline" {
+            XCTAssertTrue(app.buttons["logRecord"].waitForExistence(timeout: 5)); app.buttons["logRecord"].tap()
+        }
+        XCTAssertTrue(app.buttons["saveRecord"].waitForExistence(timeout: 5))
     }
 
     private func navigate(_ app: XCUIApplication, _ name: String) {

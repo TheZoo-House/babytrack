@@ -5,7 +5,7 @@ struct TodayView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var dynamicType
-    @ScaledMetric(relativeTo: .largeTitle) private var childTitleSize = 38
+    @ScaledMetric(relativeTo: .largeTitle) private var childTitleSize = 34
     @State private var showActions = false
     @State private var showJournal = false
     var body: some View {
@@ -44,7 +44,7 @@ struct TodayView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showActions = true } label: { Image(systemName: "plus").font(.body.weight(.semibold)) }
-                        .buttonStyle(CareActionStyle(color: "mint")).accessibilityLabel("Add record").accessibilityIdentifier("addRecord")
+                        .buttonStyle(CareActionStyle(color: "neutral")).accessibilityLabel("Add record").accessibilityIdentifier("addRecord")
                 }
             }
             .sheet(isPresented: $showActions) { AddRecordMenu() }
@@ -71,7 +71,7 @@ struct TodayView: View {
                 Button("Add child", systemImage: "plus") { store.form = FormRequest(type: "child") }
             } label: {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(store.child?.title ?? "Today").font(.system(size: childTitleSize, weight: .medium, design: .serif))
+                    Text(store.child?.title ?? "Today").font(.system(size: childTitleSize, weight: .bold, design: .rounded))
                     if store.children.count > 1 {
                         Image(systemName: "chevron.down").font(.caption.weight(.bold))
                     }
@@ -87,7 +87,7 @@ struct TodayView: View {
 
     @ViewBuilder private var status: some View {
         if store.isPreview, sizeClass != .regular {
-            Text("Sample family").font(.caption.weight(.medium)).foregroundStyle(Palette.ochre)
+            Text("Sample family").font(.caption.weight(.medium)).foregroundStyle(Palette.secondary)
         }
         if store.syncing {
             ProgressView().controlSize(.small)
@@ -104,7 +104,7 @@ struct TodayView: View {
             activity(type: "diaper", identifier: "quickDiaper", latestID: store.summary?.lastDiaperID,
                      total: store.summary.map { "\($0.diaperCount) diaper\($0.diaperCount == 1 ? "" : "s") today" })
             Divider()
-            activity(type: "sleep", identifier: "sleepTimeline", latestID: store.summary?.lastSleepID,
+            activity(type: "sleep", identifier: "toggleSleep", latestID: store.summary?.lastSleepID,
                      total: store.summary.map { "\($0.sleepMinutes / 60)h \($0.sleepMinutes % 60)m today" })
             Divider()
         }
@@ -112,41 +112,47 @@ struct TodayView: View {
 
     private func activity(type: String, identifier: String, latestID: String?, total: String?) -> some View {
         let latest = (type == "sleep" ? store.activeSleep : nil) ?? store.entities.first { $0.id == latestID }
-        return NavigationLink { JournalView(type: type) } label: {
-            HStack(spacing: 14) {
-                RecordSymbol(type: type, size: 42)
-                VStack(alignment: .leading, spacing: 4) {
-                    ViewThatFits(in: .horizontal) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(Catalog.shared.spec(type).title).font(.headline).foregroundStyle(Palette.ink).fixedSize()
-                            Spacer(minLength: 8)
-                            totalLabel(type: type, total: total).fixedSize()
+        let layout = dynamicType.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+            : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
+        return layout {
+            NavigationLink { JournalView(type: type) } label: {
+                HStack(spacing: 12) {
+                    RecordSymbol(type: type, size: 38)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(Catalog.shared.spec(type).title).font(.headline).foregroundStyle(Palette.ink)
+                        if type == "sleep", let active = store.activeSleep {
+                            Text(timerInterval: active.date ... Date.distantFuture, countsDown: false)
+                                .monospacedDigit().accessibilityIdentifier("sleepTimer")
+                        } else {
+                            Text(latest?.displayDetail ?? "No records yet")
+                                .lineLimit(dynamicType.isAccessibilitySize ? 3 : 1)
                         }
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(Catalog.shared.spec(type).title).font(.headline).foregroundStyle(Palette.ink)
-                            totalLabel(type: type, total: total)
-                        }
-                    }
-                    if type == "sleep", let active = store.activeSleep {
-                        Text(timerInterval: active.date ... Date.distantFuture, countsDown: false)
-                            .monospacedDigit().accessibilityIdentifier("sleepTimer")
-                    } else {
-                        Text(latest?.displayDetail ?? "No records yet").lineLimit(dynamicType.isAccessibilitySize ? 3 : 1)
-                    }
-                    if let latest {
-                        Text(latest.date, format: .dateTime.month(.abbreviated).day().hour().minute())
-                            .font(.caption).foregroundStyle(Palette.secondary)
-                    }
-                }.font(.subheadline).foregroundStyle(Palette.secondary)
-                Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Palette.secondary)
-            }.foregroundStyle(Palette.ink).padding(.vertical, 14).contentShape(Rectangle())
-        }.buttonStyle(.plain).accessibilityIdentifier(identifier)
+                        totalLabel(type: type, total: total)
+                    }.font(.subheadline).foregroundStyle(Palette.secondary)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Palette.secondary)
+                }.contentShape(Rectangle())
+            }.buttonStyle(.plain).accessibilityIdentifier("\(type)Timeline")
+            Button {
+                if type == "sleep" {
+                    store.toggleSleep()
+                } else {
+                    store.form = FormRequest(type: type)
+                }
+            } label: {
+                Text(type == "sleep" ? (store.activeSleep == nil ? "Start sleep" : "End sleep")
+                    : "Add " + Catalog.shared.spec(type).title.lowercased()).fixedSize(horizontal: false, vertical: true)
+            }.buttonStyle(CareActionStyle(color: Catalog.shared.spec(type).color))
+                .accessibilityIdentifier(identifier)
+                .frame(maxWidth: dynamicType.isAccessibilitySize ? .infinity : nil, alignment: .trailing)
+        }.padding(.vertical, 12)
     }
 
     @ViewBuilder private func totalLabel(type: String, total: String?) -> some View {
         if let total {
             Text(total).font(.caption.weight(.medium)).monospacedDigit()
-                .foregroundStyle(Palette.accent).accessibilityIdentifier("total-\(type)")
+                .foregroundStyle(Palette.tint(Catalog.shared.spec(type).color)).accessibilityIdentifier("total-\(type)")
         }
     }
 
@@ -198,7 +204,7 @@ struct AddRecordMenu: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         VStack(spacing: 0) {
-            LogSheetHeader(title: "Add record", color: "mint", closeLabel: "Close", close: { dismiss() })
+            LogSheetHeader(title: "Add record", color: "neutral", closeLabel: "Close", close: { dismiss() })
             AppList {
                 Section("Care") { ForEach(["feeding", "diaper", "sleep", "reading", "growth"], id: \.self) { type in entry(Catalog.shared.spec(type)) } }
                 Section("Health & memories") { ForEach(Catalog.shared.types.filter { ["medication", "temperature", "illness", "vaccine", "appointment", "milestone", "note", "reminder"].contains($0.id) }) { type in entry(type) } }
@@ -248,7 +254,7 @@ struct JournalView: View {
 
     private var sleepAction: some View {
         Button(store.activeSleep == nil ? "Start sleep" : "End sleep") { store.toggleSleep() }
-            .buttonStyle(CareActionStyle(color: "mint")).accessibilityIdentifier("toggleSleep")
+            .buttonStyle(CareActionStyle(color: "indigo")).accessibilityIdentifier("toggleSleep")
     }
 
     var body: some View {
@@ -279,9 +285,8 @@ struct JournalView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     if let type {
-                        Button("Log", systemImage: "plus") { store.form = FormRequest(type: type) }
-                            .buttonStyle(CareActionStyle(color: "mint"))
-                            .accessibilityLabel("Log " + Catalog.shared.spec(type).title).accessibilityIdentifier("logRecord")
+                        AddRecordButton(type: type, label: "Log " + Catalog.shared.spec(type).title)
+                            .accessibilityIdentifier("logRecord")
                     } else {
                         Menu { Button("All") { filter = "All" }; ForEach(Catalog.shared.types.filter { ![
                             "child",

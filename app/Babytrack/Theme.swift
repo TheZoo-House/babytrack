@@ -8,11 +8,11 @@ extension CarePalette {
         let bar = UINavigationBar.appearance()
         for (style, large) in [(UIFont.TextStyle.headline, false), (.largeTitle, true)] {
             let font = UIFont.preferredFont(forTextStyle: style)
-            let serif = UIFont(descriptor: font.fontDescriptor.withDesign(.serif) ?? font.fontDescriptor, size: 0)
+            let rounded = UIFont(descriptor: font.fontDescriptor.withDesign(.rounded) ?? font.fontDescriptor, size: 0)
             if large {
-                bar.largeTitleTextAttributes = [.font: serif]
+                bar.largeTitleTextAttributes = [.font: rounded]
             } else {
-                bar.titleTextAttributes = [.font: serif]
+                bar.titleTextAttributes = [.font: rounded]
             }
         }
     }
@@ -33,7 +33,7 @@ struct SectionTitle<Trailing: View>: View {
     var title: String
     @ViewBuilder var trailing: () -> Trailing
     var body: some View {
-        HStack { Text(title).font(.system(.title3, design: .serif, weight: .medium)); Spacer(); trailing() }.padding(.vertical, 8)
+        HStack { Text(title).font(.system(.title3, design: .rounded, weight: .medium)); Spacer(); trailing() }.padding(.vertical, 8)
     }
 }
 
@@ -95,7 +95,7 @@ struct EntryHeading: View {
         HStack(spacing: 14) {
             RecordSymbol(type: type, size: 52)
             VStack(alignment: .leading, spacing: 4) {
-                Text(Catalog.shared.spec(type).title).font(.system(.title2, design: .serif, weight: .semibold))
+                Text(Catalog.shared.spec(type).title).font(.system(.title2, design: .rounded, weight: .semibold))
                 if let child, !child.isEmpty {
                     Text(child).font(.subheadline).foregroundStyle(Palette.secondary)
                 }
@@ -149,8 +149,20 @@ struct CareActionStyle: ButtonStyle {
         configuration.label.font(.subheadline.weight(.semibold))
             .foregroundStyle(Palette.buttonInk)
             .padding(.horizontal, 16).padding(.vertical, 10).frame(minHeight: 44)
-            .background(Palette.fill(color), in: Capsule())
+            .background(Palette.fill(color), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .opacity(isEnabled ? (configuration.isPressed ? 0.75 : 1) : 0.45)
+    }
+}
+
+struct AddRecordButton: View {
+    var type: String
+    var label: String? = nil
+    @Environment(AppStore.self) private var store
+    var body: some View {
+        Button { store.form = FormRequest(type: type) } label: {
+            Image(systemName: "plus").font(.body.weight(.semibold))
+        }.buttonStyle(CareActionStyle(color: Catalog.shared.spec(type).color))
+            .accessibilityLabel(label ?? "Add " + Catalog.shared.spec(type).title.lowercased())
     }
 }
 
@@ -167,7 +179,7 @@ struct LogSheetHeader: View {
         HStack(spacing: 12) {
             Button(action: close) { Image(systemName: "xmark").font(.title3).frame(width: 44, height: 44) }
                 .accessibilityLabel(closeLabel).buttonStyle(.plain)
-            Text(title).font(.system(.title3, design: .serif, weight: .medium))
+            Text(title).font(.system(.title3, design: .rounded, weight: .medium))
                 .multilineTextAlignment(.center).frame(maxWidth: .infinity)
             if let actionTitle, let action {
                 Button(actionTitle, action: action).font(.body.weight(.semibold))

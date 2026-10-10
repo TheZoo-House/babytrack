@@ -3,25 +3,24 @@ import Charts
 import SwiftUI
 
 struct HealthView: View {
-    @Environment(AppStore.self) private var store
     private let types = ["medication", "temperature", "illness", "vaccine", "appointment", "milestone", "note"]
     var body: some View {
         AppList {
-            Section { NavigationLink { GrowthView() } label: { Label("Growth", systemImage: "chart.xyaxis.line") } }
             Section {
+                NavigationLink { GrowthView() } label: { category("growth", title: "Growth") }
                 ForEach(types, id: \.self) { type in
                     NavigationLink { HealthRecords(type: type) } label: {
-                        HStack(spacing: 14) {
-                            RecordSymbol(type: type); Text(type == "note" ? "Notes & photos" : Catalog.shared.spec(type)
-                                .title); Spacer()
-                        }.padding(
-                            .vertical,
-                            8
-                        )
+                        category(type, title: type == "note" ? "Notes & photos" : Catalog.shared.spec(type).title)
                     }
                 }
             }
         }.appList().navigationTitle("Health")
+    }
+
+    private func category(_ type: String, title: String) -> some View {
+        HStack(spacing: 14) {
+            RecordSymbol(type: type); Text(title); Spacer()
+        }.padding(.vertical, 8)
     }
 }
 
@@ -40,8 +39,7 @@ struct HealthRecords: View {
         .navigationTitle(Catalog.shared.spec(type).title)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button { store.form = FormRequest(type: type) } label: { Image(systemName: "plus") }
-                    .accessibilityLabel("Add \(Catalog.shared.spec(type).title.lowercased())")
+                AddRecordButton(type: type)
             }
         }
         .overlay {
@@ -99,7 +97,7 @@ struct GrowthView: View {
                         Text("\(value(last).formatted(.number.precision(.fractionLength(1)))) \(unit)").font(.system(
                             size: 44,
                             weight: .medium,
-                            design: .serif
+                            design: .rounded
                         )); Text(last.date, format: .dateTime.month().day().year()).font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -121,8 +119,7 @@ struct GrowthView: View {
         }.background(Palette.paper).navigationTitle("Growth")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { store.form = FormRequest(type: "growth") } label: { Image(systemName: "plus") }
-                        .accessibilityLabel("Add measurement")
+                    AddRecordButton(type: "growth")
                 }
             }
     }

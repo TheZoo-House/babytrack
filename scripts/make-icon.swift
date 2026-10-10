@@ -9,34 +9,24 @@ let context = CGContext(data: nil, width: 1024, height: 1024, bitsPerComponent: 
                         bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
 NSGraphicsContext.saveGraphicsState()
 NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: false)
-NSColor(calibratedRed: 0.13, green: 0.25, blue: 0.21, alpha: 1).setFill()
+/// A small sun nested in a moon marks day-and-night care.
+let ink = NSColor(calibratedRed: 36 / 255, green: 38 / 255, blue: 60 / 255, alpha: 1)
+ink.setFill()
 NSBezierPath(rect: NSRect(origin: .zero, size: size)).fill()
-NSColor(calibratedRed: 0.98, green: 0.97, blue: 0.94, alpha: 1).setStroke()
-let stem = NSBezierPath(); stem.move(to: NSPoint(x: 510, y: 260)); stem.curve(
-    to: NSPoint(x: 530, y: 570),
-    controlPoint1: NSPoint(x: 465, y: 365),
-    controlPoint2: NSPoint(x: 565, y: 465)
-); stem.lineWidth = 28; stem.lineCapStyle = .round; stem.stroke()
-NSColor(calibratedRed: 0.98, green: 0.97, blue: 0.94, alpha: 1).setFill()
-let leaf = NSBezierPath(); leaf.move(to: NSPoint(x: 516, y: 478)); leaf.curve(
-    to: NSPoint(x: 738, y: 727),
-    controlPoint1: NSPoint(x: 495, y: 650),
-    controlPoint2: NSPoint(x: 660, y: 735)
-); leaf.curve(
-    to: NSPoint(x: 516, y: 478),
-    controlPoint1: NSPoint(x: 790, y: 550),
-    controlPoint2: NSPoint(x: 652, y: 473)
-); leaf.fill()
-NSColor(calibratedRed: 0.84, green: 0.67, blue: 0.36, alpha: 1).setFill()
-let other = NSBezierPath(); other.move(to: NSPoint(x: 505, y: 427)); other.curve(
-    to: NSPoint(x: 280, y: 652),
-    controlPoint1: NSPoint(x: 490, y: 591),
-    controlPoint2: NSPoint(x: 365, y: 660)
-); other.curve(
-    to: NSPoint(x: 505, y: 427),
-    controlPoint1: NSPoint(x: 247, y: 475),
-    controlPoint2: NSPoint(x: 351, y: 406)
-); other.fill()
+NSColor(calibratedRed: 187 / 255, green: 180 / 255, blue: 235 / 255, alpha: 1).setFill()
+NSBezierPath(ovalIn: NSRect(x: 200, y: 190, width: 600, height: 600)).fill()
+ink.setFill()
+NSBezierPath(ovalIn: NSRect(x: 375, y: 330, width: 535, height: 535)).fill()
+NSColor(calibratedRed: 244 / 255, green: 197 / 255, blue: 110 / 255, alpha: 1).setFill()
+NSBezierPath(ovalIn: NSRect(x: 282, y: 488, width: 214, height: 214)).fill()
+NSColor(calibratedRed: 149 / 255, green: 204 / 255, blue: 232 / 255, alpha: 1).setFill()
+let star = NSBezierPath()
+star.move(to: NSPoint(x: 736, y: 752))
+star.curve(to: NSPoint(x: 795, y: 693), controlPoint1: NSPoint(x: 746, y: 706), controlPoint2: NSPoint(x: 749, y: 703))
+star.curve(to: NSPoint(x: 736, y: 634), controlPoint1: NSPoint(x: 749, y: 683), controlPoint2: NSPoint(x: 746, y: 680))
+star.curve(to: NSPoint(x: 677, y: 693), controlPoint1: NSPoint(x: 726, y: 680), controlPoint2: NSPoint(x: 723, y: 683))
+star.curve(to: NSPoint(x: 736, y: 752), controlPoint1: NSPoint(x: 723, y: 703), controlPoint2: NSPoint(x: 726, y: 706))
+star.close(); star.fill()
 NSGraphicsContext.restoreGraphicsState()
 let rep = NSBitmapImageRep(cgImage: context.makeImage()!)
 try rep.representation(using: .png, properties: [:])!.write(to: folder.appendingPathComponent("Icon.png"))
