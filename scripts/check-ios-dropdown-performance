@@ -27,7 +27,13 @@ average = statistics.mean(large)
 if len(sys.argv) == 3:
     # Same visible rows and actions on this runner; isolate work caused by history size.
     # A slow/noisy control must not inflate the allowed large-history budget.
-    control = min(cpu_measurements("testSmallHistoryDropdownPerformance"))
+    controls = cpu_measurements("testSmallHistoryDropdownPerformance")
+    variation = statistics.pstdev(controls) / statistics.mean(controls)
+    # XCTest's 10% relative-deviation criterion makes the control a usable calibration.
+    if variation > 0.10:
+        print(f"INCONCLUSIVE: control CPU variation {variation * 100:.1f}% exceeds 10%; recalibrate")
+        sys.exit(2)
+    control = min(controls)
     ratio = average / control
     print(f"Dropdown CPU: {average * 1000:.1f} ms large / {control * 1000:.1f} ms fastest control; ratio {ratio:.2f}; limit 1.50")
     if ratio >= 1.5:

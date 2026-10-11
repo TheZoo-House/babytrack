@@ -33,9 +33,15 @@ class DropdownPerformanceTests(unittest.TestCase):
         self.assertIn("local CPU budget", result.stderr)
 
     def test_slow_control_samples_cannot_inflate_the_relative_budget(self):
-        result = self.gate([0.44] * 5, [0.28, 0.9, 0.8, 0.7, 0.6], relative=True)
+        result = self.gate([0.43] * 5, [0.28, 0.32, 0.32, 0.32, 0.32], relative=True)
         self.assertNotEqual(result.returncode, 0, result.stdout)
         self.assertIn("excessive UI work", result.stderr)
+
+    def test_unstable_control_is_inconclusive_not_a_performance_pass(self):
+        result = self.gate([1.953, 1.552, 1.118, 0.911, 0.976],
+                           [0.742, 2.162, 0.734, 0.667, 0.753], relative=True)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("INCONCLUSIVE", result.stdout)
 
     def test_consistently_fast_interactions_pass_both_gates(self):
         for relative in (False, True):

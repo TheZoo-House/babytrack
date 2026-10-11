@@ -93,6 +93,10 @@ cannot inflate the budget. This separates history-dependent work
 from the speed of a virtualized simulator; the local 500 ms worst-sample budget
 still applies. Synthetic gate tests reject averaging away a single slow sample
 and reject inflating the hosted budget with a slow control.
+Control variation above XCTest's 10% criterion is inconclusive, not a pass.
+CI repeats only the two benchmark cases once for that calibration outcome;
+stable performance failures are never retried, and a second inconclusive result
+still fails CI.
 The app caches formatted records until data changes or the minute changes;
 selection and summaries read draft records without formatting the whole history.
 Inline histories filter lazily through their visible limit plus one lookahead
