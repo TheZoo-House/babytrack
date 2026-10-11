@@ -5,42 +5,18 @@ import Security
 import SwiftUI
 import WidgetKit
 
-struct APIError: LocalizedError {
-    var message: String
-    var status: Int?
-    var errorDescription: String? {
-        message
-    }
-}
-
-enum SessionKeychain {
-    private static let service = "house.thezoo.babytrack.session"
-    static func read() -> String? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecReturnData as String: true,
-        ]
-        var result: CFTypeRef?
-        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-              let data = result as? Data else { return nil }
-        return String(data: data, encoding: .utf8)
-    }
-
-    static func write(_ token: String?) throws {
-        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service]
-        SecItemDelete(query as CFDictionary)
-        guard let token else { return }
-        var item = query
-        item[kSecValueData as String] = Data(token.utf8)
-        item[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        guard SecItemAdd(item as CFDictionary, nil) == errSecSuccess
-        else { throw APIError(message: "Could not securely save your session.") }
-    }
-}
-
 @MainActor @Observable final class AppStore {
-    var state = DiskState()
+    private struct ViewState {
+        var minute: Int
+        var records: [Entity]
+        var children: [Entity]
+        var child: Entity?
+        var activeSleep: Entity?
+        var care: [Entity]
+    }
+    var state = DiskState() { didSet { viewCache = nil; summaryCache = nil } }
+    @ObservationIgnored private var viewCache: ViewState?
+    @ObservationIgnored private var summaryCache: (minute: Int, zone: String, childID: String, value: DaySummary?)?
     var error: String?
     var notice: String?
     var syncing = false
@@ -49,7 +25,10 @@ enum SessionKeychain {
     var nonce: String?
     var selectedSection: AppSection = .today
     var form: FormRequest?
+    private var pendingForm: FormRequest?
     var detail: Entity?
+    func formAfterDetail(_ request: FormRequest) { pendingForm = request; detail = nil }
+    func detailDismissed() { if let request = pendingForm { pendingForm = nil; form = request } }
     var notificationsEnabled = UserDefaults.standard.bool(forKey: "notificationsEnabled")
     var unitSystem = UserDefaults.standard.string(forKey: "units") ?? "imperial"
     var appearance = UserDefaults.standard.string(forKey: "appearance") ?? "system"
@@ -60,28 +39,40 @@ enum SessionKeychain {
     let storage: SharedStorage
     let testing: Bool
     private var token: String?
-    var entities: [Entity] {
-        state.visibleEntities
+    private var projected: ViewState {
+        // Read observable state even on a cache hit so screens react to incoming changes.
+        let disk = state
+        let minute = Int(Date.now.timeIntervalSince1970 / 60)
+        if let cached = viewCache, cached.minute == minute { return cached }
+        let records = disk.visibleEntities
+        let profiles = records.filter { $0.type == "child" }
+        let chosenID = disk.resolvedChild?.id ?? ""
+        let activeID = disk.activeSleep(for: chosenID)?.id
+        let care = records.filter { $0.childID == chosenID && Catalog.shared.spec($0.type).scope == "care" && $0.scheduled != true }.sorted { $0.at > $1.at }
+        let result = ViewState(minute: minute, records: records, children: profiles,
+                               child: profiles.first { $0.id == chosenID },
+                               activeSleep: records.first { $0.id == activeID }, care: care)
+        viewCache = result
+        return result
     }
 
-    var children: [Entity] {
-        entities.filter { $0.type == "child" }
-    }
-
-    var child: Entity? {
-        children.first { $0.id == state.selectedChildID } ?? children.first
-    }
+    var entities: [Entity] { projected.records }
+    var children: [Entity] { projected.children }
+    var child: Entity? { projected.child }
 
     var childID: String {
         child?.id ?? ""
     }
 
-    var activeSleep: Entity? {
-        entities.first { $0.type == "sleep" && $0.childID == childID && $0.end == nil }
-    }
+    var activeSleep: Entity? { projected.activeSleep }
 
-    var summary: DaySummary? {
-        state.snapshot.summaries.first { $0.childID == childID }
+    func summary(at date: Date) -> DaySummary? {
+        let disk = state, id = childID, zone = TimeZone.current
+        let minute = Int(date.timeIntervalSince1970 / 60)
+        if let cached = summaryCache, cached.minute == minute, cached.zone == zone.identifier, cached.childID == id { return cached.value }
+        let result = disk.careSummary(for: id, now: date, timeZone: zone)
+        summaryCache = (minute, zone.identifier, id, result)
+        return result
     }
 
     var signedIn: Bool {
@@ -93,18 +84,14 @@ enum SessionKeychain {
     }
 
     var pendingCount: Int {
-        state.outbox.count
+        state.outbox.count + (state.caregiverPhotoDraft == nil ? 0 : 1)
     }
 
-    var care: [Entity] {
-        entities.filter { $0.childID == childID && !["child", "reminder"].contains($0.type) && $0.scheduled != true }
-            .sorted { $0.at > $1.at }
-    }
+    var care: [Entity] { projected.care }
 
     init() {
         #if DEBUG
-            testing = ProcessInfo.processInfo.arguments.contains("--ui-testing") || ProcessInfo.processInfo.arguments
-                .contains("--ui-http-test")
+            testing = Self.testingRequested
         #else
             testing = false
         #endif
@@ -115,6 +102,7 @@ enum SessionKeychain {
             .object(forInfoDictionaryKey: "BackendURL") as? String ?? "http://127.0.0.1:8792"
         token = testing ? nil : SessionKeychain.read()
         if testing {
+            assert(IntentCatalog.valid, "Siri options must match the shared catalog")
             unitSystem = "imperial"; notificationsEnabled = false
         }
         #if DEBUG
@@ -124,23 +112,35 @@ enum SessionKeychain {
         #endif
         do { state = try storage.read() } catch { self.error = error.localizedDescription }
         #if DEBUG
-            if ProcessInfo.processInfo.arguments.contains("--ui-testing") {
-                // UI tests explicitly opt into synthetic state and never use personal sessions.
-                token = nil
-                do {
-                    var fresh = DiskState(); fresh.snapshot = try Snapshot.sample(); fresh.localPreview = true; fresh
-                        .selectedChildID = fresh.snapshot.entities.first { $0.type == "child" }?
-                        .id ?? ""; state = fresh; try storage.update { $0 = fresh }
-                } catch { self.error = error.localizedDescription }
-            }
+            do { try installSyntheticTestingState() } catch { self.error = error.localizedDescription }
         #endif
+        do {
+            #if DEBUG
+                let ownerRender = ProcessInfo.processInfo.arguments.contains("--owner-preview-testing")
+            #else
+                let ownerRender = false
+            #endif
+            if !testing || ownerRender, state.snapshot.user.preview || token == nil, let url = Bundle.main.url(forResource: "OwnerPreview", withExtension: "json") {
+                let sample = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: url))
+                let upgraded = try storage.update { try $0.installOwnerSample(sample) }
+                if upgraded {
+                    if !testing {
+                        try SessionKeychain.write(nil)
+                    }; token = nil; state = try storage.read()
+                }
+            }
+        } catch { self.error = error.localizedDescription }
         showWelcome = children.isEmpty && token == nil
+        #if DEBUG
+            form = ownerTestingForm()
+        #endif
     }
 
     func reload() {
         do { state = try storage.read() } catch { self.error = error.localizedDescription }
         showWelcome = children.isEmpty && token == nil
         WidgetCenter.shared.reloadAllTimelines()
+        BabytrackShortcuts.updateAppShortcutParameters()
     }
 
     func selectChild(_ id: String) {
@@ -149,32 +149,11 @@ enum SessionKeychain {
     }
 
     func request<T: Decodable>(_ path: String, body: Data? = nil, authenticated: Bool = true) async throws -> T {
-        guard let base = URL(string: backendURL), ["http", "https"].contains(base.scheme), base.host != nil,
-              let url = URL(string: backendURL.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + path)
-        else { throw APIError(message: "Enter a valid server URL in Connection settings.") }
-        var req = URLRequest(url: url); req.timeoutInterval = 15
-        if let body {
-            req.httpMethod = "POST"; req.httpBody = body; req.setValue(
-                "application/json",
-                forHTTPHeaderField: "Content-Type"
-            )
+        do { return try await APIClient(baseURL: backendURL).request(path, body: body, token: authenticated ? token : nil) }
+        catch let error as APIError {
+            if authenticated, error.status == 401 { reauthenticationRequired = true }
+            throw error
         }
-        if authenticated, let token {
-            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        let (data, response) = try await URLSession.shared.data(for: req)
-        guard let http = response as? HTTPURLResponse, (200 ..< 300).contains(http.statusCode) else {
-            let value = try? JSONDecoder().decode([String: String].self, from: data)
-            let status = (response as? HTTPURLResponse)?.statusCode
-            if authenticated, status == 401 {
-                reauthenticationRequired = true
-            }
-            throw APIError(
-                message: value?["error"] ?? "Server unavailable. Your offline records are saved.",
-                status: status
-            )
-        }
-        return try JSONDecoder().decode(T.self, from: data)
     }
 
     func body(_ object: [String: Any]) throws -> Data {
@@ -211,6 +190,11 @@ enum SessionKeychain {
         guard pendingCount == 0,
               !reauthenticationRequired else { error = "Sign in again to sync your saved records first."; return }
         do {
+            if !testing, let url = Bundle.main.url(forResource: "OwnerPreview", withExtension: "json") {
+                var fresh = DiskState(); fresh.snapshot = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: url)); fresh.localPreview = true
+                fresh.selectedChildID = fresh.snapshot.entities.first { $0.type == "child" }?.id ?? ""
+                try storage.update { $0 = fresh }; reload(); notice = "Sample family is stored on this device."; return
+            }
             let login: LoginResponse = try await request(
                 "/v1/auth/preview",
                 body: Data("{}".utf8),
@@ -238,12 +222,13 @@ enum SessionKeychain {
         reload(); showWelcome = false
     }
 
-    func save(_ entity: Entity, action: String = "upsert") {
+    @discardableResult func save(_ entity: Entity, action: String = "upsert") -> Bool {
         do {
             try storage.enqueue(Command(action: action, entity: entity)); reload()
             notice = state.localPreview ? "Saved on this device" : "Saved"
             Task { await sync() }
-        } catch { self.error = error.localizedDescription }
+            return true
+        } catch { self.error = error.localizedDescription; return false }
     }
 
     func discard(_ id: String) {
@@ -253,24 +238,28 @@ enum SessionKeychain {
     }
 
     func sync() async {
-        guard !syncing, signedIn, !reauthenticationRequired else { return }
+        guard !syncing, signedIn, !state.localPreview, !reauthenticationRequired else { return }
         syncing = true; defer { syncing = false }
         do {
             let disk = try storage.read()
+            if let draft = disk.caregiverPhotoDraft, draft.userID == disk.snapshot.user.id {
+                let snap: Snapshot = try await request("/v1/caregiver/profile", body: body(["photo": draft.photo as Any? ?? NSNull(), "timeZone": TimeZone.current.identifier]))
+                try storage.update { try $0.acknowledgeCaregiverPhoto(draft.id, snapshot: snap) }
+            }
             let commands = Array(disk.outbox.filter { $0.error == nil }.prefix(50))
             if commands.isEmpty {
                 let snap: Snapshot =
                     try await request(
                         "/v1/snapshot?timeZone=\(TimeZone.current.identifier.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "UTC")"
                     )
-                try storage.update { $0.snapshot = snap }
+                try storage.update { try $0.refresh(snap, familyID: disk.snapshot.familyID, userID: disk.snapshot.user.id) }
             } else {
-                struct Payload: Encodable { var commands: [Command]; var timeZone: String }
+                struct Payload: Encodable { var commands: [Command]; var timeZone: String; var familyID: String }
                 let response: SyncResponse = try await request(
                     "/v1/sync",
-                    body: JSONEncoder().encode(Payload(commands: commands, timeZone: TimeZone.current.identifier))
+                    body: JSONEncoder().encode(Payload(commands: commands, timeZone: TimeZone.current.identifier, familyID: disk.snapshot.familyID))
                 )
-                let messages = try storage.update { $0.merge(response) }
+                let messages = try storage.update { $0.merge(response, familyID: disk.snapshot.familyID, userID: disk.snapshot.user.id) }
                 if let message = messages.first {
                     error = message
                 }
@@ -281,14 +270,26 @@ enum SessionKeychain {
         }
     }
 
-    func toggleSleep() {
-        guard let child else { form = FormRequest(type: "child"); return }
-        if var sleep = activeSleep {
-            sleep.end = Date.now.timeIntervalSince1970; save(sleep, action: "sleepStop")
-        } else {
-            let sleep = Entity(type: "sleep", childID: child.id, title: "Sleep", fields: ["category": "Nap"])
-            save(sleep, action: "sleepStart")
+    var caregiverPhoto: String? {
+        if let draft = state.caregiverPhotoDraft, draft.userID == state.snapshot.user.id {
+            return draft.photo
         }
+        return state.snapshot.user.photo
+    }
+
+    func caregiverPhoto(for member: Member) -> String? {
+        member.id == state.snapshot.user.id ? caregiverPhoto : member.photo
+    }
+
+    @discardableResult func setCaregiverPhoto(_ photo: String?) -> Bool {
+        do { try storage.update { $0.setCaregiverPhoto(photo) }; reload(); Task { await sync() }; return true }
+        catch { self.error = error.localizedDescription; return false }
+    }
+
+    func toggleSleep() {
+        guard child != nil else { form = FormRequest(type: "child"); return }
+        do { try storage.record(activeSleep == nil ? .startSleep : .endSleep, childID: childID); reload(); Task { await sync() } }
+        catch { self.error = error.localizedDescription }
         Task { await SleepCoordinator.shared.reconcile(store: self) }
     }
 
@@ -296,15 +297,45 @@ enum SessionKeychain {
         if !entities.contains(where: { $0.id == sessionID }) {
             await sync()
         }
-        guard var sleep = entities.first(where: { $0.id == sessionID && $0.type == "sleep" }),
+        guard let sleep = entities.first(where: { $0.id == sessionID && $0.type == "sleep" }),
               sleep.end == nil else { return }
-        sleep.end = Date.now.timeIntervalSince1970
-        save(sleep, action: "sleepStop")
+        do { try storage.record(.endSleepSession(sessionID), childID: sleep.childID); reload(); await sync() }
+        catch { self.error = error.localizedDescription }
         await SleepCoordinator.shared.reconcile(store: self)
     }
 
     func quickDiaper() {
-        save(Entity(type: "diaper", childID: childID, title: "Diaper", fields: ["contents": "Wet"]))
+        do { try storage.record(.diaper("Wet"), childID: childID); reload(); Task { await sync() } } catch { self.error = error.localizedDescription }
+    }
+    func reminder(_ id: String, snooze: Bool) {
+        guard entities.contains(where: { $0.id == id }) else {
+            Task {
+                await sync()
+                guard entities.contains(where: { $0.id == id }) else { error = "This reminder is no longer available."; return }
+                reminder(id, snooze: snooze)
+            }
+            return
+        }
+        // Persist before a notification delegate returns and the app can be suspended.
+        do { try storage.record(snooze ? .reminderSnooze(id, 15) : .reminderDone(id)); reload(); Task { await sync() } }
+        catch { self.error = error.localizedDescription }
+    }
+
+    func handle(_ link: DeepLink) {
+        switch link {
+        case let .log(type): form = FormRequest(type: type, childID: childID)
+        case let .endSleep(id): Task { await endSleep(id) }
+        case let .openSleep(id):
+            if let sleep = entities.first(where: { $0.id == id && $0.type == "sleep" }) { selectChild(sleep.childID) }
+            selectedSection = .today
+        case let .record(id):
+            Task {
+                if !entities.contains(where: { $0.id == id }) { await sync() }
+                if let record = entities.first(where: { $0.id == id }) { if !record.childID.isEmpty { selectChild(record.childID) }; detail = record }
+                else { error = "This record is no longer available." }
+            }
+        case let .join(code): Task { do { try await join(code) } catch { self.error = error.localizedDescription } }
+        }
     }
 
     func signOut(revoke: Bool = true) async throws {
@@ -361,6 +392,8 @@ struct FormRequest: Identifiable {
     var id = UUID()
     var type: String
     var entity: Entity?
+    var childID: String?
+    var template: Entity?
 }
 
 enum AppSection: String, CaseIterable, Identifiable {

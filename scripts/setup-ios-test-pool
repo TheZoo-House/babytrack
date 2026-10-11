@@ -1,0 +1,12 @@
+#!/bin/zsh
+set -euo pipefail
+pool_size=${IOS_SIMULATOR_POOL_SIZE:-3}
+[[ "$pool_size" == <-> && "$pool_size" -gt 0 && "$pool_size" -le 8 ]] || { print -u2 'Choose a pool size from 1 to 8.'; exit 64; }
+runtime_id=$(xcrun simctl list runtimes available --json | jq -r '[.runtimes[] | select(.isAvailable and (.identifier | contains(".iOS-")))] | sort_by(.version | split(".") | map(tonumber)) | last | .identifier // empty')
+[[ -n "$runtime_id" ]] || { print -u2 'Install an available iOS Simulator runtime in Xcode.'; exit 69; }
+device_type=$(xcrun simctl list runtimes available --json | jq -r --arg runtime "$runtime_id" '.runtimes[] | select(.identifier == $runtime) | [.supportedDeviceTypes[] | select(.productFamily == "iPhone")] | last | .identifier // empty')
+[[ -n "$device_type" ]] || { print -u2 'No iPhone Simulator device type is available.'; exit 69; }
+for index in $(seq 1 "$pool_size"); do
+  existing=$(xcrun simctl list devices available --json | jq -r --arg runtime "$runtime_id" --arg name "iOS Test $index" '.devices[$runtime][]? | select(.name == $name) | .udid' | head -1)
+  if [[ -z "$existing" ]]; then xcrun simctl create "iOS Test $index" "$device_type" "$runtime_id"; fi
+done

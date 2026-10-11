@@ -15,8 +15,8 @@ struct RootView: View {
                 NavigationSplitView {
                     VStack(alignment: .leading, spacing: 18) {
                         HStack(spacing: 10) {
-                            Image(systemName: "leaf.fill").foregroundStyle(Palette.accent); Text(store.branding)
-                                .font(.title2.weight(.semibold))
+                            Image(systemName: "moon.stars.fill").foregroundStyle(Palette.accent); Text(store.branding)
+                                .font(.system(.title2, design: .rounded, weight: .medium)).lineLimit(1).minimumScaleFactor(0.6)
                         }.padding(
                             .horizontal,
                             20
@@ -34,9 +34,9 @@ struct RootView: View {
                         if store
                             .isPreview
                         {
-                            Text("Sample family").font(.caption).foregroundStyle(.secondary).padding(20)
+                            Text("Sample family").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading).padding(20)
                         }
-                    }.background(Palette.paper)
+                    }.background(Palette.paper).navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 320)
                 } detail: {
                     NavigationStack { content(store.selectedSection) }.id(store.selectedSection)
                 }.navigationSplitViewStyle(.balanced)
@@ -54,7 +54,7 @@ struct RootView: View {
             }
         }
         .sheet(item: $store.form) { request in RecordForm(request: request) }
-        .sheet(item: $store.detail) { entity in RecordDetail(entity: entity) }
+        .sheet(item: $store.detail, onDismiss: store.detailDismissed) { entity in RecordDetail(entity: entity) }
         .alert(
             "Could not complete",
             isPresented: Binding(get: { store.error != nil }, set: {
@@ -94,8 +94,8 @@ struct WelcomeView: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 24) {
                 Spacer()
-                Image(systemName: "leaf.fill").font(.system(size: 60, weight: .light)).foregroundStyle(Palette.accent)
-                Text(store.branding).font(.system(.largeTitle, design: .rounded, weight: .bold))
+                Image(systemName: "moon.stars.fill").font(.system(size: 60, weight: .light)).foregroundStyle(Palette.accent)
+                Text(store.branding).font(.system(.largeTitle, design: .rounded, weight: .medium))
                 Spacer()
                 SignInWithAppleButton(.signIn) { request in
                     request.requestedScopes = [.fullName, .email]
@@ -133,7 +133,7 @@ struct WelcomeView: View {
                             } else {
                                 Text("Try sample family").fontWeight(.semibold)
                             }; Spacer()
-                        }.frame(height: 44)
+                        }.frame(height: 44).contentShape(Rectangle())
                     }.disabled(loading).accessibilityIdentifier("trySample")
                 }
                 NavigationLink("Connection", destination: ConnectionView()).font(.subheadline)
@@ -146,11 +146,11 @@ struct WelcomeView: View {
 
 struct MoreView: View {
     var body: some View {
-        List {
+        AppList {
             NavigationLink { JournalView() } label: { Label("Journal", systemImage: "clock") }
             NavigationLink { GrowthView() } label: { Label("Growth", systemImage: "chart.xyaxis.line") }
             NavigationLink { FamilyView() } label: { Label("Family", systemImage: "person.2") }
             NavigationLink { SettingsView() } label: { Label("Settings", systemImage: "gearshape") }
-        }.listStyle(.plain).scrollContentBackground(.hidden).background(Palette.paper).navigationTitle("More")
+        }.appList().navigationTitle("More")
     }
 }

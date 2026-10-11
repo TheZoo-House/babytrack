@@ -1,11 +1,12 @@
 import { Store } from '../server/store.mjs';
+import { nextRepeat } from '../server/reminders.mjs';
 import { readFileSync } from 'node:fs';
 import { sign } from 'node:crypto';
 import http2 from 'node:http2';
 import { fileURLToPath } from 'node:url';
 export function payload(job,device,childName){
  const e=job.entity;
- if(job.type==='reminder')return {topic:'house.thezoo.babytrack',pushType:'alert',token:device.pushToken,body:{aps:{alert:{title:e.title,body:childName},sound:'default'},recordID:e.id}};
+ if(job.type==='reminder')return {topic:'house.thezoo.babytrack',pushType:'alert',token:device.pushToken,body:{aps:{alert:{title:e.title,body:childName},sound:'default',category:'BABYTRACK_REMINDER'},recordID:e.id}};
  const ending=e.end!=null;const activityToken=device.activityTokens?.[e.id]??(device.activityID===e.id?device.activityToken:null);const hasActivity=!!activityToken;
  if(ending&&!hasActivity)return null;
  return {topic:'house.thezoo.babytrack.push-type.liveactivity',pushType:'liveactivity',token:hasActivity?activityToken:device.startToken,body:{aps:{timestamp:Math.floor(Date.now()/1000),event:ending?'end':hasActivity?'update':'start','content-state':{startedAt:e.at,ended:ending},...(ending?{'dismissal-date':Math.floor(Date.now()/1000)}:hasActivity?{}:{'attributes-type':'SleepAttributes',attributes:{sessionID:e.id,childID:e.childID,childName},alert:{title:childName+' is sleeping',body:'Sleep timer started'}})}}};
@@ -29,30 +30,32 @@ export async function deliver(message,device,credentials){
 }
 export async function tick(store,credentials,sender=deliver,now=Date.now()/1000){
  if(!credentials.keyID||!credentials.keyPath||!credentials.teamID)return {configured:false};
- const jobs=store.db.prepare('SELECT * FROM jobs WHERE due<=? ORDER BY due LIMIT 30').all(now);
+ const jobs=store.jobsDue(now);
  for(const row of jobs){
   const job=JSON.parse(row.body);const current=store.list(job.family).find(e=>e.id===job.entity.id);
-  if(!current||current.deleted||current.version!==job.entity.version){store.db.prepare('DELETE FROM jobs WHERE id=?').run(row.id);continue;}
+  if(!current||current.deleted||current.version!==job.entity.version||(job.type==='reminder'&&current.fields.done==='true')){store.removeJob(row.id);continue;}
   const child=store.list(job.family).find(e=>e.id===job.entity.childID);let retry=false;
-  const recipients=store.db.prepare('SELECT devices.user,devices.id,devices.body FROM devices JOIN members ON devices.user=members.user WHERE members.family=?').all(job.family);
-  for(const recipient of recipients){const device=JSON.parse(recipient.body);if(!device.enabled||store.db.prepare('SELECT 1 FROM deliveries WHERE job=? AND user=? AND device=?').get(row.id,recipient.user,recipient.id))continue;
+  const recipients=store.deliveryRecipients(job.family,job.entity.recipientUserID);
+  for(const recipient of recipients){const device=JSON.parse(recipient.body);if(!device.enabled||store.delivered(row.id,recipient.user,recipient.id))continue;
    const message=payload(job,device,child?.title??'Baby');
-   if(!message?.token){if(job.type==='sleep'&&job.entity.end!=null&&device.startedSessions?.includes(job.entity.id))retry=true;continue;}
+   if(!message?.token){if(job.type==='sleep'&&job.entity.end!=null&&device.startedSessions?.includes(job.entity.id)&&row.attempts<8)retry=true;continue;}
    try{const result=await sender(message,device,credentials);let reason;try{reason=JSON.parse(result.body??'{}').reason;}catch{}
    if([200,204].includes(result.status)){
-    store.db.prepare('INSERT OR IGNORE INTO deliveries VALUES (?,?,?)').run(row.id,recipient.user,recipient.id);
-    if(message.body.aps.event==='start'){device.startedSessions=Array.from(new Set([...(device.startedSessions??[]),job.entity.id])).slice(-32);store.db.prepare('UPDATE devices SET body=? WHERE user=? AND id=?').run(JSON.stringify(device),recipient.user,recipient.id);}
+    store.markDelivered(row.id,recipient.user,recipient.id);
+    if(message.body.aps.event==='start'){device.startedSessions=Array.from(new Set([...(device.startedSessions??[]),job.entity.id])).slice(-32);store.saveDevice(recipient.user,recipient.id,device);}
    }
    else if([400,410].includes(result.status)&&['BadDeviceToken','Unregistered','DeviceTokenNotForTopic'].includes(reason)){
-    const field=message.pushType==='alert'?'pushToken':message.token===device.startToken?'startToken':'activityToken';delete device[field];if(device.activityTokens)delete device.activityTokens[job.entity.id];store.db.prepare('UPDATE devices SET body=? WHERE user=? AND id=?').run(JSON.stringify(device),recipient.user,recipient.id);
-   }else if(result.status>=500||result.status===429)retry=true;else if(result.status!==200&&result.status!==204)retry=true;
+    const field=message.pushType==='alert'?'pushToken':message.token===device.startToken?'startToken':'activityToken';delete device[field];if(device.activityTokens)delete device.activityTokens[job.entity.id];store.saveDevice(recipient.user,recipient.id,device);
+    store.markDelivered(row.id,recipient.user,recipient.id);
+   }else if(result.status>=500||result.status===429)retry=true;
+   else store.markDelivered(row.id,recipient.user,recipient.id);
    }catch{retry=true;}
   }
-  if(retry){store.db.prepare('UPDATE jobs SET attempts=attempts+1,due=? WHERE id=?').run(now+Math.min(86400,30*2**Math.min(row.attempts,12)),row.id);}
+  if(retry&&row.attempts<8){store.retryJob(row.id,now+Math.min(86400,30*2**Math.min(row.attempts,12)));}
   else{
-   store.db.prepare('DELETE FROM jobs WHERE id=?').run(row.id);
-   store.db.prepare('DELETE FROM deliveries WHERE job=?').run(row.id);
-   if(job.type==='reminder'&&Number(job.entity.fields.repeatHours)>0){const interval=Number(job.entity.fields.repeatHours)*3600;store.enqueue(job,Math.max(job.entity.at+interval,now+interval));}
+   store.removeJob(row.id);
+
+   if(job.type==='reminder'){const next=nextRepeat(job.entity,now);if(next!=null)store.enqueue(job,next);}
   }
  }
  return {configured:true,processed:jobs.length};

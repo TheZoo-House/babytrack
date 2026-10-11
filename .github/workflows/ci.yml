@@ -18,8 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: node --test server/*.test.mjs relay/*.test.mjs
-      - run: python3 scripts/check-contracts.py
+      - run: scripts/check --server
       - name: Docker storage smoke
         run: |
           docker build -t babytrack-ci .
@@ -36,10 +35,37 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - run: brew install xcodegen
-      - run: swift test --package-path app/BabyCore
+      - run: scripts/check --core
       - run: xcodegen generate --spec app/project.yml
-      - run: xcodebuild -project app/Babytrack.xcodeproj -scheme Babytrack -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build-for-testing
+      - run: scripts/setup-ios-test-pool
+        env:
+          IOS_SIMULATOR_POOL_SIZE: '1'
+      - name: Native journeys and paired dropdown benchmarks
+        run: |
+          dropdown_tests=(
+            BabytrackUITests/BabytrackUITests/testLargeHistoryDropdownPerformance
+            BabytrackUITests/BabytrackUITests/testSmallHistoryDropdownPerformance
+          )
+          scripts/test-ios "${dropdown_tests[@]/#/-skip-testing:}" -resultBundlePath .codex-tmp/ci-ios.xcresult
+          for calibration in 1 2; do
+            result_bundle=".codex-tmp/ci-dropdown-${calibration}.xcresult"
+            scripts/test-ios "${dropdown_tests[@]/#/-only-testing:}" -resultBundlePath "$result_bundle"
+            gate_status=0
+            scripts/check-ios-dropdown-performance "$result_bundle" --relative || gate_status=$?
+            if [[ "$gate_status" == 0 ]]; then break; fi
+            if [[ "$gate_status" != 2 || "$calibration" == 2 ]]; then exit "$gate_status"; fi
+          done
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: ios-test-results
+          path: |
+            .codex-tmp/ci-ios.xcresult
+            .codex-tmp/ci-dropdown-*.xcresult
   gate:
     name: CI Gate
     runs-on: ubuntu-latest

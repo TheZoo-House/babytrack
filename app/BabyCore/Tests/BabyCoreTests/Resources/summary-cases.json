@@ -1,0 +1,244 @@
+[
+  {
+    "name": "spring DST and unknown bottle",
+    "timeZone": "America/New_York",
+    "now": 1772985600,
+    "entities": [
+      {
+        "id": "sleep",
+        "type": "sleep",
+        "childID": "synthetic-child",
+        "title": "sleep",
+        "at": 1772942400,
+        "end": 1772971200,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 0,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "bottle",
+        "type": "feeding",
+        "childID": "synthetic-child",
+        "title": "feeding",
+        "at": 1772974800,
+        "end": null,
+        "fields": {
+          "amount": "5.5",
+          "unit": "oz"
+        },
+        "version": 1,
+        "updatedAt": 0,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "unknown",
+        "type": "feeding",
+        "childID": "synthetic-child",
+        "title": "feeding",
+        "at": 1772978400,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 0,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "a-same-time",
+        "type": "feeding",
+        "childID": "synthetic-child",
+        "title": "feeding",
+        "at": 1772978400,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 0,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "diaper",
+        "type": "diaper",
+        "childID": "synthetic-child",
+        "title": "diaper",
+        "at": 1772975700,
+        "end": null,
+        "fields": {
+          "contents": "Both"
+        },
+        "version": 1,
+        "updatedAt": 0,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "childID": "synthetic-child",
+    "expected": {
+      "childID": "synthetic-child",
+      "feedingCount": 3,
+      "feedingML": 163,
+      "diaperCount": 1,
+      "sleepMinutes": 420,
+      "readingCount": 0,
+      "day": "2026-03-08",
+      "lastFeedingID": "a-same-time",
+      "lastDiaperID": "diaper",
+      "lastSleepID": "sleep"
+    }
+  },
+  {
+    "name": "fall DST and active sleep",
+    "timeZone": "America/New_York",
+    "now": 1793520000,
+    "entities": [
+      {
+        "id": "sleep",
+        "type": "sleep",
+        "childID": "synthetic-child",
+        "title": "sleep",
+        "at": 1793502000,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 0,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "bottle",
+        "type": "feeding",
+        "childID": "synthetic-child",
+        "title": "feeding",
+        "at": 1793512800,
+        "end": null,
+        "fields": {
+          "amount": "50",
+          "unit": "mL"
+        },
+        "version": 1,
+        "updatedAt": 0,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "future-sleep",
+        "type": "sleep",
+        "childID": "synthetic-child",
+        "title": "sleep",
+        "at": 1793527200,
+        "end": 1793530800,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 0,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "childID": "synthetic-child",
+    "expected": {
+      "childID": "synthetic-child",
+      "feedingCount": 1,
+      "feedingML": 50,
+      "diaperCount": 0,
+      "sleepMinutes": 240,
+      "readingCount": 0,
+      "day": "2026-11-01",
+      "lastFeedingID": "bottle",
+      "lastDiaperID": null,
+      "lastSleepID": "future-sleep"
+    }
+  },
+  {
+    "name": "Tokyo day and child isolation",
+    "timeZone": "Asia/Tokyo",
+    "now": 1791594000,
+    "entities": [
+      {
+        "id": "bottle",
+        "type": "feeding",
+        "childID": "synthetic-child",
+        "title": "feeding",
+        "at": 1791554400,
+        "end": null,
+        "fields": {
+          "amount": "4",
+          "unit": "oz"
+        },
+        "version": 1,
+        "updatedAt": 0,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "reading",
+        "type": "reading",
+        "childID": "synthetic-child",
+        "title": "reading",
+        "at": 1791590400,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 0,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "other",
+        "type": "diaper",
+        "childID": "other-child",
+        "title": "diaper",
+        "at": 1791590400,
+        "end": null,
+        "fields": {},
+        "version": 1,
+        "updatedAt": 0,
+        "deleted": false,
+        "actor": "Synthetic",
+        "detail": ""
+      },
+      {
+        "id": "deleted",
+        "type": "feeding",
+        "childID": "synthetic-child",
+        "title": "feeding",
+        "at": 1791590400,
+        "end": null,
+        "fields": {
+          "amount": "10",
+          "unit": "oz"
+        },
+        "version": 1,
+        "updatedAt": 0,
+        "deleted": true,
+        "actor": "Synthetic",
+        "detail": ""
+      }
+    ],
+    "childID": "synthetic-child",
+    "expected": {
+      "childID": "synthetic-child",
+      "feedingCount": 0,
+      "feedingML": 0,
+      "diaperCount": 0,
+      "sleepMinutes": 0,
+      "readingCount": 1,
+      "day": "2026-10-10",
+      "lastFeedingID": "bottle",
+      "lastDiaperID": null,
+      "lastSleepID": null
+    }
+  }
+]

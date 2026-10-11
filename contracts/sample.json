@@ -281,7 +281,7 @@
       "updatedAt": 1791589500,
       "deleted": false,
       "actor": "Alex",
-      "detail": "Head circumference · 16 in",
+      "detail": "Head size · 16 in",
       "scheduled": false
     },
     {
@@ -305,7 +305,7 @@
     {
       "id": "sample-child",
       "type": "child",
-      "title": "Robin",
+      "title": "Sample child",
       "at": 1783727100,
       "fields": {},
       "childID": "",
@@ -326,7 +326,27 @@
       "diaperCount": 1,
       "sleepMinutes": 75,
       "readingCount": 1,
-      "day": "2026-10-09"
+      "day": "2026-10-09",
+      "lastFeedingID": "sample-feed-1",
+      "lastDiaperID": "sample-diaper",
+      "lastSleepID": "sample-sleep"
+    }
+  ],
+  "formulaBrands": [
+    "Enfamil",
+    "Similac",
+    "Kendamil",
+    "Bobbie",
+    "ByHeart",
+    "Earth’s Best",
+    "Kirkland Signature",
+    "Nara Organics",
+    "Formula"
+  ],
+  "feedingDefaults": [
+    {
+      "childID": "sample-child",
+      "formula": "Formula"
     }
   ],
   "members": [

@@ -1,0 +1,29 @@
+#!/bin/zsh
+set -eu
+cd "${0:A:h:h}"
+private_dir="$HOME/.local/share/babytrack/imports"
+[[ -f "$private_dir/OwnerPreview.json" ]] || { print -u2 'Generate the private OwnerPreview.json first.'; exit 1; }
+mkdir -p .codex-tmp/owner
+xcodegen dump --spec app/project.yml --type json --file .codex-tmp/owner/spec.json --quiet
+export BABYTRACK_OWNER_RESOURCE="$private_dir/OwnerPreview.json"
+python3 - <<'PY'
+import json,os
+from pathlib import Path
+p=Path('.codex-tmp/owner/spec.json');s=json.loads(p.read_text())
+root=Path('app').resolve()
+for target in s['targets'].values():
+ if target.get('entitlements'): target['entitlements']['path']=str(root/target['entitlements']['path'])
+ if target.get('info'): target['info']['path']=str(root/target['info']['path'])
+s['targets']['Babytrack']['sources'].append({'path':os.environ['BABYTRACK_OWNER_RESOURCE'],'buildPhase':'resources','type':'file'})
+p.write_text(json.dumps(s))
+PY
+xcodegen generate --spec .codex-tmp/owner/spec.json --project-root "$PWD/app" --project .codex-tmp/owner
+xcodebuild -project .codex-tmp/owner/Babytrack.xcodeproj -scheme Babytrack -configuration Release -destination 'generic/platform=iOS' -archivePath .codex-tmp/owner/Babytrack.xcarchive -allowProvisioningUpdates archive
+python3 - <<'PY'
+import plistlib
+from pathlib import Path
+Path('.codex-tmp/owner/ExportOptions.plist').write_bytes(plistlib.dumps({'method':'release-testing','teamID':'Q28NF3NH3D','signingStyle':'automatic'}))
+PY
+xcodebuild -exportArchive -archivePath .codex-tmp/owner/Babytrack.xcarchive -exportPath .codex-tmp/owner/export -exportOptionsPlist .codex-tmp/owner/ExportOptions.plist -allowProvisioningUpdates
+cp .codex-tmp/owner/export/Babytrack.ipa "$private_dir/Babytrack-owner.ipa"
+chmod 600 "$private_dir/Babytrack-owner.ipa"
