@@ -4,10 +4,10 @@ Native SwiftUI app in `app/`, dependency-free Node backend in `server/`, separat
 APNs worker in `relay/`, shared machine-readable catalog and fixtures in `contracts/`.
 Branding is configured in `app/Config/Brand.xcconfig`; internal identifiers stay stable.
 
-Follow the user's selected scope. Kaneo project Babytrack uses keys `BABY-*`.
-Track coherent work, attach one kind and difficulty plus affected scope labels,
-and verify task readback. Use `<type>/BABY-<number>-<slug>` branches, signed
-`BABY-<number>:` commits, and a changelog fragment per tracked change.
+Follow the user's selected scope. Kanvil project Babytrack uses keys `BABY-*`.
+Track coherent work with native kind, difficulty, scopes and readiness, mirror
+the required labels through the kanvil skill, and verify ticket readback. Use `<type>/BABY-<number>-<slug>` branches,
+signed `BABY-<number>:` commits, and a changelog fragment per tracked change.
 Keep main buildable. Publishing and delivery are authorized for the initial build;
 merges and production releases require explicit authorization.
 
