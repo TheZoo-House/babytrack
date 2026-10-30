@@ -1,0 +1,111 @@
+name: Babytrack
+options:
+  bundleIdPrefix: house.thezoo.babytrack
+  deploymentTarget:
+    iOS: '18.0'
+  xcodeVersion: '27.1'
+packages:
+  BabyCore:
+    path: BabyCore
+configs:
+  Debug: debug
+  Release: release
+configFiles:
+  Debug: Config/Shared.xcconfig
+  Release: Config/Shared.xcconfig
+settings:
+  base:
+    SWIFT_VERSION: '6.0'
+    SWIFT_STRICT_CONCURRENCY: complete
+    TARGETED_DEVICE_FAMILY: '1,2'
+    CODE_SIGN_STYLE: Automatic
+    GENERATE_INFOPLIST_FILE: NO
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+targets:
+  Babytrack:
+    type: application
+    platform: iOS
+    sources: [Babytrack]
+    info:
+      path: Babytrack/Info.plist
+      properties:
+        CFBundleDisplayName: $(APP_DISPLAY_NAME)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        NSCameraUsageDescription: Scan a book barcode to add it to your library.
+        NSPhotoLibraryUsageDescription: Attach photos to records and milestones.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        NSSupportsLiveActivities: true
+        NSSupportsLiveActivitiesFrequentUpdates: true
+        AppGroup: $(APP_GROUP_IDENTIFIER)
+        BackendURL: $(BACKEND_URL)
+        CFBundleURLTypes:
+          - CFBundleURLSchemes: [babytrack]
+        UIBackgroundModes: [remote-notification]
+    entitlements:
+      path: Babytrack/Babytrack.entitlements
+      properties:
+        com.apple.security.application-groups: [$(APP_GROUP_IDENTIFIER)]
+        com.apple.developer.applesignin: [Default]
+        aps-environment: development
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_IDENTIFIER)
+    dependencies:
+      - package: BabyCore
+      - target: BabyWidgets
+  BabyWidgets:
+    type: app-extension
+    platform: iOS
+    sources: [Widgets]
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: $(APP_DISPLAY_NAME)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        AppGroup: $(APP_GROUP_IDENTIFIER)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Widgets/BabyWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [$(APP_GROUP_IDENTIFIER)]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_IDENTIFIER).widgets
+        ASSETCATALOG_COMPILER_APPICON_NAME: ''
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+    dependencies:
+      - package: BabyCore
+  BabytrackUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_IDENTIFIER).uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Babytrack
+        ASSETCATALOG_COMPILER_APPICON_NAME: ''
+    dependencies:
+      - target: Babytrack
+schemes:
+  Babytrack:
+    build:
+      targets:
+        Babytrack: all
+        BabyWidgets: all
+        BabytrackUITests: [test]
+    test:
+      targets: [BabytrackUITests]
+      gatherCoverageData: true

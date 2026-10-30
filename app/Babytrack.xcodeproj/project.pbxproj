@@ -1,0 +1,662 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0D09DB7FE8F93F27BF5CDA30 /* BabyWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC2FF607929A37D21AE00C0 /* BabyWidgets.swift */; };
+		334D7963E434650BAC0BA084 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF7DF5ADC50B12BBFE6C8B1 /* TodayView.swift */; };
+		3B7F3E59A06DADC0B4EDBCFE /* FamilyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38ED0B8C85D74A823C6963A7 /* FamilyView.swift */; };
+		3EC81D390BF20CAF2307DFEE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 772B5C05C05F30ECACFCB72D /* Assets.xcassets */; };
+		59041A53B81CA97439EE5C4E /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98C0975003666C460EFC8A18 /* Theme.swift */; };
+		6232C95BB24BDF81CD60E732 /* SleepCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D1F4D12F73786C9BD5D2023 /* SleepCoordinator.swift */; };
+		64F27D1112B01C76FE7A0CAA /* BabyCore in Frameworks */ = {isa = PBXBuildFile; productRef = 6758E30C5CBE2A6480518709 /* BabyCore */; };
+		6CA242F3D3408822C4C739B7 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B7124937E2453A2C2329AAF /* AppStore.swift */; };
+		8068D10A60EF78449D3F6E13 /* BabytrackApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46835C123B81BBDDEAAA785 /* BabytrackApp.swift */; };
+		A4EBE4716424E012E5E69A9A /* RecordForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5248161E7D3F11D0D82D52D3 /* RecordForm.swift */; };
+		C0B24A9405AF107EFF7EF530 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7892086320009B4616926DCB /* RootView.swift */; };
+		CF770B79FC5D26DE4022097B /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8B51AC159933344E70126B /* LibraryView.swift */; };
+		D65D6965F73D9EA7546084EB /* BabyCore in Frameworks */ = {isa = PBXBuildFile; productRef = 7811636CC8D9EEA6A8B85929 /* BabyCore */; };
+		E1AABC9E8AF16285B66B2530 /* HealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40702E6B4772C8E4809F94DD /* HealthView.swift */; };
+		EE1803969C472F35F3AD2247 /* BabyWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DE377DB22696A7294CFDF1B8 /* BabyWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		EE5715BE21D6CD722CD110BD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AEC46048FD2FC26AF806B8A9 /* PrivacyInfo.xcprivacy */; };
+		F0BBA1F1FF5E40A7C4DCF194 /* BabytrackUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAEA0B9986811360AF04D6EF /* BabytrackUITests.swift */; };
+		F2D43143F5D5DB6AEB6BFE67 /* BarcodeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03C4BD4849146B95138B1A55 /* BarcodeScanner.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5CBEE07AD2247C5D46563A31 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 753EC2DA537DD57AB4D592A0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9A70DEA7A8DC82599E5B4EB6;
+			remoteInfo = Babytrack;
+		};
+		9904B5C26C3B95C59E26373A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 753EC2DA537DD57AB4D592A0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A5831D399498AEF7467219BF;
+			remoteInfo = BabyWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		466761AB74435F4394BD6D84 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				EE1803969C472F35F3AD2247 /* BabyWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		03C4BD4849146B95138B1A55 /* BarcodeScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScanner.swift; sourceTree = "<group>"; };
+		2B8B51AC159933344E70126B /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		38ED0B8C85D74A823C6963A7 /* FamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyView.swift; sourceTree = "<group>"; };
+		40702E6B4772C8E4809F94DD /* HealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthView.swift; sourceTree = "<group>"; };
+		5248161E7D3F11D0D82D52D3 /* RecordForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordForm.swift; sourceTree = "<group>"; };
+		63C6BE17664D9CAA6E8E88D2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6AF7DF5ADC50B12BBFE6C8B1 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		6B7124937E2453A2C2329AAF /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
+		735F88A3171B5817FE0125F2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		772B5C05C05F30ECACFCB72D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7892086320009B4616926DCB /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		7D1F4D12F73786C9BD5D2023 /* SleepCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepCoordinator.swift; sourceTree = "<group>"; };
+		7E9FB7BE5F2BA064A3B1D430 /* BabyWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BabyWidgets.entitlements; sourceTree = "<group>"; };
+		8CEE840704A71F45B326A4C7 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
+		90E0FF58F9E693F7A9CE7FCE /* Babytrack.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Babytrack.entitlements; sourceTree = "<group>"; };
+		976B969FEC3705531DDF9999 /* BabyCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = BabyCore; path = BabyCore; sourceTree = SOURCE_ROOT; };
+		98C0975003666C460EFC8A18 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		9DFBF30EF58043E70317E0A0 /* Babytrack.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Babytrack.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A2433FD4C17C641269F0BC08 /* BabytrackUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BabytrackUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AEC46048FD2FC26AF806B8A9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		D46835C123B81BBDDEAAA785 /* BabytrackApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabytrackApp.swift; sourceTree = "<group>"; };
+		DAC2FF607929A37D21AE00C0 /* BabyWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabyWidgets.swift; sourceTree = "<group>"; };
+		DE377DB22696A7294CFDF1B8 /* BabyWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = BabyWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		EAEA0B9986811360AF04D6EF /* BabytrackUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabytrackUITests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		140AF0931555EB0C5DED18E7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				64F27D1112B01C76FE7A0CAA /* BabyCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2996DFBCD3FFB2E242312577 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D65D6965F73D9EA7546084EB /* BabyCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		04C437CD85747CE71C7516EF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9DFBF30EF58043E70317E0A0 /* Babytrack.app */,
+				A2433FD4C17C641269F0BC08 /* BabytrackUITests.xctest */,
+				DE377DB22696A7294CFDF1B8 /* BabyWidgets.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3568E797BBB442E28910868A = {
+			isa = PBXGroup;
+			children = (
+				DFE2346755E9F3F2BCE57A05 /* Babytrack */,
+				7EDFCF712C6D6D3C2A6AA0C8 /* Config */,
+				B95D72F3F46F47B2349B33DE /* Packages */,
+				67A3648D25A1A3CD98EEF153 /* UITests */,
+				3C12420FDF991015C1E707DB /* Widgets */,
+				04C437CD85747CE71C7516EF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3C12420FDF991015C1E707DB /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				7E9FB7BE5F2BA064A3B1D430 /* BabyWidgets.entitlements */,
+				DAC2FF607929A37D21AE00C0 /* BabyWidgets.swift */,
+				735F88A3171B5817FE0125F2 /* Info.plist */,
+			);
+			path = Widgets;
+			sourceTree = "<group>";
+		};
+		67A3648D25A1A3CD98EEF153 /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				EAEA0B9986811360AF04D6EF /* BabytrackUITests.swift */,
+			);
+			path = UITests;
+			sourceTree = "<group>";
+		};
+		7EDFCF712C6D6D3C2A6AA0C8 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				8CEE840704A71F45B326A4C7 /* Shared.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		B95D72F3F46F47B2349B33DE /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				976B969FEC3705531DDF9999 /* BabyCore */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		DFE2346755E9F3F2BCE57A05 /* Babytrack */ = {
+			isa = PBXGroup;
+			children = (
+				6B7124937E2453A2C2329AAF /* AppStore.swift */,
+				772B5C05C05F30ECACFCB72D /* Assets.xcassets */,
+				90E0FF58F9E693F7A9CE7FCE /* Babytrack.entitlements */,
+				D46835C123B81BBDDEAAA785 /* BabytrackApp.swift */,
+				03C4BD4849146B95138B1A55 /* BarcodeScanner.swift */,
+				38ED0B8C85D74A823C6963A7 /* FamilyView.swift */,
+				40702E6B4772C8E4809F94DD /* HealthView.swift */,
+				63C6BE17664D9CAA6E8E88D2 /* Info.plist */,
+				2B8B51AC159933344E70126B /* LibraryView.swift */,
+				AEC46048FD2FC26AF806B8A9 /* PrivacyInfo.xcprivacy */,
+				5248161E7D3F11D0D82D52D3 /* RecordForm.swift */,
+				7892086320009B4616926DCB /* RootView.swift */,
+				7D1F4D12F73786C9BD5D2023 /* SleepCoordinator.swift */,
+				98C0975003666C460EFC8A18 /* Theme.swift */,
+				6AF7DF5ADC50B12BBFE6C8B1 /* TodayView.swift */,
+			);
+			path = Babytrack;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9A70DEA7A8DC82599E5B4EB6 /* Babytrack */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9BC5A6D75D0FD1ADA520A633 /* Build configuration list for PBXNativeTarget "Babytrack" */;
+			buildPhases = (
+				E319F2E47C5E9323F7C32DA1 /* Sources */,
+				A23155CE8B4A3E40D6AB4E21 /* Resources */,
+				2996DFBCD3FFB2E242312577 /* Frameworks */,
+				466761AB74435F4394BD6D84 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F93BB4D23BDFEB70D940E17F /* PBXTargetDependency */,
+			);
+			name = Babytrack;
+			packageProductDependencies = (
+				7811636CC8D9EEA6A8B85929 /* BabyCore */,
+			);
+			productName = Babytrack;
+			productReference = 9DFBF30EF58043E70317E0A0 /* Babytrack.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A5831D399498AEF7467219BF /* BabyWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 946FB63FE1F29499EDC27FAC /* Build configuration list for PBXNativeTarget "BabyWidgets" */;
+			buildPhases = (
+				49CCB20B067099C3DEC9BF58 /* Sources */,
+				140AF0931555EB0C5DED18E7 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BabyWidgets;
+			packageProductDependencies = (
+				6758E30C5CBE2A6480518709 /* BabyCore */,
+			);
+			productName = BabyWidgets;
+			productReference = DE377DB22696A7294CFDF1B8 /* BabyWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		DC5DDD59977FCC16A8DCAEB9 /* BabytrackUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CB24E0518F992A9BE06CD4ED /* Build configuration list for PBXNativeTarget "BabytrackUITests" */;
+			buildPhases = (
+				E345589781336BF1F143E013 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8CC7503D491575EDCB614C02 /* PBXTargetDependency */,
+			);
+			name = BabytrackUITests;
+			packageProductDependencies = (
+			);
+			productName = BabytrackUITests;
+			productReference = A2433FD4C17C641269F0BC08 /* BabytrackUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		753EC2DA537DD57AB4D592A0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2710;
+				TargetAttributes = {
+					9A70DEA7A8DC82599E5B4EB6 = {
+						DevelopmentTeam = Q28NF3NH3D;
+						ProvisioningStyle = Automatic;
+					};
+					A5831D399498AEF7467219BF = {
+						DevelopmentTeam = Q28NF3NH3D;
+						ProvisioningStyle = Automatic;
+					};
+					DC5DDD59977FCC16A8DCAEB9 = {
+						DevelopmentTeam = Q28NF3NH3D;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 9A70DEA7A8DC82599E5B4EB6;
+					};
+				};
+			};
+			buildConfigurationList = 8CCD628A86FCAEF539BEB0F1 /* Build configuration list for PBXProject "Babytrack" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 3568E797BBB442E28910868A;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4FE678605845FD1CBE30C64E /* XCLocalSwiftPackageReference "BabyCore" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 04C437CD85747CE71C7516EF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9A70DEA7A8DC82599E5B4EB6 /* Babytrack */,
+				A5831D399498AEF7467219BF /* BabyWidgets */,
+				DC5DDD59977FCC16A8DCAEB9 /* BabytrackUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A23155CE8B4A3E40D6AB4E21 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3EC81D390BF20CAF2307DFEE /* Assets.xcassets in Resources */,
+				EE5715BE21D6CD722CD110BD /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		49CCB20B067099C3DEC9BF58 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0D09DB7FE8F93F27BF5CDA30 /* BabyWidgets.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E319F2E47C5E9323F7C32DA1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6CA242F3D3408822C4C739B7 /* AppStore.swift in Sources */,
+				8068D10A60EF78449D3F6E13 /* BabytrackApp.swift in Sources */,
+				F2D43143F5D5DB6AEB6BFE67 /* BarcodeScanner.swift in Sources */,
+				3B7F3E59A06DADC0B4EDBCFE /* FamilyView.swift in Sources */,
+				E1AABC9E8AF16285B66B2530 /* HealthView.swift in Sources */,
+				CF770B79FC5D26DE4022097B /* LibraryView.swift in Sources */,
+				A4EBE4716424E012E5E69A9A /* RecordForm.swift in Sources */,
+				C0B24A9405AF107EFF7EF530 /* RootView.swift in Sources */,
+				6232C95BB24BDF81CD60E732 /* SleepCoordinator.swift in Sources */,
+				59041A53B81CA97439EE5C4E /* Theme.swift in Sources */,
+				334D7963E434650BAC0BA084 /* TodayView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E345589781336BF1F143E013 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F0BBA1F1FF5E40A7C4DCF194 /* BabytrackUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8CC7503D491575EDCB614C02 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9A70DEA7A8DC82599E5B4EB6 /* Babytrack */;
+			targetProxy = 5CBEE07AD2247C5D46563A31 /* PBXContainerItemProxy */;
+		};
+		F93BB4D23BDFEB70D940E17F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A5831D399498AEF7467219BF /* BabyWidgets */;
+			targetProxy = 9904B5C26C3B95C59E26373A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0D78EA1808F117976951F219 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8CEE840704A71F45B326A4C7 /* Shared.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6509EA3C79BBEC8E63A2DF8B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Babytrack/Babytrack.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Babytrack/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_IDENTIFIER)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		701F2F17035D5081167BFA8A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_IDENTIFIER).uitests";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Babytrack;
+			};
+			name = Debug;
+		};
+		8DF9F6CD2E8573E9EDA567FA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_IDENTIFIER).uitests";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Babytrack;
+			};
+			name = Release;
+		};
+		B5F0CE5600F1CC479982C10F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				CODE_SIGN_ENTITLEMENTS = Widgets/BabyWidgets.entitlements;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_IDENTIFIER).widgets";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CF6D12C9E1B060C8BF7202DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				CODE_SIGN_ENTITLEMENTS = Widgets/BabyWidgets.entitlements;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_IDENTIFIER).widgets";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E44F697C3F5FFC24FB37D1F7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Babytrack/Babytrack.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Babytrack/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_IDENTIFIER)";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F2E78236B35A3CCF85878460 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8CEE840704A71F45B326A4C7 /* Shared.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8CCD628A86FCAEF539BEB0F1 /* Build configuration list for PBXProject "Babytrack" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0D78EA1808F117976951F219 /* Debug */,
+				F2E78236B35A3CCF85878460 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		946FB63FE1F29499EDC27FAC /* Build configuration list for PBXNativeTarget "BabyWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B5F0CE5600F1CC479982C10F /* Debug */,
+				CF6D12C9E1B060C8BF7202DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9BC5A6D75D0FD1ADA520A633 /* Build configuration list for PBXNativeTarget "Babytrack" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6509EA3C79BBEC8E63A2DF8B /* Debug */,
+				E44F697C3F5FFC24FB37D1F7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CB24E0518F992A9BE06CD4ED /* Build configuration list for PBXNativeTarget "BabytrackUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				701F2F17035D5081167BFA8A /* Debug */,
+				8DF9F6CD2E8573E9EDA567FA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		4FE678605845FD1CBE30C64E /* XCLocalSwiftPackageReference "BabyCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = BabyCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		6758E30C5CBE2A6480518709 /* BabyCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BabyCore;
+		};
+		7811636CC8D9EEA6A8B85929 /* BabyCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BabyCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 753EC2DA537DD57AB4D592A0 /* Project object */;
+}
